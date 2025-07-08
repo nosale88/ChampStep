@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Trophy, TrendingUp, Grid3X3, List } from 'lucide-react';
-import { dancers } from '../data/mockData';
 import DancerCard from './DancerCard';
 import DancerListItem from './DancerListItem';
 import { useTheme } from '../contexts/ThemeContext';
+import { Dancer } from '../types';
 
 interface RankingPageProps {
   onDancerClick: (dancerId: string) => void;
+  dancers: Dancer[];
 }
 
-const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick }) => {
+const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => {
   const { isDarkMode } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
@@ -24,7 +25,7 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick }) => {
 
   const allCrews = useMemo(() => {
     const crews = new Set<string>();
-    dancers.forEach(dancer => dancer.crew && crews.add(dancer.crew));
+    dancers.forEach(dancer => dancer.crewIds && dancer.crewIds.forEach(crewId => crews.add(crewId)));
     return Array.from(crews);
   }, []);
 
@@ -33,7 +34,7 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick }) => {
       const matchesSearch = dancer.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            dancer.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesGenre = selectedGenre === 'all' || dancer.genres.includes(selectedGenre);
-      const matchesCrew = selectedCrew === 'all' || dancer.crew === selectedCrew;
+      const matchesCrew = selectedCrew === 'all' || (dancer.crewIds && dancer.crewIds.includes(selectedCrew));
       
       return matchesSearch && matchesGenre && matchesCrew;
     });

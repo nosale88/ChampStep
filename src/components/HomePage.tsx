@@ -1,16 +1,18 @@
 import React from 'react';
 import { Trophy, Calendar, TrendingUp, Star } from 'lucide-react';
-import { dancers, competitions } from '../data/mockData';
 import DancerCard from './DancerCard';
 import CompetitionCard from './CompetitionCard';
 import { useTheme } from '../contexts/ThemeContext';
+import { Dancer, Competition } from '../types';
 
 interface HomePageProps {
   onDancerClick: (dancerId: string) => void;
   onCompetitionClick: (competitionId: string) => void;
+  dancers: Dancer[];
+  competitions: Competition[];
 }
 
-const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick }) => {
+const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, dancers, competitions }) => {
   const { isDarkMode } = useTheme();
   const topDancers = dancers.slice(0, 3);
   const recentCompetitions = competitions.slice(0, 2);

@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Calendar, Trophy } from 'lucide-react';
-import { competitions } from '../data/mockData';
 import CompetitionCard from './CompetitionCard';
 import { useTheme } from '../contexts/ThemeContext';
+import { Competition } from '../types';
 
 interface CompetitionsPageProps {
   onCompetitionClick: (competitionId: string) => void;
+  competitions: Competition[];
 }
 
-const CompetitionsPage: React.FC<CompetitionsPageProps> = ({ onCompetitionClick }) => {
+const CompetitionsPage: React.FC<CompetitionsPageProps> = ({ onCompetitionClick, competitions }) => {
   const { isDarkMode } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
@@ -47,13 +48,8 @@ const CompetitionsPage: React.FC<CompetitionsPageProps> = ({ onCompetitionClick 
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center mb-8">
-            <h1 className={`text-3xl font-bold mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              댄스 대회
-            </h1>
-            <p className={`max-w-2xl mx-auto transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              국내외 주요 댄스 대회 정보와 수상 내역을 확인하세요
-            </p>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className={`text-4xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>대회 목록</h1>
           </div>
 
           {/* Search and Filters */}

@@ -2,9 +2,11 @@ import React from 'react';
 import { Crown, Search, Menu, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
+type View = 'home' | 'ranking' | 'competitions' | 'crews';
+
 interface HeaderProps {
-  currentView: 'home' | 'ranking' | 'competitions' | 'admin';
-  onViewChange: (view: 'home' | 'ranking' | 'competitions' | 'admin') => void;
+  currentView: View;
+  onViewChange: (view: View) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
@@ -33,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
               { key: 'home' as const, label: '홈' },
               { key: 'ranking' as const, label: '랭킹' },
               { key: 'competitions' as const, label: '대회' },
-              { key: 'admin' as const, label: '행사 등록' }
+              { key: 'crews' as const, label: '크루' }
             ].map(({ key, label }) => (
               <button
                 key={key}

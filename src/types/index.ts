@@ -50,16 +50,51 @@ export interface Competition {
   isPrelimGroupTournament?: boolean;
 }
 
+export interface CrewSchedule {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  type: 'practice' | 'performance' | 'meeting' | 'workshop' | 'competition';
+  isPublic: boolean;
+  createdBy: string; // dancer ID
+  createdAt: string;
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  authorName: string;
+  authorEmail?: string;
+  targetType: 'dancer' | 'crew';
+  targetId: string;
+  isPublic: boolean;
+  createdAt: string;
+}
+
+export interface Crew {
+  id: string;
+  name: string;
+  genre: string;
+  introduction: string;
+  members: Dancer[]; // Array of dancer objects
+  schedules: CrewSchedule[];
+  avatar?: string;
+  createdAt: string;
+}
+
 export interface Dancer {
   id: string;
   nickname: string;
   name: string;
-  crew?: string;
+  crew?: string; // crew name from database
   genres: string[];
   sns?: string;
   competitions: Competition[];
   totalPoints: number;
   rank: number;
   avatar?: string;
-  videos?: Video[];
+  videos: Video[];
 }

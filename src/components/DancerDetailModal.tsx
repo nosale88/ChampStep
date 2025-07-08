@@ -1,18 +1,26 @@
-import React from 'react';
-import { X, Trophy, Users, Calendar, Instagram, Globe } from 'lucide-react';
-import { Dancer, Competition } from '../types';
+import React, { useState } from 'react';
+import { X, Trophy, Users, Calendar, Instagram, Globe, MessageCircle } from 'lucide-react';
+import { Dancer, Competition, Crew, Message } from '../types';
 import { competitions as allCompetitions } from '../data/mockData';
 import { useTheme } from '../contexts/ThemeContext';
+import MessageModal from './MessageModal';
+import MessageList from './MessageList';
 
 interface DancerDetailModalProps {
   dancer: Dancer;
   isOpen: boolean;
   onClose: () => void;
   onSelectCompetition: (competition: Competition) => void;
+  onSelectCrew?: (crew: Crew) => void;
+  crews?: Crew[];
+  messages?: Message[];
+  onSendMessage?: (message: Omit<Message, 'id' | 'createdAt'>) => void;
+  onDancerClick?: (dancerId: string) => void;
 }
 
-const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, onClose, onSelectCompetition }) => {
+const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, onClose, onSelectCompetition, onSelectCrew, crews, messages = [], onSendMessage, onDancerClick }) => {
   const { isDarkMode } = useTheme();
+  const [showMessageModal, setShowMessageModal] = useState(false);
   
   if (!isOpen) return null;
 
@@ -38,6 +46,25 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
     });
   };
 
+  const handleCrewClick = (crewName: string) => {
+    if (onSelectCrew && crews) {
+      const crew = crews.find(c => c.name === crewName);
+      if (crew) {
+        onClose();
+        onSelectCrew(crew);
+      }
+    }
+  };
+
+  const handleSendMessage = async (message: Omit<Message, 'id' | 'createdAt'>) => {
+    if (onSendMessage) {
+      await onSendMessage(message);
+    }
+  };
+
+  // 댄서에게 온 메시지 필터링
+  const dancerMessages = messages.filter(msg => msg.targetId === dancer.id && msg.targetType === 'dancer');
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className={`rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-colors ${
@@ -59,7 +86,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
                   {getRankIcon(dancer.rank)}
                 </div>
               </div>
-              <div>
+              <div className="flex-1">
                 <h2 className={`text-2xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   {dancer.nickname}
                 </h2>
@@ -69,12 +96,30 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
                 {dancer.crew && (
                   <div className="flex items-center space-x-2 mt-1">
                     <Users className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                    <span className={`text-sm transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <button
+                      onClick={() => handleCrewClick(dancer.crew!)}
+                      className={`text-sm font-medium transition-colors hover:underline ${
+                        isDarkMode 
+                          ? 'text-blue-400 hover:text-blue-300' 
+                          : 'text-blue-600 hover:text-blue-700'
+                      }`}
+                    >
                       {dancer.crew}
-                    </span>
+                    </button>
                   </div>
                 )}
               </div>
+              <button
+                onClick={() => setShowMessageModal(true)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                  isDarkMode 
+                    ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' 
+                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                }`}
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>메시지 보내기</span>
+              </button>
             </div>
             <button
               onClick={onClose}
@@ -160,6 +205,140 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
               ))}
             </div>
           </div>
+
+          {/* Crew Information */}
+          {dancer.crew && crews && (
+            <div className="mb-8">
+              <h3 className={`text-lg font-semibold mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                소속 크루
+              </h3>
+              {(() => {
+                const crew = crews.find(c => c.name === dancer.crew);
+                if (crew) {
+                  return (
+                    <div 
+                      onClick={() => handleCrewClick(dancer.crew!)}
+                      className={`p-6 rounded-xl cursor-pointer transition-all hover:shadow-lg ${
+                        isDarkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600' 
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <img
+                          src={crew.avatar}
+                          alt={crew.name}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <h4 className={`text-xl font-bold transition-colors ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            {crew.name}
+                          </h4>
+                          <p className={`text-sm transition-colors ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                            {crew.genre} • {crew.members.length}명
+                          </p>
+                          <p className={`text-sm mt-2 line-clamp-2 transition-colors ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
+                            {crew.introduction}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-4 text-sm">
+                          <div className="text-center">
+                            <div className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {crew.members.length}
+                            </div>
+                            <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              멤버
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {crew.schedules.length}
+                            </div>
+                            <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              스케줄
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="flex flex-wrap gap-2">
+                          {crew.members.slice(0, 3).map((member) => (
+                            <button
+                              key={member.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onDancerClick) {
+                                  onClose();
+                                  onDancerClick(member.id);
+                                }
+                              }}
+                              className={`flex items-center space-x-2 px-2 py-1 rounded-lg transition-colors ${
+                                onDancerClick 
+                                  ? isDarkMode 
+                                    ? 'hover:bg-gray-600' 
+                                    : 'hover:bg-gray-200'
+                                  : ''
+                              }`}
+                            >
+                              <img
+                                src={member.avatar}
+                                alt={member.nickname}
+                                className="w-6 h-6 rounded-full"
+                              />
+                              <span className={`text-sm ${
+                                onDancerClick 
+                                  ? isDarkMode 
+                                    ? 'text-blue-400 hover:text-blue-300' 
+                                    : 'text-blue-600 hover:text-blue-700'
+                                  : isDarkMode 
+                                    ? 'text-gray-300' 
+                                    : 'text-gray-700'
+                              }`}>
+                                {member.nickname}
+                              </span>
+                            </button>
+                          ))}
+                          {crew.members.length > 3 && (
+                            <span className={`text-sm ${
+                              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                            }`}>
+                              외 {crew.members.length - 3}명
+                            </span>
+                          )}
+                        </div>
+                        <div className={`text-sm font-medium ${
+                          isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                        }`}>
+                          크루 상세보기 →
+                        </div>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className={`p-4 rounded-lg ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+                    }`}>
+                      <div className="flex items-center space-x-2">
+                        <Users className={`h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                        <span className={`font-medium ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          {dancer.crew}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+          )}
 
           {/* SNS */}
           {dancer.sns && (
@@ -283,7 +462,28 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
               </div>
             </div>
           )}
+
+          {/* Messages Section */}
+          <div className="mt-8">
+            <MessageList 
+              messages={dancerMessages}
+              targetType="dancer"
+              targetName={dancer.nickname}
+            />
+          </div>
         </div>
+
+        {/* Message Modal */}
+        {showMessageModal && onSendMessage && (
+          <MessageModal
+            isOpen={showMessageModal}
+            onClose={() => setShowMessageModal(false)}
+            targetType="dancer"
+            targetName={dancer.nickname}
+            targetId={dancer.id}
+            onSendMessage={handleSendMessage}
+          />
+        )}
       </div>
     </div>
   );

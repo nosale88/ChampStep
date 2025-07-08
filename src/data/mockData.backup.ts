@@ -1,5 +1,4 @@
 import { Competition, Dancer, Video, Crew } from '../types';
-import { allAdditionalDancers } from './additionalDancers';
 
 const videosList: Video[] = [
   { id: 'v1', title: 'J-ROC - Groove Night Vol. 3 - Final Battle', url: 'https://www.youtube.com/watch?v=example1', thumbnail: 'https://i.ytimg.com/vi/example1/hqdefault.jpg', type: 'battle', competitionId: '1', dancerId: 'd1', uploadDate: '2024-08-16' },
@@ -1234,10 +1233,7 @@ competitionsList[2].participants = [
   { dancerId: 'd2', dancer: waackt, position: 1, points: 90 },
 ];
 
-// 모든 댄서들을 합친 배열
-const allDancers = [...dancersList, ...allAdditionalDancers];
-
 export const competitions = competitionsList;
-export const dancers = allDancers;
+export const dancers = dancersList;
 export const crews = crewsList;
 export const videos = videosList;
