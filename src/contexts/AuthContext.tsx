@@ -337,25 +337,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (updates: Partial<Dancer>) => {
     try {
-      if (!user || !dancer) throw new Error('No user logged in');
+      if (!user) throw new Error('No user logged in');
       
-      const { error } = await supabase
+      // 기존 프로필이 있는지 확인
+      const { data: existingProfile } = await supabase
         .from('dancers')
-        .update({
-          name: updates.name,
-          nickname: updates.nickname,
-          genres: updates.genres,
-          sns: updates.sns,
-          bio: updates.bio,
-          phone: updates.phone,
-          birth_date: updates.birthDate
-        })
-        .eq('user_id', user.id);
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
       
-      if (error) throw error;
-      
-      // 로컬 상태 업데이트
-      setDancer(prev => prev ? { ...prev, ...updates } : null);
+      if (existingProfile) {
+        // 기존 프로필 업데이트
+        const { error } = await supabase
+          .from('dancers')
+          .update({
+            name: updates.name,
+            nickname: updates.nickname,
+            genres: updates.genres,
+            sns: updates.sns,
+            bio: updates.bio,
+            phone: updates.phone,
+            birth_date: updates.birthDate,
+            crew: updates.crew,
+            avatar: updates.avatar
+          })
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+        
+        // 로컬 상태 업데이트
+        setDancer(prev => prev ? { ...prev, ...updates } : null);
+      } else {
+        // 새 프로필 생성
+        const { data, error } = await supabase
+          .from('dancers')
+          .insert({
+            user_id: user.id,
+            email: user.email,
+            name: updates.name,
+            nickname: updates.nickname,
+            genres: updates.genres || [],
+            sns: updates.sns || '',
+            bio: updates.bio || '',
+            phone: updates.phone || '',
+            birth_date: updates.birthDate || '',
+            crew: updates.crew || '',
+            avatar: updates.avatar || `https://i.pravatar.cc/150?u=${user.id}`,
+            total_points: 0,
+            rank: 999
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        // 새로 생성된 프로필로 상태 업데이트
+        setDancer({
+          id: data.id,
+          nickname: data.nickname,
+          name: data.name,
+          crew: data.crew,
+          genres: data.genres || [],
+          sns: data.sns || '',
+          totalPoints: data.total_points || 0,
+          rank: data.rank || 999,
+          avatar: data.avatar || `https://i.pravatar.cc/150?u=${data.id}`,
+          competitions: [],
+          videos: [],
+          email: data.email,
+          phone: data.phone,
+          birthDate: data.birth_date,
+          bio: data.bio
+        });
+      }
       
       return { error: null };
     } catch (error) {

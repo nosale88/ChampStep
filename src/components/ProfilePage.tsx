@@ -6,6 +6,7 @@ import { Dancer, Crew } from '../types';
 import { uploadImage } from '../services/storageService';
 import { fetchCrews } from '../services/crewService';
 import ImageUpload from './ImageUpload';
+import ProfileOnboarding from './ProfileOnboarding';
 
 const ProfilePage: React.FC = () => {
   const { isDarkMode } = useTheme();
@@ -146,47 +147,7 @@ const ProfilePage: React.FC = () => {
 
   // 댄서 프로필이 없을 때 (로그인은 되었지만 프로필이 아직 생성되지 않음)
   if (!dancer) {
-    const handleForceCreateProfile = async () => {
-      if (!user) return;
-      
-      try {
-        const { supabase } = await import('../lib/supabase');
-        const { error } = await supabase.from('dancers').insert({
-          user_id: user.id,
-          email: user.email,
-          name: user.email?.split('@')[0] || 'User',
-          nickname: user.email?.split('@')[0] || 'User',
-          genres: [],
-          total_points: 0,
-          rank: 999,
-          avatar: `https://i.pravatar.cc/150?u=${user.id}`
-        });
-        
-        if (!error) {
-          window.location.reload();
-        }
-      } catch (error) {
-        console.error('Error creating profile:', error);
-      }
-    };
-    
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
-      }`}>
-        <div className={`text-center px-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <h2 className="text-xl sm:text-2xl font-bold mb-2">프로필을 생성하는 중...</h2>
-          <p className="text-sm sm:text-base text-gray-500 mb-4">잠시만 기다려주세요.</p>
-          <button
-            onClick={handleForceCreateProfile}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors"
-          >
-            프로필 강제 생성
-          </button>
-        </div>
-      </div>
-    );
+    return <ProfileOnboarding />;
   }
 
   return (

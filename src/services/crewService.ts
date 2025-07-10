@@ -175,6 +175,51 @@ export async function fetchCrewById(id: string): Promise<Crew | null> {
   return crews.find(crew => crew.id === id) || null
 }
 
+export async function createCrew(crewData: {
+  name: string;
+  description: string;
+  founded_year: number;
+  location: string;
+  member_count: number;
+}): Promise<Crew | null> {
+  try {
+    console.log('🔄 새 크루 생성 중:', crewData.name)
+    
+    const { data, error } = await supabase
+      .from('crews')
+      .insert({
+        name: crewData.name,
+        description: crewData.description,
+        founded_year: crewData.founded_year,
+        location: crewData.location,
+        member_count: crewData.member_count
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('❌ Error creating crew:', error)
+      throw error
+    }
+
+    console.log('✅ 크루 생성 성공:', data.name)
+    
+    return {
+      id: data.id,
+      name: data.name,
+      genre: 'Hip-hop', // 기본값
+      introduction: data.description || `${data.name} 크루입니다.`,
+      members: [],
+      schedules: [],
+      backgroundImage: undefined,
+      createdAt: data.created_at
+    }
+  } catch (error) {
+    console.error('❌ Error in createCrew:', error)
+    return null
+  }
+}
+
 export async function addScheduleToCrew(crewId: string, schedule: Omit<CrewSchedule, 'id' | 'createdAt'>): Promise<CrewSchedule | null> {
   try {
     const { data: userData } = await supabase.auth.getUser();
