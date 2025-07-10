@@ -222,70 +222,117 @@ export async function createCrew(crewData: {
 
 export async function addScheduleToCrew(crewId: string, schedule: Omit<CrewSchedule, 'id' | 'createdAt'>): Promise<CrewSchedule | null> {
   try {
+    console.log('🔄 Adding schedule to crew:', crewId, schedule);
+    
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) throw new Error('Not authenticated');
+    if (!userData.user) {
+      console.error('❌ User not authenticated');
+      throw new Error('Not authenticated');
+    }
 
+    // 크루 이름 가져오기
+    const { data: crewData } = await supabase
+      .from('crews')
+      .select('name')
+      .eq('id', crewId)
+      .single();
+
+    if (!crewData) {
+      console.error('❌ Crew not found');
+      throw new Error('Crew not found');
+    }
+
+    console.log('✅ Found crew:', crewData.name);
+
+    // 실제 테이블 구조에 맞게 데이터 삽입
     const { data, error } = await supabase
       .from('crew_schedules')
       .insert({
-        crew_id: crewId,
+        crew_name: crewData.name,  // crew_id 대신 crew_name 사용
         title: schedule.title,
         description: schedule.description,
         date: schedule.date,
-        time: schedule.time,
+        start_time: schedule.time,  // time 대신 start_time 사용
         location: schedule.location,
-        type: schedule.type,
-        is_public: schedule.isPublic,
-        created_by: userData.user.id
+        // type과 is_public 필드는 실제 테이블에 없을 수 있으므로 제거
+        // type: schedule.type,
+        // is_public: schedule.isPublic,
+        // created_by: userData.user.id
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error inserting schedule:', error);
+      throw error;
+    }
+
+    console.log('✅ Schedule added successfully:', data);
 
     return {
       id: data.id,
       title: data.title,
-      description: data.description,
+      description: data.description || '',
       date: data.date,
-      time: data.time,
-      location: data.location,
-      type: data.type,
-      isPublic: data.is_public,
-      createdBy: data.created_by,
+      time: data.start_time,
+      location: data.location || '',
+      type: 'practice', // 기본값
+      isPublic: true,   // 기본값
+      createdBy: userData.user.id,
       createdAt: data.created_at
     };
   } catch (error) {
-    console.error('Error adding schedule:', error);
+    console.error('❌ Error adding schedule:', error);
     return null;
   }
 }
 
 export async function getCrewSchedules(crewId: string): Promise<CrewSchedule[]> {
   try {
+    console.log('🔍 Fetching schedules for crew:', crewId);
+    
+    // 크루 이름 가져오기
+    const { data: crewData } = await supabase
+      .from('crews')
+      .select('name')
+      .eq('id', crewId)
+      .single();
+
+    if (!crewData) {
+      console.error('❌ Crew not found');
+      return [];
+    }
+
+    console.log('✅ Found crew for schedule fetch:', crewData.name);
+
     const { data, error } = await supabase
       .from('crew_schedules')
       .select('*')
-      .eq('crew_id', crewId)
+      .eq('crew_name', crewData.name)  // crew_id 대신 crew_name 사용
       .order('date', { ascending: true })
-      .order('time', { ascending: true });
+      .order('start_time', { ascending: true });  // time 대신 start_time 사용
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error fetching schedules:', error);
+      throw error;
+    }
+
+    console.log(`✅ Found ${data?.length || 0} schedules for ${crewData.name}`);
 
     return (data || []).map(schedule => ({
       id: schedule.id,
       title: schedule.title,
-      description: schedule.description,
+      description: schedule.description || '',
       date: schedule.date,
-      time: schedule.time,
-      location: schedule.location,
-      type: schedule.type,
-      isPublic: schedule.is_public,
-      createdBy: schedule.created_by,
+      time: schedule.start_time,
+      location: schedule.location || '',
+      type: 'practice', // 기본값 (실제 테이블에 type 컬럼이 없을 수 있음)
+      isPublic: true,   // 기본값 (실제 테이블에 is_public 컬럼이 없을 수 있음)
+      createdBy: 'system', // 기본값 (실제 테이블에 created_by 컬럼이 없을 수 있음)
       createdAt: schedule.created_at
     }));
   } catch (error) {
-    console.error('Error fetching schedules:', error);
+    console.error('❌ Error fetching schedules:', error);
     return [];
   }
 }
