@@ -33,9 +33,9 @@ function AppContent() {
       try {
         console.log('📊 Fetching data from services...');
         
-        // 타임아웃 추가 (10초)
+        // 타임아웃을 3초로 줄임
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Data loading timeout')), 10000)
+          setTimeout(() => reject(new Error('Data loading timeout')), 3000)
         );
         
         const dataPromise = Promise.all([
@@ -60,10 +60,15 @@ function AppContent() {
         setCrews(crewsData);
       } catch (error) {
         console.error('❌ Error loading data:', error);
-        // 오류 발생 시에도 빈 배열로 설정하여 앱이 계속 작동하도록 함
-        setDancers([]);
-        setCompetitions([]);
-        setCrews([]);
+        // 타임아웃 시 목데이터 직접 로드
+        const { dancers } = await import('./data/mockData');
+        const { competitions } = await import('./data/mockData');
+        const { crews } = await import('./data/mockData');
+        
+        console.log('🔄 Using mock data as fallback');
+        setDancers(dancers);
+        setCompetitions(competitions);
+        setCrews(crews);
       } finally {
         console.log('🏁 Data loading completed, setting loading to false');
         setLoading(false);

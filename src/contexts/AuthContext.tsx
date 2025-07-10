@@ -91,15 +91,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchDancerProfile = async (userId: string) => {
     try {
+      console.log('🔍 Fetching dancer profile for user:', userId);
       const { data, error } = await supabase
         .from('dancers')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching dancer profile:', error);
+        // 프로필이 없을 경우 기본 프로필 생성
+        if (error.code === 'PGRST116') {
+          console.log('🔄 Creating default profile for user');
+          await createDefaultProfile(userId);
+        }
+        return;
+      }
       
       if (data) {
+        console.log('✅ Dancer profile loaded:', data.nickname);
         setDancer({
           id: data.id,
           nickname: data.nickname,
@@ -119,7 +129,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
     } catch (error) {
-      console.error('Error fetching dancer profile:', error);
+      console.error('❌ Error fetching dancer profile:', error);
+    }
+  };
+
+  const createDefaultProfile = async (userId: string) => {
+    try {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) return;
+
+      const { error } = await supabase.from('dancers').insert({
+        user_id: userId,
+        email: user.data.user.email,
+        name: user.data.user.email?.split('@')[0] || 'User',
+        nickname: user.data.user.email?.split('@')[0] || 'User',
+        genres: [],
+        total_points: 0,
+        rank: 999,
+        avatar: `https://i.pravatar.cc/150?u=${userId}`
+      });
+
+      if (error) {
+        console.error('Error creating default profile:', error);
+      } else {
+        console.log('✅ Default profile created');
+        fetchDancerProfile(userId);
+      }
+    } catch (error) {
+      console.error('Error in createDefaultProfile:', error);
     }
   };
 
@@ -198,7 +235,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    console.log('🚪 Signing out...');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // 상태 초기화
+      setUser(null);
+      setSession(null);
+      setDancer(null);
+      console.log('✅ Signed out successfully');
+    } catch (error) {
+      console.error('❌ Error signing out:', error);
+    }
   };
 
   const updateProfile = async (updates: Partial<Dancer>) => {
