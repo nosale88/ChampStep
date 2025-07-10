@@ -4,9 +4,9 @@ import { dancers } from '../data/mockData'
 
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
-    // 1초 타임아웃으로 빠르게 처리
+    // 5초 타임아웃으로 증가
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 1000)
+      setTimeout(() => reject(new Error('Timeout')), 5000)
     })
 
     const supabasePromise = supabase
@@ -18,6 +18,41 @@ export async function fetchDancers(): Promise<Dancer[]> {
 
     if (error) {
       console.error('Error fetching dancers from Supabase:', error)
+      // 타임아웃이 아닌 다른 오류의 경우 재시도
+      if (error.message !== 'Timeout') {
+        console.log('🔄 재시도 중...')
+        const { data: retryData, error: retryError } = await supabase
+          .from('dancers')
+          .select('*')
+          .order('rank', { ascending: true })
+        
+        if (!retryError && retryData && retryData.length > 0) {
+          console.log(`✅ 재시도 성공: ${retryData.length}명의 댄서 데이터`)
+          return retryData.map(dancer => ({
+            id: dancer.id,
+            nickname: dancer.nickname,
+            name: dancer.name,
+            crew: dancer.crew,
+            genres: dancer.genres,
+            sns: dancer.sns || '',
+            totalPoints: dancer.total_points,
+            rank: dancer.rank,
+            avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
+            profileImage: dancer.profile_image,
+            backgroundImage: dancer.background_image,
+            bio: dancer.bio,
+            birthDate: dancer.birth_date,
+            phone: dancer.phone,
+            email: dancer.email,
+            instagramUrl: dancer.instagram_url,
+            youtubeUrl: dancer.youtube_url,
+            twitterUrl: dancer.twitter_url,
+            competitions: [],
+            videos: [],
+          }))
+        }
+      }
+      console.log('⚠️ 목데이터 사용')
       return dancers
     }
 

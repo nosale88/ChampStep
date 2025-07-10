@@ -4,9 +4,9 @@ import { competitions } from '../data/mockData'
 
 export async function fetchCompetitions(): Promise<Competition[]> {
   try {
-    // 1초 타임아웃으로 빠르게 처리
+    // 5초 타임아웃으로 증가
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 1000)
+      setTimeout(() => reject(new Error('Timeout')), 5000)
     })
 
     const supabasePromise = supabase
@@ -18,6 +18,52 @@ export async function fetchCompetitions(): Promise<Competition[]> {
 
     if (error) {
       console.error('Error fetching competitions from Supabase:', error)
+      // 타임아웃이 아닌 다른 오류의 경우 재시도
+      if (error.message !== 'Timeout') {
+        console.log('🔄 재시도 중...')
+        const { data: retryData, error: retryError } = await supabase
+          .from('competitions')
+          .select('*')
+          .order('date', { ascending: false })
+        
+        if (!retryError && retryData && retryData.length > 0) {
+          console.log(`✅ 재시도 성공: ${retryData.length}개의 대회 데이터`)
+          return retryData.map(comp => ({
+            id: comp.id,
+            managerName: comp.manager_name || '',
+            managerContact: comp.manager_contact || '',
+            managerEmail: comp.manager_email || '',
+            eventName: comp.name || comp.event_name || '',
+            genres: comp.genres || [],
+            venue: comp.location || comp.venue || '',
+            eventStartDate: comp.date || comp.event_start_date || '',
+            eventEndDate: comp.event_end_date || comp.date || '',
+            registrationStartDate: comp.registration_start_date || '',
+            registrationEndDate: comp.registration_end_date || '',
+            participationType: comp.participation_type || 'individual',
+            participantLimit: comp.participant_limit || 'unlimited',
+            isParticipantListPublic: comp.is_participant_list_public || true,
+            usePreliminaries: comp.use_preliminaries || false,
+            prelimFormat: comp.prelim_format,
+            finalistCount: comp.finalist_count,
+            prizeDetails: comp.prize || comp.prize_details || '',
+            ageRequirement: comp.age_requirement || '',
+            regionRequirement: comp.region_requirement || '',
+            entryFee: comp.entry_fee || '',
+            audienceLimit: comp.audience_limit || 'unlimited',
+            audienceFee: comp.audience_fee || '',
+            dateMemo: comp.date_memo,
+            detailedDescription: comp.description || comp.detailed_description || '',
+            poster: comp.poster,
+            link: comp.link,
+            teamSize: comp.team_size,
+            isPrelimGroupTournament: comp.is_prelim_group_tournament || false,
+            participants: [],
+            videos: []
+          }))
+        }
+      }
+      console.log('⚠️ 목데이터 사용')
       return competitions
     }
 

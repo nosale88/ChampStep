@@ -33,21 +33,12 @@ function AppContent() {
       try {
         console.log('📊 Fetching data from services...');
         
-        // 타임아웃을 3초로 줄임
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Data loading timeout')), 3000)
-        );
-        
-        const dataPromise = Promise.all([
+        // 실제 데이터 로딩 (타임아웃 없이)
+        const [dancersData, competitionsData, crewsData] = await Promise.all([
           fetchDancers(),
           fetchCompetitions(),
           fetchCrews()
         ]);
-        
-        const [dancersData, competitionsData, crewsData] = await Promise.race([
-          dataPromise,
-          timeoutPromise
-        ]) as [any[], any[], any[]];
         
         console.log('✅ Data fetched successfully:', {
           dancers: dancersData.length,
@@ -55,17 +46,30 @@ function AppContent() {
           crews: crewsData.length
         });
         
-        setDancers(dancersData);
-        setCompetitions(competitionsData);
-        setCrews(crewsData);
+        // 실제 데이터가 있으면 사용
+        if (dancersData.length > 0 || competitionsData.length > 0 || crewsData.length > 0) {
+          console.log('🎯 Using real data from database');
+          setDancers(dancersData);
+          setCompetitions(competitionsData);
+          setCrews(crewsData);
+        } else {
+          console.log('⚠️ No real data found, using mock data');
+          const { dancers } = await import('./data/mockData');
+          const { competitions } = await import('./data/mockData');
+          const { crews } = await import('./data/mockData');
+          
+          setDancers(dancers);
+          setCompetitions(competitions);
+          setCrews(crews);
+        }
       } catch (error) {
         console.error('❌ Error loading data:', error);
-        // 타임아웃 시 목데이터 직접 로드
+        // 오류 시에만 목데이터 사용
+        console.log('🔄 Using mock data as fallback due to error');
         const { dancers } = await import('./data/mockData');
         const { competitions } = await import('./data/mockData');
         const { crews } = await import('./data/mockData');
         
-        console.log('🔄 Using mock data as fallback');
         setDancers(dancers);
         setCompetitions(competitions);
         setCrews(crews);
