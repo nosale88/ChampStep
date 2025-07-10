@@ -1,39 +1,53 @@
 import { supabase } from '../lib/supabase'
 import { Dancer } from '../types'
+import { dancers } from '../data/mockData'
 
 export async function fetchDancers(): Promise<Dancer[]> {
-  const { data, error } = await supabase
-    .from('dancers')
-    .select('*')
-    .order('rank', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from('dancers')
+      .select('*')
+      .order('rank', { ascending: true })
 
-  if (error) {
-    console.error('Error fetching dancers:', error)
-    throw error
+    if (error) {
+      console.error('Error fetching dancers from Supabase:', error)
+      // Supabase 오류 시 목데이터 사용
+      return dancers
+    }
+
+    // 데이터가 있으면 Supabase 데이터 사용
+    if (data && data.length > 0) {
+      return data.map(dancer => ({
+        id: dancer.id,
+        nickname: dancer.nickname,
+        name: dancer.name,
+        crew: dancer.crew,
+        genres: dancer.genres,
+        sns: dancer.sns || '',
+        totalPoints: dancer.total_points,
+        rank: dancer.rank,
+        avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
+        profileImage: dancer.profile_image,
+        backgroundImage: dancer.background_image,
+        bio: dancer.bio,
+        birthDate: dancer.birth_date,
+        phone: dancer.phone,
+        email: dancer.email,
+        instagramUrl: dancer.instagram_url,
+        youtubeUrl: dancer.youtube_url,
+        twitterUrl: dancer.twitter_url,
+        competitions: [], // Empty for now
+        videos: [], // Empty for now
+      }))
+    }
+
+    // 데이터가 없으면 목데이터 사용
+    return dancers
+  } catch (error) {
+    console.error('Error in fetchDancers:', error)
+    // 오류 발생 시 목데이터 사용
+    return dancers
   }
-
-  return data.map(dancer => ({
-    id: dancer.id,
-    nickname: dancer.nickname,
-    name: dancer.name,
-    crew: dancer.crew,
-    genres: dancer.genres,
-    sns: dancer.sns || '',
-    totalPoints: dancer.total_points,
-    rank: dancer.rank,
-    avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
-    profileImage: dancer.profile_image,
-    backgroundImage: dancer.background_image,
-    bio: dancer.bio,
-    birthDate: dancer.birth_date,
-    phone: dancer.phone,
-    email: dancer.email,
-    instagramUrl: dancer.instagram_url,
-    youtubeUrl: dancer.youtube_url,
-    twitterUrl: dancer.twitter_url,
-    competitions: [], // Empty for now
-    videos: [], // Empty for now
-  }))
 }
 
 export async function fetchDancerById(id: string): Promise<Dancer | null> {
