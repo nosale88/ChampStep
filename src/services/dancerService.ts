@@ -4,19 +4,26 @@ import { dancers } from '../data/mockData'
 
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
-    const { data, error } = await supabase
+    // 1초 타임아웃으로 빠르게 처리
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout')), 1000)
+    })
+
+    const supabasePromise = supabase
       .from('dancers')
       .select('*')
       .order('rank', { ascending: true })
 
+    const { data, error } = await Promise.race([supabasePromise, timeoutPromise])
+
     if (error) {
       console.error('Error fetching dancers from Supabase:', error)
-      // Supabase 오류 시 목데이터 사용
       return dancers
     }
 
-    // 데이터가 있으면 Supabase 데이터 사용
+    // 실제 데이터가 있으면 사용
     if (data && data.length > 0) {
+      console.log(`✅ Supabase에서 ${data.length}명의 댄서 데이터를 가져왔습니다`)
       return data.map(dancer => ({
         id: dancer.id,
         nickname: dancer.nickname,
@@ -36,53 +43,58 @@ export async function fetchDancers(): Promise<Dancer[]> {
         instagramUrl: dancer.instagram_url,
         youtubeUrl: dancer.youtube_url,
         twitterUrl: dancer.twitter_url,
-        competitions: [], // Empty for now
-        videos: [], // Empty for now
+        competitions: [],
+        videos: [],
       }))
     }
 
-    // 데이터가 없으면 목데이터 사용
+    console.log('⚠️ Supabase에서 댄서 데이터를 찾을 수 없어 목데이터를 사용합니다')
     return dancers
   } catch (error) {
     console.error('Error in fetchDancers:', error)
-    // 오류 발생 시 목데이터 사용
+    console.log('⚠️ 오류 발생으로 목데이터를 사용합니다')
     return dancers
   }
 }
 
 export async function fetchDancerById(id: string): Promise<Dancer | null> {
-  const { data, error } = await supabase
-    .from('dancers')
-    .select('*')
-    .eq('id', id)
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('dancers')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-  if (error) {
-    console.error('Error fetching dancer:', error)
-    return null
-  }
+    if (error || !data) {
+      console.error('Error fetching dancer by id:', error)
+      return dancers.find(d => d.id === id) || null
+    }
 
-  return {
-    id: data.id,
-    nickname: data.nickname,
-    name: data.name,
-    crew: data.crew,
-    genres: data.genres,
-    sns: data.sns || '',
-    totalPoints: data.total_points,
-    rank: data.rank,
-    avatar: data.avatar || `https://i.pravatar.cc/150?u=${data.id}`,
-    profileImage: data.profile_image,
-    backgroundImage: data.background_image,
-    bio: data.bio,
-    birthDate: data.birth_date,
-    phone: data.phone,
-    email: data.email,
-    instagramUrl: data.instagram_url,
-    youtubeUrl: data.youtube_url,
-    twitterUrl: data.twitter_url,
-    competitions: [], // Empty for now
-    videos: [], // Empty for now
+    return {
+      id: data.id,
+      nickname: data.nickname,
+      name: data.name,
+      crew: data.crew,
+      genres: data.genres,
+      sns: data.sns || '',
+      totalPoints: data.total_points,
+      rank: data.rank,
+      avatar: data.avatar || `https://i.pravatar.cc/150?u=${data.id}`,
+      profileImage: data.profile_image,
+      backgroundImage: data.background_image,
+      bio: data.bio,
+      birthDate: data.birth_date,
+      phone: data.phone,
+      email: data.email,
+      instagramUrl: data.instagram_url,
+      youtubeUrl: data.youtube_url,
+      twitterUrl: data.twitter_url,
+      competitions: [],
+      videos: [],
+    }
+  } catch (error) {
+    console.error('Error in fetchDancerById:', error)
+    return dancers.find(d => d.id === id) || null
   }
 }
 

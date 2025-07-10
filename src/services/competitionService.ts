@@ -1,62 +1,69 @@
 import { supabase } from '../lib/supabase'
-import { Competition, Participant } from '../types'
+import { Competition } from '../types'
 import { competitions } from '../data/mockData'
 
 export async function fetchCompetitions(): Promise<Competition[]> {
   try {
-    const { data, error } = await supabase
+    // 1초 타임아웃으로 빠르게 처리
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout')), 1000)
+    })
+
+    const supabasePromise = supabase
       .from('competitions')
       .select('*')
-      .order('event_start_date', { ascending: false })
+      .order('date', { ascending: false })
+
+    const { data, error } = await Promise.race([supabasePromise, timeoutPromise])
 
     if (error) {
       console.error('Error fetching competitions from Supabase:', error)
-      // Supabase 오류 시 목데이터 사용
       return competitions
     }
 
-    // 데이터가 있으면 Supabase 데이터 사용
+    // 실제 데이터가 있으면 사용
     if (data && data.length > 0) {
+      console.log(`✅ Supabase에서 ${data.length}개의 대회 데이터를 가져왔습니다`)
       return data.map(comp => ({
         id: comp.id,
-        managerName: comp.manager_name,
-        managerContact: comp.manager_contact,
-        managerEmail: comp.manager_email,
-        eventName: comp.event_name,
-        genres: comp.genres,
-        venue: comp.venue,
-        eventStartDate: comp.event_start_date,
-        eventEndDate: comp.event_end_date,
-        registrationStartDate: comp.registration_start_date,
-        registrationEndDate: comp.registration_end_date,
-        participationType: comp.participation_type,
-        teamSize: comp.team_size,
-        participantLimit: comp.participant_limit,
-        isParticipantListPublic: comp.is_participant_list_public,
-        usePreliminaries: comp.use_preliminaries,
+        managerName: comp.manager_name || '',
+        managerContact: comp.manager_contact || '',
+        managerEmail: comp.manager_email || '',
+        eventName: comp.name || comp.event_name || '',
+        genres: comp.genres || [],
+        venue: comp.location || comp.venue || '',
+        eventStartDate: comp.date || comp.event_start_date || '',
+        eventEndDate: comp.event_end_date || comp.date || '',
+        registrationStartDate: comp.registration_start_date || '',
+        registrationEndDate: comp.registration_end_date || '',
+        participationType: comp.participation_type || 'individual',
+        participantLimit: comp.participant_limit || 'unlimited',
+        isParticipantListPublic: comp.is_participant_list_public || true,
+        usePreliminaries: comp.use_preliminaries || false,
         prelimFormat: comp.prelim_format,
-        isPrelimGroupTournament: comp.is_prelim_group_tournament,
         finalistCount: comp.finalist_count,
-        prizeDetails: comp.prize_details,
-        ageRequirement: comp.age_requirement,
-        regionRequirement: comp.region_requirement,
-        entryFee: comp.entry_fee,
-        audienceLimit: comp.audience_limit,
-        audienceFee: comp.audience_fee,
+        prizeDetails: comp.prize || comp.prize_details || '',
+        ageRequirement: comp.age_requirement || '',
+        regionRequirement: comp.region_requirement || '',
+        entryFee: comp.entry_fee || '',
+        audienceLimit: comp.audience_limit || 'unlimited',
+        audienceFee: comp.audience_fee || '',
         dateMemo: comp.date_memo,
-        detailedDescription: comp.detailed_description,
+        detailedDescription: comp.description || comp.detailed_description || '',
         poster: comp.poster,
         link: comp.link,
+        teamSize: comp.team_size,
+        isPrelimGroupTournament: comp.is_prelim_group_tournament || false,
         participants: [],
         videos: []
       }))
     }
 
-    // 데이터가 없으면 목데이터 사용
+    console.log('⚠️ Supabase에서 대회 데이터를 찾을 수 없어 목데이터를 사용합니다')
     return competitions
   } catch (error) {
     console.error('Error in fetchCompetitions:', error)
-    // 오류 발생 시 목데이터 사용
+    console.log('⚠️ 오류 발생으로 목데이터를 사용합니다')
     return competitions
   }
 }
@@ -65,89 +72,51 @@ export async function fetchCompetitionById(id: string): Promise<Competition | nu
   try {
     const { data, error } = await supabase
       .from('competitions')
-      .select(`
-        *,
-        competition_participants (
-          id,
-          dancer_id,
-          position,
-          points,
-          status,
-          dancers (
-            id,
-            nickname,
-            name,
-            avatar,
-            rank,
-            total_points
-          )
-        ),
-        competition_videos (
-          id,
-          title,
-          url,
-          thumbnail,
-          type,
-          upload_date
-        )
-      `)
+      .select('*')
       .eq('id', id)
-      .single();
+      .single()
 
-    if (error) throw error;
-    if (!data) return null;
+    if (error || !data) {
+      console.error('Error fetching competition by id:', error)
+      return competitions.find(c => c.id === id) || null
+    }
 
     return {
       id: data.id,
-      managerName: data.manager_name,
+      managerName: data.manager_name || '',
       managerContact: data.manager_contact || '',
       managerEmail: data.manager_email || '',
-      eventName: data.event_name,
+      eventName: data.name || data.event_name || '',
       genres: data.genres || [],
-      venue: data.venue || '',
-      eventStartDate: data.event_start_date,
-      eventEndDate: data.event_end_date,
+      venue: data.location || data.venue || '',
+      eventStartDate: data.date || data.event_start_date || '',
+      eventEndDate: data.event_end_date || data.date || '',
       registrationStartDate: data.registration_start_date || '',
       registrationEndDate: data.registration_end_date || '',
       participationType: data.participation_type || 'individual',
       participantLimit: data.participant_limit || 'unlimited',
-      isParticipantListPublic: data.is_participant_list_public,
-      usePreliminaries: data.use_preliminaries,
+      isParticipantListPublic: data.is_participant_list_public || true,
+      usePreliminaries: data.use_preliminaries || false,
       prelimFormat: data.prelim_format,
       finalistCount: data.finalist_count,
-      prizeDetails: data.prize_details || '',
+      prizeDetails: data.prize || data.prize_details || '',
       ageRequirement: data.age_requirement || '',
       regionRequirement: data.region_requirement || '',
       entryFee: data.entry_fee || '',
       audienceLimit: data.audience_limit || 'unlimited',
       audienceFee: data.audience_fee || '',
       dateMemo: data.date_memo,
-      detailedDescription: data.detailed_description || '',
+      detailedDescription: data.description || data.detailed_description || '',
       poster: data.poster,
       link: data.link,
       teamSize: data.team_size,
-      isPrelimGroupTournament: data.is_prelim_group_tournament,
-      participants: (data.competition_participants || []).map((p: any) => ({
-        dancerId: p.dancer_id,
-        dancer: p.dancers ? {
-          id: p.dancers.id,
-          nickname: p.dancers.nickname,
-          name: p.dancers.name,
-          avatar: p.dancers.avatar,
-          rank: p.dancers.rank,
-          totalPoints: p.dancers.total_points,
-          genres: [],
-          competitions: [],
-          videos: []
-        } : null,
-        position: p.position || 0,
-        points: p.points || 0
-      })).filter((p: any) => p.dancer),
-      videos: data.competition_videos || []
-    };
+      isPrelimGroupTournament: data.is_prelim_group_tournament || false,
+      participants: [],
+      videos: []
+    }
   } catch (error) {
-    console.error('Error fetching competition:', error);
-    return null;
+    console.error('Error in fetchCompetitionById:', error)
+    return competitions.find(c => c.id === id) || null
   }
 }
 
