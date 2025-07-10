@@ -85,6 +85,7 @@ export interface Crew {
   avatar?: string;
   backgroundImage?: string; // 크루 카드에 사용될 배경 이미지
   createdAt: string;
+  member_count?: number; // 크루 생성 시 사용
 }
 
 export interface Dancer {

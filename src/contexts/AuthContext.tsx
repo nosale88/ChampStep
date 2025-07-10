@@ -108,9 +108,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🔍 Fetching dancer profile for user:', userId);
       setLoading(true); // 프로필 로딩 시작
       
-      // 3초 타임아웃 설정
+      // 1초 타임아웃으로 줄임 (빠른 응답)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000);
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 1000);
       });
       
       const fetchPromise = supabase
@@ -123,15 +123,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ Error fetching dancer profile:', error);
-        // 프로필이 없을 경우 기본 프로필 생성
+        // 프로필이 없을 경우 - 로딩 완료하고 온보딩으로 이동
         if (error.code === 'PGRST116') {
-          console.log('🔄 Creating default profile for user');
-          await createDefaultProfile(userId);
+          console.log('🔄 No profile found - will show onboarding');
+          setDancer(null);
+          setLoading(false);
+          return;
         } else if (error.message === 'Profile fetch timeout') {
-          console.log('⏰ Profile fetch timeout - creating default profile');
-          await createDefaultProfile(userId);
+          console.log('⏰ Profile fetch timeout - will show onboarding');
+          setDancer(null);
+          setLoading(false);
+          return;
         }
-        setLoading(false); // 에러 시에도 로딩 완료
+        setDancer(null);
+        setLoading(false);
         return;
       }
       
@@ -154,15 +159,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           birthDate: data.birth_date,
           bio: data.bio
         });
+      } else {
+        console.log('🔄 No profile data - will show onboarding');
+        setDancer(null);
       }
       
       setLoading(false); // 성공 시 로딩 완료
     } catch (error) {
       console.error('❌ Error fetching dancer profile:', error);
-      // 타임아웃이나 기타 오류 시 기본 프로필 생성
-      console.log('🔄 Creating default profile due to error');
-      await createDefaultProfile(userId);
-      setLoading(false); // 예외 발생 시에도 로딩 완료
+      // 타임아웃이나 기타 오류 시 온보딩으로 이동
+      console.log('🔄 Error occurred - will show onboarding');
+      setDancer(null);
+      setLoading(false);
     }
   };
 

@@ -148,6 +148,8 @@ const ProfileOnboarding: React.FC = () => {
 
     try {
       setLoading(true);
+      console.log('🔄 Creating profile with data:', formData);
+      
       const { error } = await updateProfile({
         id: user.id,
         name: formData.name,
@@ -166,13 +168,17 @@ const ProfileOnboarding: React.FC = () => {
         videos: []
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Profile creation error:', error);
+        throw error;
+      }
       
-      // 성공 시 페이지 새로고침으로 프로필 다시 로드
-      window.location.reload();
+      console.log('✅ Profile created successfully');
+      // 성공 시 즉시 리다이렉트 (페이지 새로고침 없이)
+      window.location.href = '/profile';
     } catch (error) {
       console.error('Error creating profile:', error);
-      alert('프로필 생성 중 오류가 발생했습니다.');
+      alert('프로필 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }

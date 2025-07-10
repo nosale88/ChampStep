@@ -117,6 +117,7 @@ const ProfilePage: React.FC = () => {
 
   // 로딩 중일 때
   if (loading) {
+    console.log('🔄 ProfilePage: Loading state - user:', !!user, 'dancer:', !!dancer);
     return (
       <div className={`min-h-screen flex items-center justify-center ${
         isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
@@ -132,6 +133,7 @@ const ProfilePage: React.FC = () => {
 
   // 인증되지 않았을 때
   if (!user) {
+    console.log('🔄 ProfilePage: No user - redirecting to login');
     return (
       <div className={`min-h-screen flex items-center justify-center ${
         isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
@@ -147,8 +149,11 @@ const ProfilePage: React.FC = () => {
 
   // 댄서 프로필이 없을 때 (로그인은 되었지만 프로필이 아직 생성되지 않음)
   if (!dancer) {
+    console.log('🔄 ProfilePage: No dancer profile - showing onboarding');
     return <ProfileOnboarding />;
   }
+
+  console.log('✅ ProfilePage: Rendering profile for dancer:', dancer.nickname);
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} py-4 sm:py-8`}>
