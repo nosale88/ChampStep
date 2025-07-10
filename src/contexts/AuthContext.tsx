@@ -25,28 +25,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🚀 AuthContext initializing...');
+    
     // 초기 세션 확인
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('📋 Initial session check:', session ? 'Found' : 'None');
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        console.log('👤 User found, fetching profile for:', session.user.id);
         fetchDancerProfile(session.user.id);
+      } else {
+        console.log('❌ No user session, setting loading to false');
+        setLoading(false); // 세션이 없으면 로딩 완료
       }
+    }).catch(error => {
+      console.error('❌ Error getting initial session:', error);
       setLoading(false);
     });
 
     // 인증 상태 변경 리스너
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed:', event, session ? 'with session' : 'without session');
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        console.log('👤 User authenticated, fetching profile for:', session.user.id);
         // 소셜 로그인 시 프로필이 없으면 생성
         if (event === 'SIGNED_IN' && session.user.app_metadata.provider !== 'email') {
+          console.log('🔑 Social login detected, creating profile if needed');
           await createSocialProfile(session.user);
         }
         fetchDancerProfile(session.user.id);
       } else {
+        console.log('🚪 User signed out, clearing dancer profile');
         setDancer(null);
+        setLoading(false); // 로그아웃 시 로딩 완료
       }
     });
 
@@ -92,11 +106,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchDancerProfile = async (userId: string) => {
     try {
       console.log('🔍 Fetching dancer profile for user:', userId);
-      const { data, error } = await supabase
+      setLoading(true); // 프로필 로딩 시작
+      
+      // 3초 타임아웃 설정
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000);
+      });
+      
+      const fetchPromise = supabase
         .from('dancers')
         .select('*')
         .eq('user_id', userId)
         .single();
+      
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('❌ Error fetching dancer profile:', error);
@@ -104,7 +127,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error.code === 'PGRST116') {
           console.log('🔄 Creating default profile for user');
           await createDefaultProfile(userId);
+        } else if (error.message === 'Profile fetch timeout') {
+          console.log('⏰ Profile fetch timeout - creating default profile');
+          await createDefaultProfile(userId);
         }
+        setLoading(false); // 에러 시에도 로딩 완료
         return;
       }
       
@@ -128,8 +155,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           bio: data.bio
         });
       }
+      
+      setLoading(false); // 성공 시 로딩 완료
     } catch (error) {
       console.error('❌ Error fetching dancer profile:', error);
+      // 타임아웃이나 기타 오류 시 기본 프로필 생성
+      console.log('🔄 Creating default profile due to error');
+      await createDefaultProfile(userId);
+      setLoading(false); // 예외 발생 시에도 로딩 완료
     }
   };
 
@@ -153,7 +186,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Error creating default profile:', error);
       } else {
         console.log('✅ Default profile created');
-        fetchDancerProfile(userId);
+        // 재귀 호출을 피하기 위해 직접 프로필 데이터 설정
+        setDancer({
+          id: userId,
+          nickname: user.data.user.email?.split('@')[0] || 'User',
+          name: user.data.user.email?.split('@')[0] || 'User',
+          crew: '',
+          genres: [],
+          sns: '',
+          totalPoints: 0,
+          rank: 999,
+          avatar: `https://i.pravatar.cc/150?u=${userId}`,
+          competitions: [],
+          videos: [],
+          email: user.data.user.email,
+          phone: '',
+          birthDate: '',
+          bio: ''
+        });
       }
     } catch (error) {
       console.error('Error in createDefaultProfile:', error);

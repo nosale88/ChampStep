@@ -34,6 +34,19 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
   useEffect(() => {
     if (propSelectedCrew) {
       setSelectedCrew(propSelectedCrew);
+      
+      // 스케줄도 불러오기
+      const loadSchedules = async () => {
+        try {
+          const { getCrewSchedules } = await import('../services/crewService');
+          const schedules = await getCrewSchedules(propSelectedCrew.id);
+          setSelectedCrew(prevCrew => prevCrew ? { ...prevCrew, schedules } : null);
+        } catch (error) {
+          console.error('Error loading crew schedules:', error);
+        }
+      };
+      
+      loadSchedules();
     }
   }, [propSelectedCrew]);
   const [newSchedule, setNewSchedule] = useState<Omit<CrewSchedule, 'id' | 'createdAt'>>({
@@ -47,43 +60,62 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
     createdBy: 'current_user' // 실제로는 로그인한 사용자 ID
   });
 
-  const handleCrewClick = (crew: Crew) => {
+  const handleCrewClick = async (crew: Crew) => {
     setSelectedCrew(crew);
+    
+    // 선택된 크루의 스케줄 불러오기
+    try {
+      const { getCrewSchedules } = await import('../services/crewService');
+      const schedules = await getCrewSchedules(crew.id);
+      setSelectedCrew(prevCrew => prevCrew ? { ...prevCrew, schedules } : null);
+    } catch (error) {
+      console.error('Error loading crew schedules:', error);
+    }
   };
 
   const handleBackToList = () => {
     setSelectedCrew(null);
   };
 
-  const handleAddSchedule = () => {
+  const handleAddSchedule = async () => {
     if (selectedCrew && newSchedule.title && newSchedule.date && newSchedule.time) {
-      // 실제 구현에서는 API 호출
-      const schedule: CrewSchedule = {
-        ...newSchedule,
-        id: `schedule_${Date.now()}`,
-        createdAt: new Date().toISOString()
-      };
-      
-      // 임시로 선택된 크루의 스케줄에 추가
-      const updatedCrew = {
-        ...selectedCrew,
-        schedules: [...selectedCrew.schedules, schedule]
-      };
-      setSelectedCrew(updatedCrew);
-      
-      // 폼 초기화
-      setNewSchedule({
-        title: '',
-        description: '',
-        date: '',
-        time: '',
-        location: '',
-        type: 'practice',
-        isPublic: true,
-        createdBy: 'current_user'
-      });
-      setSelectedDate(''); // 선택된 날짜 초기화
-      setShowScheduleModal(false);
+      try {
+        // 실제 API 호출로 스케줄 추가
+        const { addScheduleToCrew } = await import('../services/crewService');
+        const addedSchedule = await addScheduleToCrew(selectedCrew.id, newSchedule);
+        
+        if (addedSchedule) {
+          // 성공적으로 추가되면 로컬 상태 업데이트
+          const updatedCrew = {
+            ...selectedCrew,
+            schedules: [...selectedCrew.schedules, addedSchedule]
+          };
+          setSelectedCrew(updatedCrew);
+          
+          // 폼 초기화
+          setNewSchedule({
+            title: '',
+            description: '',
+            date: '',
+            time: '',
+            location: '',
+            type: 'practice',
+            isPublic: true,
+            createdBy: 'current_user'
+          });
+          setSelectedDate('');
+          setShowScheduleModal(false);
+          
+          alert('스케줄이 성공적으로 추가되었습니다!');
+        } else {
+          throw new Error('스케줄 추가에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('Error adding schedule:', error);
+        alert('스케줄 추가 중 오류가 발생했습니다.');
+      }
+    } else {
+      alert('제목, 날짜, 시간을 모두 입력해주세요.');
     }
   };
 

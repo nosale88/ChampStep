@@ -2,6 +2,47 @@ import { supabase } from '../lib/supabase'
 import { Crew, Dancer, CrewSchedule } from '../types'
 import { crews } from '../data/mockData'
 
+// 문자열 유사도 계산 함수 (레벤슈타인 거리 기반)
+function calculateSimilarity(str1: string, str2: string): number {
+  const s1 = str1.toLowerCase().trim()
+  const s2 = str2.toLowerCase().trim()
+  
+  if (s1 === s2) return 1.0
+  
+  const maxLen = Math.max(s1.length, s2.length)
+  if (maxLen === 0) return 1.0
+  
+  return (maxLen - levenshteinDistance(s1, s2)) / maxLen
+}
+
+function levenshteinDistance(str1: string, str2: string): number {
+  const matrix = []
+  
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i]
+  }
+  
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j
+  }
+  
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1]
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        )
+      }
+    }
+  }
+  
+  return matrix[str2.length][str1.length]
+}
+
 export async function fetchCrews(): Promise<Crew[]> {
   try {
     // 1초 타임아웃으로 빠르게 처리
@@ -38,13 +79,15 @@ export async function fetchCrews(): Promise<Crew[]> {
     if (crewsData && crewsData.length > 0) {
       console.log(`✅ Supabase에서 ${crewsData.length}개의 크루 데이터를 가져왔습니다`)
       
-      // 댄서 데이터를 크루별로 그룹화
+      // 댄서 데이터를 크루별로 그룹화 (원본 크루명 유지)
       const dancersByCrewName = (dancersData || []).reduce((acc, dancer) => {
         if (dancer.crew) {
-          if (!acc[dancer.crew]) {
-            acc[dancer.crew] = []
+          const crewName = dancer.crew.trim()
+          
+          if (!acc[crewName]) {
+            acc[crewName] = []
           }
-          acc[dancer.crew].push({
+          acc[crewName].push({
             id: dancer.id,
             nickname: dancer.nickname,
             rank: dancer.rank,
@@ -61,16 +104,61 @@ export async function fetchCrews(): Promise<Crew[]> {
         return acc
       }, {} as Record<string, Dancer[]>)
 
-      return crewsData.map(crew => ({
-        id: crew.id,
-        name: crew.name,
-        genre: 'Hip-hop', // 기본값 (crews 테이블에 genre 컬럼이 없으므로)
-        introduction: crew.description || `${crew.name} 크루입니다.`,
-        members: dancersByCrewName[crew.name] || [],
-        schedules: [],
-        backgroundImage: undefined,
-        createdAt: crew.created_at
-      }))
+      // 디버깅: 댄서 데이터 확인
+      console.log('🔍 댄서별 크루 정보:')
+      Object.keys(dancersByCrewName).forEach(crewName => {
+        console.log(`  ${crewName}: ${dancersByCrewName[crewName].length}명`)
+      })
+
+      return crewsData.map(crew => {
+        // 정확한 매칭 시도
+        let matchedDancers = dancersByCrewName[crew.name] || []
+        
+        // 정확한 매칭이 안 되면 유사도 기반 매칭 시도
+        if (matchedDancers.length === 0) {
+          const dancerCrewNames = Object.keys(dancersByCrewName)
+          let bestMatch = ''
+          let bestSimilarity = 0
+          
+          for (const dancerCrewName of dancerCrewNames) {
+            const similarity = calculateSimilarity(crew.name, dancerCrewName)
+            if (similarity > bestSimilarity && similarity > 0.7) { // 70% 이상 유사도
+              bestSimilarity = similarity
+              bestMatch = dancerCrewName
+            }
+          }
+          
+          if (bestMatch) {
+            matchedDancers = dancersByCrewName[bestMatch]
+            console.log(`🔄 ${crew.name} -> ${bestMatch} (유사도: ${(bestSimilarity * 100).toFixed(1)}%)`)
+          }
+        }
+        
+        // Rivers Crew 특별 디버깅
+        if (crew.name.toLowerCase().includes('rivers')) {
+          console.log(`🔍 ${crew.name} 디버깅:`)
+          console.log(`  - DB에서 member_count: ${crew.member_count}`)
+          console.log(`  - 실제 매칭된 댄서 수: ${matchedDancers.length}`)
+          console.log(`  - 매칭된 댄서들:`, matchedDancers.map((d: Dancer) => d.nickname))
+          
+          // 가능한 매칭 후보들 확인
+          const possibleMatches = Object.keys(dancersByCrewName).filter(name => 
+            name.toLowerCase().includes('rivers') || name.toLowerCase().includes('river')
+          )
+          console.log(`  - 가능한 매칭 후보들:`, possibleMatches)
+        }
+
+        return {
+          id: crew.id,
+          name: crew.name,
+          genre: 'Hip-hop', // 기본값 (crews 테이블에 genre 컬럼이 없으므로)
+          introduction: crew.description || `${crew.name} 크루입니다.`,
+          members: matchedDancers,
+          schedules: [], // 스케줄은 별도로 불러오기
+          backgroundImage: undefined,
+          createdAt: crew.created_at
+        }
+      })
     }
 
     // 타임아웃이나 데이터가 없으면 목데이터 사용
