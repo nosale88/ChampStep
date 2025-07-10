@@ -13,7 +13,7 @@ export async function fetchCrews(): Promise<Crew[]> {
     const crewsPromise = supabase
       .from('crews')
       .select('*')
-      .order('name', { ascending: true })
+      .order('member_count', { ascending: false })
 
     const dancersPromise = supabase
       .from('dancers')
@@ -30,7 +30,7 @@ export async function fetchCrews(): Promise<Crew[]> {
     const { data: dancersData, error: dancersError } = dancersResult
 
     if (crewsError || dancersError) {
-      console.error('Error fetching crews or dancers:', crewsError || dancersError)
+      console.error('Error fetching crews/dancers from Supabase:', crewsError || dancersError)
       return crews
     }
 
@@ -38,111 +38,47 @@ export async function fetchCrews(): Promise<Crew[]> {
     if (crewsData && crewsData.length > 0) {
       console.log(`✅ Supabase에서 ${crewsData.length}개의 크루 데이터를 가져왔습니다`)
       
-      // 크루별로 멤버 매칭
-      const crewsWithMembers = crewsData.map(crew => {
-        const members = dancersData
-          ?.filter(dancer => dancer.crew === crew.name)
-          .map(dancer => ({
+      // 댄서 데이터를 크루별로 그룹화
+      const dancersByCrewName = (dancersData || []).reduce((acc, dancer) => {
+        if (dancer.crew) {
+          if (!acc[dancer.crew]) {
+            acc[dancer.crew] = []
+          }
+          acc[dancer.crew].push({
             id: dancer.id,
             nickname: dancer.nickname,
-            name: dancer.name,
-            crew: dancer.crew,
-            genres: dancer.genres,
-            sns: dancer.sns || '',
-            totalPoints: dancer.total_points,
             rank: dancer.rank,
-            avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
+            totalPoints: dancer.total_points || 0,
+            genres: dancer.genres || [],
             profileImage: dancer.profile_image,
-            backgroundImage: dancer.background_image,
-            bio: dancer.bio,
-            birthDate: dancer.birth_date,
-            phone: dancer.phone,
-            email: dancer.email,
-            instagramUrl: dancer.instagram_url,
-            youtubeUrl: dancer.youtube_url,
-            twitterUrl: dancer.twitter_url,
-            competitions: [],
-            videos: [],
-          })) || []
-
-        return {
-          id: crew.id,
-          name: crew.name,
-          genre: crew.genre,
-          introduction: crew.introduction,
-          members,
-          schedules: [],
-          backgroundImage: crew.background_image,
-          createdAt: crew.created_at
-        }
-      })
-
-      return crewsWithMembers
-    }
-
-    // 데이터가 없으면 댄서 데이터에서 크루 정보 추출
-    if (dancersData && dancersData.length > 0) {
-      console.log('⚠️ 크루 테이블에서 데이터를 찾을 수 없어 댄서 데이터에서 크루 정보를 추출합니다')
-      
-      // 댄서 데이터에서 고유한 크루 이름 추출
-      const crewNames = [...new Set(dancersData.map(d => d.crew).filter(Boolean))]
-      
-      const crewsFromDancers = crewNames.map((crewName, index) => {
-        const members = dancersData
-          .filter(dancer => dancer.crew === crewName)
-          .map(dancer => ({
-            id: dancer.id,
-            nickname: dancer.nickname,
-            name: dancer.name,
             crew: dancer.crew,
-            genres: dancer.genres,
-            sns: dancer.sns || '',
-            totalPoints: dancer.total_points,
-            rank: dancer.rank,
-            avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
-            profileImage: dancer.profile_image,
-            backgroundImage: dancer.background_image,
-            bio: dancer.bio,
-            birthDate: dancer.birth_date,
-            phone: dancer.phone,
-            email: dancer.email,
-            instagramUrl: dancer.instagram_url,
-            youtubeUrl: dancer.youtube_url,
-            twitterUrl: dancer.twitter_url,
-            competitions: [],
-            videos: [],
-          }))
-
-        // 크루의 주요 장르 추출 (멤버들의 장르 중 가장 많은 것)
-        const genreCounts = members.reduce((acc, member) => {
-          member.genres.forEach((genre: string) => {
-            acc[genre] = (acc[genre] || 0) + 1
+            bio: dancer.bio || '',
+            achievements: dancer.achievements || [],
+            socialLinks: dancer.social_links || {},
+            createdAt: dancer.created_at
           })
-          return acc
-        }, {} as Record<string, number>)
-        
-        const mainGenre = Object.entries(genreCounts).sort(([,a], [,b]) => b - a)[0]?.[0] || 'Hip-hop'
-
-        return {
-          id: `crew_${index + 1}`,
-          name: crewName,
-          genre: mainGenre,
-          introduction: `${crewName} 크루입니다. ${members.length}명의 멤버가 활동하고 있습니다.`,
-          members,
-          schedules: [],
-          backgroundImage: undefined,
-          createdAt: new Date().toISOString()
         }
-      })
+        return acc
+      }, {} as Record<string, Dancer[]>)
 
-      return crewsFromDancers
+      return crewsData.map(crew => ({
+        id: crew.id,
+        name: crew.name,
+        genre: 'Hip-hop', // 기본값 (crews 테이블에 genre 컬럼이 없으므로)
+        introduction: crew.description || `${crew.name} 크루입니다.`,
+        members: dancersByCrewName[crew.name] || [],
+        schedules: [],
+        backgroundImage: undefined,
+        createdAt: crew.created_at
+      }))
     }
 
-    console.log('⚠️ Supabase에서 크루 및 댄서 데이터를 찾을 수 없어 목데이터를 사용합니다')
+    // 타임아웃이나 데이터가 없으면 목데이터 사용
+    console.log('⚠️ Supabase 타임아웃 또는 데이터 없음 - 목데이터 사용')
     return crews
+
   } catch (error) {
     console.error('Error in fetchCrews:', error)
-    console.log('⚠️ 오류 발생으로 목데이터를 사용합니다')
     return crews
   }
 }
