@@ -29,18 +29,43 @@ function AppContent() {
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('🚀 Starting data load...');
       try {
-        const [dancersData, competitionsData, crewsData] = await Promise.all([
+        console.log('📊 Fetching data from services...');
+        
+        // 타임아웃 추가 (10초)
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Data loading timeout')), 10000)
+        );
+        
+        const dataPromise = Promise.all([
           fetchDancers(),
           fetchCompetitions(),
           fetchCrews()
         ]);
+        
+        const [dancersData, competitionsData, crewsData] = await Promise.race([
+          dataPromise,
+          timeoutPromise
+        ]) as [any[], any[], any[]];
+        
+        console.log('✅ Data fetched successfully:', {
+          dancers: dancersData.length,
+          competitions: competitionsData.length,
+          crews: crewsData.length
+        });
+        
         setDancers(dancersData);
         setCompetitions(competitionsData);
         setCrews(crewsData);
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('❌ Error loading data:', error);
+        // 오류 발생 시에도 빈 배열로 설정하여 앱이 계속 작동하도록 함
+        setDancers([]);
+        setCompetitions([]);
+        setCrews([]);
       } finally {
+        console.log('🏁 Data loading completed, setting loading to false');
         setLoading(false);
       }
     };
