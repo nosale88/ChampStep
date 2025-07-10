@@ -237,16 +237,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     console.log('🚪 Signing out...');
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      // 상태 초기화
+      // 먼저 로컬 상태를 즉시 초기화
       setUser(null);
       setSession(null);
       setDancer(null);
+      
+      // Supabase 로그아웃 실행
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('❌ Supabase signOut error:', error);
+        // 에러가 있어도 로컬 상태는 이미 초기화됨
+      }
+      
+      // 브라우저 캐시 강제 정리
+      if (typeof window !== 'undefined') {
+        // 로컬 스토리지에서 Supabase 관련 데이터 제거
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('supabase.') || key.startsWith('sb-')) {
+            localStorage.removeItem(key);
+          }
+        });
+        
+        // 세션 스토리지도 정리
+        Object.keys(sessionStorage).forEach(key => {
+          if (key.startsWith('supabase.') || key.startsWith('sb-')) {
+            sessionStorage.removeItem(key);
+          }
+        });
+      }
+      
       console.log('✅ Signed out successfully');
+      
+      // 페이지 새로고침으로 완전한 상태 초기화
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+      
     } catch (error) {
       console.error('❌ Error signing out:', error);
+      // 에러가 있어도 로컬 상태는 초기화하고 새로고침
+      setUser(null);
+      setSession(null);
+      setDancer(null);
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   };
 
