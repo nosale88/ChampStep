@@ -30,14 +30,35 @@ function AppContent() {
   useEffect(() => {
     const loadData = async () => {
       console.log('🚀 Starting data load...');
+      
+      // 최대 5초 로딩 제한
+      const maxLoadingTime = setTimeout(() => {
+        console.log('⏰ Max loading time reached, forcing completion');
+        setLoading(false);
+      }, 5000);
+      
       try {
         console.log('📊 Fetching data from services...');
         
-        // 실제 데이터 로딩 - 각 서비스별로 독립적으로 처리
+        // 우선순위별 로딩: 댄서 > 대회 > 크루 순서
+        // 댄서 데이터 먼저 로딩 (홈페이지에서 가장 중요)
+        const dancersPromise = fetchDancers();
+        
+        // 0.5초 후 대회 데이터 로딩 시작
+        const competitionsPromise = new Promise<Competition[]>(resolve => {
+          setTimeout(() => resolve(fetchCompetitions()), 500);
+        });
+        
+        // 1초 후 크루 데이터 로딩 시작
+        const crewsPromise = new Promise<Crew[]>(resolve => {
+          setTimeout(() => resolve(fetchCrews()), 1000);
+        });
+        
+        // 모든 요청을 병렬로 처리하되, 실패해도 계속 진행
         const [dancersData, competitionsData, crewsData] = await Promise.allSettled([
-          fetchDancers(),
-          fetchCompetitions(),
-          fetchCrews()
+          dancersPromise,
+          competitionsPromise,
+          crewsPromise
         ]);
         
         // 성공한 데이터만 추출
@@ -54,43 +75,54 @@ function AppContent() {
           crewsStatus: crewsData.status
         });
         
-        // 각 데이터 타입별로 개별 처리
+        // 댄서 데이터 처리 (최우선)
         if (dancers.length > 0) {
           console.log('🎯 Using real dancer data from database');
           setDancers(dancers);
         } else {
           console.log('⚠️ No dancer data found, using mock data');
           const { dancers: mockDancers } = await import('./data/mockData');
-          setDancers(mockDancers);
+          setDancers(mockDancers.slice(0, 50)); // 상위 50명만 사용
         }
         
+        // 대회 데이터 처리
         if (competitions.length > 0) {
           console.log('🎯 Using real competition data from database');
           setCompetitions(competitions);
         } else {
           console.log('⚠️ No competition data found, using mock data');
           const { competitions: mockCompetitions } = await import('./data/mockData');
-          setCompetitions(mockCompetitions);
+          setCompetitions(mockCompetitions.slice(0, 10)); // 최근 10개만 사용
         }
         
+        // 크루 데이터 처리
         if (crews.length > 0) {
           console.log('🎯 Using real crew data from database');
           setCrews(crews);
         } else {
           console.log('⚠️ No crew data found, using mock data');
           const { crews: mockCrews } = await import('./data/mockData');
-          setCrews(mockCrews);
+          setCrews(mockCrews.slice(0, 20)); // 상위 20개만 사용
         }
         
       } catch (error) {
         console.error('❌ Critical error loading data:', error);
-        // 완전한 오류 시에만 목데이터 사용
-        console.log('🔄 Using mock data as complete fallback');
-        const mockData = await import('./data/mockData');
-        setDancers(mockData.dancers);
-        setCompetitions(mockData.competitions);
-        setCrews(mockData.crews);
+        // 완전한 오류 시 최소한의 목데이터 사용
+        console.log('🔄 Using minimal mock data as complete fallback');
+        try {
+          const mockData = await import('./data/mockData');
+          setDancers(mockData.dancers.slice(0, 20));
+          setCompetitions(mockData.competitions.slice(0, 5));
+          setCrews(mockData.crews.slice(0, 10));
+        } catch (mockError) {
+          console.error('❌ Even mock data failed:', mockError);
+          // 완전 실패 시 빈 배열
+          setDancers([]);
+          setCompetitions([]);
+          setCrews([]);
+        }
       } finally {
+        clearTimeout(maxLoadingTime);
         console.log('🏁 Data loading completed, setting loading to false');
         setLoading(false);
       }

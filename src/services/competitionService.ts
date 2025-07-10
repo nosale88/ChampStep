@@ -6,69 +6,81 @@ export async function fetchCompetitions(): Promise<Competition[]> {
   try {
     console.log('🔍 Fetching competitions from Supabase...');
     
-    // 배포 환경에서는 10초 타임아웃 (더 긴 시간 필요)
+    // 3초 타임아웃으로 줄여서 빠른 응답
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 10000)
+      setTimeout(() => reject(new Error('Timeout')), 3000)
     })
 
     const supabasePromise = supabase
       .from('competitions')
       .select('*')
       .order('date', { ascending: false })
+      .limit(20) // 최근 20개만 가져와서 속도 개선
 
     const { data, error } = await Promise.race([supabasePromise, timeoutPromise])
 
     if (error) {
       console.error('❌ Error fetching competitions from Supabase:', error)
       
-      // 네트워크 오류가 아닌 경우 재시도
-      if (error.message !== 'Timeout' && !error.message.includes('fetch')) {
-        console.log('🔄 Retrying competition fetch...')
-        const { data: retryData, error: retryError } = await supabase
-          .from('competitions')
-          .select('*')
-          .order('date', { ascending: false })
-        
-        if (!retryError && retryData && retryData.length > 0) {
-          console.log(`✅ Retry successful: ${retryData.length} competitions`)
-          return retryData.map(comp => ({
-            id: comp.id,
-            managerName: comp.manager_name || '',
-            managerContact: comp.manager_contact || '',
-            managerEmail: comp.manager_email || '',
-            eventName: comp.name || comp.event_name || '',
-            genres: comp.genres || [],
-            venue: comp.location || comp.venue || '',
-            eventStartDate: comp.date || comp.event_start_date || '',
-            eventEndDate: comp.event_end_date || comp.date || '',
-            registrationStartDate: comp.registration_start_date || '',
-            registrationEndDate: comp.registration_end_date || '',
-            participationType: comp.participation_type || 'individual',
-            participantLimit: comp.participant_limit || 'unlimited',
-            isParticipantListPublic: comp.is_participant_list_public || true,
-            usePreliminaries: comp.use_preliminaries || false,
-            prelimFormat: comp.prelim_format,
-            finalistCount: comp.finalist_count,
-            prizeDetails: comp.prize || comp.prize_details || '',
-            ageRequirement: comp.age_requirement || '',
-            regionRequirement: comp.region_requirement || '',
-            entryFee: comp.entry_fee || '',
-            audienceLimit: comp.audience_limit || 'unlimited',
-            audienceFee: comp.audience_fee || '',
-            dateMemo: comp.date_memo,
-            detailedDescription: comp.description || comp.detailed_description || '',
-            poster: comp.poster,
-            link: comp.link,
-            teamSize: comp.team_size,
-            isPrelimGroupTournament: comp.is_prelim_group_tournament || false,
-            participants: [],
-            videos: []
-          }))
-        }
+      // 타임아웃 시 즉시 목데이터 사용
+      if (error.message === 'Timeout') {
+        console.log('⏰ Timeout - using mock data immediately')
+        return competitions
       }
       
-      // 타임아웃이나 네트워크 오류 시 목데이터 사용
-      console.log('⚠️ Using mock data due to network issues')
+      // 다른 오류는 빠른 재시도 (1초 타임아웃)
+      console.log('🔄 Quick retry...')
+      const quickRetryPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Quick retry timeout')), 1000)
+      })
+      
+      const retryPromise = supabase
+        .from('competitions')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(10) // 재시도 시 더 적은 데이터
+      
+      const { data: retryData, error: retryError } = await Promise.race([retryPromise, quickRetryPromise])
+      
+      if (!retryError && retryData && retryData.length > 0) {
+        console.log(`✅ Quick retry successful: ${retryData.length} competitions`)
+        return retryData.map(comp => ({
+          id: comp.id,
+          managerName: comp.manager_name || '',
+          managerContact: comp.manager_contact || '',
+          managerEmail: comp.manager_email || '',
+          eventName: comp.name || comp.event_name || '',
+          genres: comp.genres || [],
+          venue: comp.location || comp.venue || '',
+          eventStartDate: comp.date || comp.event_start_date || '',
+          eventEndDate: comp.event_end_date || comp.date || '',
+          registrationStartDate: comp.registration_start_date || '',
+          registrationEndDate: comp.registration_end_date || '',
+          participationType: comp.participation_type || 'individual',
+          participantLimit: comp.participant_limit || 'unlimited',
+          isParticipantListPublic: comp.is_participant_list_public || true,
+          usePreliminaries: comp.use_preliminaries || false,
+          prelimFormat: comp.prelim_format,
+          finalistCount: comp.finalist_count,
+          prizeDetails: comp.prize || comp.prize_details || '',
+          ageRequirement: comp.age_requirement || '',
+          regionRequirement: comp.region_requirement || '',
+          entryFee: comp.entry_fee || '',
+          audienceLimit: comp.audience_limit || 'unlimited',
+          audienceFee: comp.audience_fee || '',
+          dateMemo: comp.date_memo,
+          detailedDescription: comp.description || comp.detailed_description || '',
+          poster: comp.poster,
+          link: comp.link,
+          teamSize: comp.team_size,
+          isPrelimGroupTournament: comp.is_prelim_group_tournament || false,
+          participants: [],
+          videos: []
+        }))
+      }
+      
+      // 재시도도 실패하면 즉시 목데이터 사용
+      console.log('⚠️ Using mock data after quick retry failed')
       return competitions
     }
 
