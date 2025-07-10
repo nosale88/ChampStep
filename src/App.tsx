@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
 import RankingPage from './components/RankingPage';
 import CompetitionsPage from './components/CompetitionsPage';
 import CrewsPage from './components/CrewsPage';
+import ProfilePage from './components/ProfilePage';
 import DancerDetailModal from './components/DancerDetailModal';
 import CompetitionDetailModal from './components/CompetitionDetailModal';
 import { fetchDancers } from './services/dancerService';
@@ -14,7 +16,8 @@ import { Competition, Dancer, Crew, Message } from './types';
 
 function AppContent() {
   const { isDarkMode } = useTheme();
-  const [currentView, setCurrentView] = useState<'home' | 'ranking' | 'competitions' | 'crews'>('home');
+  const { dancer: authDancer } = useAuth();
+  const [currentView, setCurrentView] = useState<'home' | 'ranking' | 'competitions' | 'crews' | 'profile'>('home');
   const [selectedDancerId, setSelectedDancerId] = useState<string | null>(null);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
@@ -49,12 +52,12 @@ function AppContent() {
   const selectedCompetition = selectedCompetitionId ? competitions.find(c => c.id === selectedCompetitionId) : null;
 
   const handleDancerClick = (dancerId: string) => {
-    setSelectedCompetitionId(null); // Close competition modal if open
+    setSelectedCompetitionId(null);
     setSelectedDancerId(dancerId);
   };
 
   const handleCompetitionClick = (competitionId: string) => {
-    setSelectedDancerId(null); // Close dancer modal if open
+    setSelectedDancerId(null);
     setSelectedCompetitionId(competitionId);
   };
 
@@ -66,41 +69,46 @@ function AppContent() {
     setSelectedCompetitionId(null);
   };
 
-  const handleSelectCompetitionFromDancer = (competition: Competition) => {
-    closeDancerModal();
-    handleCompetitionClick(competition.id);
-  };
-
-  const handleSelectCrewFromDancer = (crew: Crew) => {
-    closeDancerModal();
-    setSelectedCrew(crew);
-    setCurrentView('crews');
+  const handleSendMessage = (message: Message) => {
+    setMessages(prev => [...prev, message]);
   };
 
   const handleSelectDancerFromCrew = (dancerId: string) => {
-    setSelectedCrew(null); // Close crew view
+    setSelectedCrew(null);
     handleDancerClick(dancerId);
   };
 
-  const handleSendMessage = async (message: Omit<Message, 'id' | 'createdAt'>) => {
-    // 실제로는 API 호출을 하겠지만, 지금은 로컬 상태로 관리
-    const newMessage: Message = {
-      ...message,
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date().toISOString()
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
+  const handleSelectCompetitionFromDancer = (competitionId: string) => {
+    setSelectedDancerId(null);
+    handleCompetitionClick(competitionId);
   };
+
+  const handleSelectCrewFromDancer = (crew: Crew) => {
+    setSelectedCrew(crew);
+    setSelectedDancerId(null);
+    setCurrentView('crews');
+  };
+
+  const handleUpdateDancer = (updatedDancer: Dancer) => {
+    setDancers(prev => prev.map(d => d.id === updatedDancer.id ? updatedDancer : d));
+  };
+
+  const handleUpdateCrew = (updatedCrew: Crew) => {
+    setCrews(prev => prev.map(c => c.id === updatedCrew.id ? updatedCrew : c));
+  };
+
+  const crewMessages = messages.filter(msg => 
+    msg.targetType === 'crew' && 
+    selectedCrew && 
+    msg.targetId === selectedCrew.id
+  );
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
-      }`}>
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p>Loading ChampStep...</p>
+          <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>로딩 중...</p>
         </div>
       </div>
     );
@@ -141,7 +149,13 @@ function AppContent() {
           messages={messages}
           onSendMessage={handleSendMessage}
           onDancerClick={handleSelectDancerFromCrew}
+          onUpdateCrew={handleUpdateCrew}
+          currentDancer={authDancer}
         />
+      )}
+
+      {currentView === 'profile' && (
+        <ProfilePage />
       )}
 
       {selectedDancer && (
@@ -155,6 +169,7 @@ function AppContent() {
           messages={messages}
           onSendMessage={handleSendMessage}
           onDancerClick={handleSelectDancerFromCrew}
+          onUpdateDancer={handleUpdateDancer}
         />
       )}
 
@@ -163,7 +178,7 @@ function AppContent() {
           competition={selectedCompetition}
           isOpen={!!selectedCompetition}
           onClose={closeCompetitionModal}
-          onDancerClick={handleDancerClick} // Added for future implementation
+          onDancerClick={handleDancerClick}
         />
       )}
     </div>
@@ -173,7 +188,9 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

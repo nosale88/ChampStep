@@ -113,63 +113,213 @@ const crewsList: Crew[] = [
     name: 'Rivers Crew',
     genre: 'B-boying',
     introduction: 'Legendary B-boy crew from Korea, known for their originality and powerful style.',
-    members: ['d1', 'd5'],
+    members: [],
+    schedules: [
+      {
+        id: 'schedule1',
+        title: '정기 연습',
+        description: '매주 화요일 정기 연습 시간입니다.',
+        date: '2024-12-17',
+        time: '19:00',
+        location: '홍대 스튜디오 A',
+        type: 'practice',
+        isPublic: true,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      },
+      {
+        id: 'schedule2',
+        title: '크루 미팅',
+        description: '연말 공연 준비 회의',
+        date: '2024-12-20',
+        time: '18:00',
+        location: '홍대 카페 B',
+        type: 'meeting',
+        isPublic: false,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      },
+      {
+        id: 'schedule3',
+        title: '연말 공연',
+        description: '2024 연말 스페셜 공연',
+        date: '2024-12-31',
+        time: '20:00',
+        location: '홍대 클럽 무브',
+        type: 'performance',
+        isPublic: true,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      },
+      {
+        id: 'schedule4',
+        title: '워크샵',
+        description: 'B-boy 파워무브 워크샵',
+        date: '2024-12-25',
+        time: '14:00',
+        location: '강남 댄스 스튜디오',
+        type: 'workshop',
+        isPublic: true,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      },
+      {
+        id: 'schedule5',
+        title: '배틀 대회',
+        description: '홍대 B-boy 배틀 참가',
+        date: '2024-12-28',
+        time: '19:30',
+        location: '홍대 배틀 그라운드',
+        type: 'competition',
+        isPublic: true,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      }
+    ],
+    backgroundImage: 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
   {
     id: 'crew2',
     name: 'Korean Waackers',
     genre: 'Waacking',
     introduction: 'A collective of top-tier Waackers, bringing drama and fashion to the dance floor.',
-    members: ['d2', 'd4', 'd6', 'd14'],
+    members: [],
+    schedules: [
+      {
+        id: 'schedule6',
+        title: '와킹 기초 클래스',
+        description: '초보자를 위한 와킹 기초 수업',
+        date: '2024-12-18',
+        time: '20:00',
+        location: '강남 댄스 아카데미',
+        type: 'workshop',
+        isPublic: true,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      },
+      {
+        id: 'schedule7',
+        title: '정기 연습',
+        description: '매주 목요일 정기 연습',
+        date: '2024-12-19',
+        time: '19:30',
+        location: '홍대 스튜디오 C',
+        type: 'practice',
+        isPublic: false,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      },
+      {
+        id: 'schedule8',
+        title: '크리스마스 쇼케이스',
+        description: '크리스마스 특별 공연',
+        date: '2024-12-24',
+        time: '19:00',
+        location: '이태원 클럽 옥타곤',
+        type: 'performance',
+        isPublic: true,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      }
+    ],
+    backgroundImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
   {
     id: 'crew3',
     name: 'Urban Groove',
     genre: 'Hip-hop',
     introduction: 'A versatile crew specializing in Hip-hop, Choreography, and Popping.',
-    members: ['d3', 'd7', 'd8'],
+    members: [],
+    schedules: [
+      {
+        id: 'schedule9',
+        title: '힙합 안무 연습',
+        description: '신곡 안무 연습 시간',
+        date: '2024-12-21',
+        time: '18:30',
+        location: '건대 댄스 스튜디오',
+        type: 'practice',
+        isPublic: false,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      },
+      {
+        id: 'schedule10',
+        title: '연말 파티',
+        description: '크루 연말 파티 및 회식',
+        date: '2024-12-30',
+        time: '19:00',
+        location: '홍대 BBQ',
+        type: 'meeting',
+        isPublic: false,
+        createdBy: 'crew_admin',
+        createdAt: '2024-12-16T00:00:00Z'
+      }
+    ],
+    backgroundImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
   {
     id: 'crew4',
     name: 'Originality',
     genre: 'Locking',
     introduction: 'A crew that represents the originality of locking dance.',
-    members: ['d9'],
+    members: [],
+    schedules: [],
+    backgroundImage: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
   {
     id: 'crew5',
     name: 'Mellow-Deep',
     genre: 'House',
     introduction: 'Feel the deep groove of house music with Mellow-Deep.',
-    members: ['d10'],
+    members: [],
+    schedules: [],
+    backgroundImage: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
   {
     id: 'crew6',
     name: 'MBA Crew',
     genre: 'B-boying',
     introduction: 'Most B-boy Action, a crew with explosive energy.',
-    members: ['d11'],
+    members: [],
+    schedules: [],
+    backgroundImage: 'https://images.unsplash.com/photo-1445384763658-0400939829cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
   {
     id: 'crew7',
     name: 'Amazon',
     genre: 'Waacking',
     introduction: 'Fierce and powerful waackers from the Amazon crew.',
-    members: ['d12'],
+    members: [],
+    schedules: [],
+    backgroundImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
   {
     id: 'crew8',
     name: 'World Fame US',
     genre: 'Popping',
     introduction: 'A crew of world-famous poppers.',
-    members: ['d13'],
+    members: [],
+    schedules: [],
+    backgroundImage: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
   {
     id: 'crew9',
     name: 'PROWDMON',
     genre: 'Choreography',
     introduction: 'A project crew that showed their strength in "Street Woman Fighter".',
-    members: ['d14'],
+    members: [],
+    schedules: [],
+    backgroundImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    createdAt: '2024-01-01T00:00:00Z'
   },
 ];
 
@@ -184,8 +334,30 @@ const dancersList: Dancer[] = [
     totalPoints: 1200,
     rank: 1,
     avatar: 'https://i.pravatar.cc/150?u=d1',
+    backgroundImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80',
     videos: [videosList[0]],
-    crewIds: ['crew1'],
+    crew: 'Rivers Crew',
+    email: 'jroc@example.com',
+    phone: '010-1234-5678',
+    birthDate: '1995-03-15',
+    bio: '한국을 대표하는 B-Boy로서 세계 각국의 대회에서 우승을 차지하며 한국 B-Boy 문화를 세계에 알리고 있습니다. 창의적인 무브와 파워풀한 퍼포먼스로 관객들을 사로잡습니다.',
+    education: [
+      { id: 1, school: '한국예술종합학교', major: '무용과', period: '2014.03 - 2018.02', degree: '학사' }
+    ],
+    career: [
+      { id: 1, company: 'Rivers Crew', position: '리더', period: '2018.03 - 현재', description: '크루 운영 및 공연 기획' },
+      { id: 2, company: '1MILLION Dance Studio', position: '강사', period: '2019.06 - 현재', description: 'B-Boy 클래스 지도' }
+    ],
+    awards: [
+      { id: 1, name: 'Red Bull BC One', rank: '우승', date: '2023.11', organizer: 'Red Bull' },
+      { id: 2, name: 'Battle of the Year', rank: '준우승', date: '2023.08', organizer: 'BOTY' },
+      { id: 3, name: 'Groove Night Vol.3', rank: '우승', date: '2024.08', organizer: 'Groove Night' }
+    ],
+    performances: [
+      { id: 1, name: 'Olympics Opening Ceremony', role: '메인 댄서', date: '2024.07', location: '파리' },
+      { id: 2, name: 'Street Dance of China', role: '게스트', date: '2023.09', location: '중국' }
+    ]
   },
   {
     id: 'd2',
@@ -197,8 +369,10 @@ const dancersList: Dancer[] = [
     totalPoints: 1150,
     rank: 2,
     avatar: 'https://i.pravatar.cc/150?u=d2',
+    backgroundImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b332c3cc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80',
     videos: [videosList[1], videosList[5]],
-    crewIds: ['crew2'],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd3',
@@ -210,8 +384,29 @@ const dancersList: Dancer[] = [
     totalPoints: 1000,
     rank: 3,
     avatar: 'https://i.pravatar.cc/150?u=d3',
+    backgroundImage: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
     videos: [videosList[3]],
-    crewIds: ['crew3'],
+    crew: 'Urban Groove',
+    email: 'liakim@example.com',
+    phone: '010-3456-7890',
+    birthDate: '1987-07-10',
+    bio: '세계적인 안무가이자 댄서로 1MILLION Dance Studio의 대표 강사입니다. K-POP 아티스트들의 안무를 담당하며 한국 댄스 문화를 세계에 알리고 있습니다.',
+    education: [
+      { id: 1, school: '경희대학교', major: '현대무용과', period: '2006.03 - 2010.02', degree: '학사' }
+    ],
+    career: [
+      { id: 1, company: '1MILLION Dance Studio', position: '수석 안무가', period: '2014.01 - 현재', description: '안무 창작 및 클래스 운영' },
+      { id: 2, company: 'SM Entertainment', position: '안무가', period: '2015.03 - 현재', description: 'K-POP 아티스트 안무 제작' }
+    ],
+    awards: [
+      { id: 1, name: 'World of Dance', rank: '우승', date: '2019.08', organizer: 'NBC' },
+      { id: 2, name: 'Asian Dance Awards', rank: '최우수 안무상', date: '2022.12', organizer: 'ADA' }
+    ],
+    performances: [
+      { id: 1, name: 'Super Bowl Halftime Show', role: '안무 감독', date: '2023.02', location: '미국' },
+      { id: 2, name: 'BTS World Tour', role: '안무가', date: '2022.04-08', location: '전세계' }
+    ]
   },
   {
     id: 'd4',
@@ -223,8 +418,10 @@ const dancersList: Dancer[] = [
     totalPoints: 950,
     rank: 4,
     avatar: 'https://i.pravatar.cc/150?u=d4',
+    backgroundImage: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=688&q=80',
     videos: [videosList[2]],
-    crewIds: ['crew2'],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd5',
@@ -236,8 +433,10 @@ const dancersList: Dancer[] = [
     totalPoints: 900,
     rank: 5,
     avatar: 'https://i.pravatar.cc/150?u=d5',
+    backgroundImage: 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
     videos: [videosList[8]],
-    crewIds: ['crew1'],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd6',
@@ -249,8 +448,10 @@ const dancersList: Dancer[] = [
     totalPoints: 850,
     rank: 6,
     avatar: 'https://i.pravatar.cc/150?u=d6',
+    backgroundImage: 'https://images.unsplash.com/photo-1445384763658-0400939829cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80',
     videos: [videosList[6]],
-    crewIds: ['crew2'],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd7',
@@ -262,8 +463,10 @@ const dancersList: Dancer[] = [
     totalPoints: 800,
     rank: 7,
     avatar: 'https://i.pravatar.cc/150?u=d7',
+    backgroundImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80',
     videos: [videosList[7]],
-    crewIds: ['crew3'],
+    crew: 'Urban Groove',
   },
   {
     id: 'd8',
@@ -275,8 +478,10 @@ const dancersList: Dancer[] = [
     totalPoints: 750,
     rank: 8,
     avatar: 'https://i.pravatar.cc/150?u=d8',
+    backgroundImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80',
     videos: [videosList[8]],
-    crewIds: ['crew3'],
+    crew: 'Urban Groove',
   },
   {
     id: 'd9',
@@ -288,8 +493,10 @@ const dancersList: Dancer[] = [
     totalPoints: 700,
     rank: 9,
     avatar: 'https://i.pravatar.cc/150?u=d9',
+    backgroundImage: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
     videos: [],
-    crewIds: ['crew4'],
+    crew: 'Originality',
   },
   {
     id: 'd10',
@@ -301,8 +508,10 @@ const dancersList: Dancer[] = [
     totalPoints: 680,
     rank: 10,
     avatar: 'https://i.pravatar.cc/150?u=d10',
+    backgroundImage: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80',
+    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
     videos: [],
-    crewIds: ['crew5'],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd11',
@@ -315,7 +524,7 @@ const dancersList: Dancer[] = [
     rank: 11,
     avatar: 'https://i.pravatar.cc/150?u=d11',
     videos: [],
-    crewIds: ['crew6'],
+    crew: 'MBA Crew',
   },
   {
     id: 'd12',
@@ -328,7 +537,7 @@ const dancersList: Dancer[] = [
     rank: 12,
     avatar: 'https://i.pravatar.cc/150?u=d12',
     videos: [],
-    crewIds: ['crew7'],
+    crew: 'Amazon',
   },
   {
     id: 'd13',
@@ -341,7 +550,7 @@ const dancersList: Dancer[] = [
     rank: 13,
     avatar: 'https://i.pravatar.cc/150?u=d13',
     videos: [],
-    crewIds: ['crew8'],
+    crew: 'World Fame US',
   },
   {
     id: 'd14',
@@ -354,7 +563,7 @@ const dancersList: Dancer[] = [
     rank: 14,
     avatar: 'https://i.pravatar.cc/150?u=d14',
     videos: [],
-    crewIds: ['crew2', 'crew9'],
+    crew: 'Korean Waackers',
   },
   // CSV 데이터에서 추가된 댄서들
   {
@@ -368,7 +577,7 @@ const dancersList: Dancer[] = [
     rank: 15,
     avatar: 'https://i.pravatar.cc/150?u=d15',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd16',
@@ -381,7 +590,7 @@ const dancersList: Dancer[] = [
     rank: 16,
     avatar: 'https://i.pravatar.cc/150?u=d16',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd17',
@@ -394,7 +603,7 @@ const dancersList: Dancer[] = [
     rank: 17,
     avatar: 'https://i.pravatar.cc/150?u=d17',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd18',
@@ -407,7 +616,7 @@ const dancersList: Dancer[] = [
     rank: 18,
     avatar: 'https://i.pravatar.cc/150?u=d18',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd19',
@@ -420,7 +629,7 @@ const dancersList: Dancer[] = [
     rank: 19,
     avatar: 'https://i.pravatar.cc/150?u=d19',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd20',
@@ -433,7 +642,7 @@ const dancersList: Dancer[] = [
     rank: 20,
     avatar: 'https://i.pravatar.cc/150?u=d20',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd21',
@@ -446,7 +655,7 @@ const dancersList: Dancer[] = [
     rank: 21,
     avatar: 'https://i.pravatar.cc/150?u=d21',
     videos: [],
-    crewIds: [],
+    crew: 'Originality',
   },
   {
     id: 'd22',
@@ -459,7 +668,7 @@ const dancersList: Dancer[] = [
     rank: 22,
     avatar: 'https://i.pravatar.cc/150?u=d22',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd23',
@@ -472,7 +681,7 @@ const dancersList: Dancer[] = [
     rank: 23,
     avatar: 'https://i.pravatar.cc/150?u=d23',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd24',
@@ -485,7 +694,7 @@ const dancersList: Dancer[] = [
     rank: 24,
     avatar: 'https://i.pravatar.cc/150?u=d24',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd25',
@@ -498,7 +707,7 @@ const dancersList: Dancer[] = [
     rank: 25,
     avatar: 'https://i.pravatar.cc/150?u=d25',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd26',
@@ -511,7 +720,7 @@ const dancersList: Dancer[] = [
     rank: 26,
     avatar: 'https://i.pravatar.cc/150?u=d26',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd27',
@@ -524,7 +733,7 @@ const dancersList: Dancer[] = [
     rank: 27,
     avatar: 'https://i.pravatar.cc/150?u=d27',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd28',
@@ -537,7 +746,7 @@ const dancersList: Dancer[] = [
     rank: 28,
     avatar: 'https://i.pravatar.cc/150?u=d28',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd29',
@@ -550,7 +759,7 @@ const dancersList: Dancer[] = [
     rank: 29,
     avatar: 'https://i.pravatar.cc/150?u=d29',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd30',
@@ -563,7 +772,7 @@ const dancersList: Dancer[] = [
     rank: 30,
     avatar: 'https://i.pravatar.cc/150?u=d30',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd31',
@@ -576,7 +785,7 @@ const dancersList: Dancer[] = [
     rank: 31,
     avatar: 'https://i.pravatar.cc/150?u=d31',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd32',
@@ -589,7 +798,7 @@ const dancersList: Dancer[] = [
     rank: 32,
     avatar: 'https://i.pravatar.cc/150?u=d32',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd33',
@@ -602,7 +811,7 @@ const dancersList: Dancer[] = [
     rank: 33,
     avatar: 'https://i.pravatar.cc/150?u=d33',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd34',
@@ -615,7 +824,7 @@ const dancersList: Dancer[] = [
     rank: 34,
     avatar: 'https://i.pravatar.cc/150?u=d34',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd35',
@@ -628,7 +837,7 @@ const dancersList: Dancer[] = [
     rank: 35,
     avatar: 'https://i.pravatar.cc/150?u=d35',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd36',
@@ -641,7 +850,7 @@ const dancersList: Dancer[] = [
     rank: 36,
     avatar: 'https://i.pravatar.cc/150?u=d36',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd37',
@@ -654,7 +863,7 @@ const dancersList: Dancer[] = [
     rank: 37,
     avatar: 'https://i.pravatar.cc/150?u=d37',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd38',
@@ -667,7 +876,7 @@ const dancersList: Dancer[] = [
     rank: 38,
     avatar: 'https://i.pravatar.cc/150?u=d38',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd39',
@@ -680,7 +889,7 @@ const dancersList: Dancer[] = [
     rank: 39,
     avatar: 'https://i.pravatar.cc/150?u=d39',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd40',
@@ -693,7 +902,7 @@ const dancersList: Dancer[] = [
     rank: 40,
     avatar: 'https://i.pravatar.cc/150?u=d40',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd41',
@@ -706,7 +915,7 @@ const dancersList: Dancer[] = [
     rank: 41,
     avatar: 'https://i.pravatar.cc/150?u=d41',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd42',
@@ -719,7 +928,7 @@ const dancersList: Dancer[] = [
     rank: 42,
     avatar: 'https://i.pravatar.cc/150?u=d42',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd43',
@@ -732,7 +941,7 @@ const dancersList: Dancer[] = [
     rank: 43,
     avatar: 'https://i.pravatar.cc/150?u=d43',
     videos: [],
-    crewIds: [],
+    crew: 'Originality',
   },
   {
     id: 'd44',
@@ -745,7 +954,7 @@ const dancersList: Dancer[] = [
     rank: 44,
     avatar: 'https://i.pravatar.cc/150?u=d44',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd45',
@@ -758,7 +967,7 @@ const dancersList: Dancer[] = [
     rank: 45,
     avatar: 'https://i.pravatar.cc/150?u=d45',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd46',
@@ -771,7 +980,7 @@ const dancersList: Dancer[] = [
     rank: 46,
     avatar: 'https://i.pravatar.cc/150?u=d46',
     videos: [],
-    crewIds: [],
+    crew: 'Originality',
   },
   {
     id: 'd47',
@@ -784,7 +993,7 @@ const dancersList: Dancer[] = [
     rank: 47,
     avatar: 'https://i.pravatar.cc/150?u=d47',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd48',
@@ -797,7 +1006,7 @@ const dancersList: Dancer[] = [
     rank: 48,
     avatar: 'https://i.pravatar.cc/150?u=d48',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd49',
@@ -810,7 +1019,7 @@ const dancersList: Dancer[] = [
     rank: 49,
     avatar: 'https://i.pravatar.cc/150?u=d49',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd50',
@@ -823,7 +1032,7 @@ const dancersList: Dancer[] = [
     rank: 50,
     avatar: 'https://i.pravatar.cc/150?u=d50',
     videos: [],
-    crewIds: [],
+    crew: 'Originality',
   },
   // 51-150번째 댄서들
   {
@@ -837,7 +1046,7 @@ const dancersList: Dancer[] = [
     rank: 51,
     avatar: 'https://i.pravatar.cc/150?u=d51',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd52',
@@ -850,7 +1059,7 @@ const dancersList: Dancer[] = [
     rank: 52,
     avatar: 'https://i.pravatar.cc/150?u=d52',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd53',
@@ -863,7 +1072,7 @@ const dancersList: Dancer[] = [
     rank: 53,
     avatar: 'https://i.pravatar.cc/150?u=d53',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd54',
@@ -876,7 +1085,7 @@ const dancersList: Dancer[] = [
     rank: 54,
     avatar: 'https://i.pravatar.cc/150?u=d54',
     videos: [],
-    crewIds: [],
+    crew: 'Originality',
   },
   {
     id: 'd55',
@@ -889,7 +1098,7 @@ const dancersList: Dancer[] = [
     rank: 55,
     avatar: 'https://i.pravatar.cc/150?u=d55',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd56',
@@ -902,7 +1111,7 @@ const dancersList: Dancer[] = [
     rank: 56,
     avatar: 'https://i.pravatar.cc/150?u=d56',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd57',
@@ -915,7 +1124,7 @@ const dancersList: Dancer[] = [
     rank: 57,
     avatar: 'https://i.pravatar.cc/150?u=d57',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd58',
@@ -928,7 +1137,7 @@ const dancersList: Dancer[] = [
     rank: 58,
     avatar: 'https://i.pravatar.cc/150?u=d58',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd59',
@@ -941,7 +1150,7 @@ const dancersList: Dancer[] = [
     rank: 59,
     avatar: 'https://i.pravatar.cc/150?u=d59',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd60',
@@ -954,7 +1163,7 @@ const dancersList: Dancer[] = [
     rank: 60,
     avatar: 'https://i.pravatar.cc/150?u=d60',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd61',
@@ -967,7 +1176,7 @@ const dancersList: Dancer[] = [
     rank: 61,
     avatar: 'https://i.pravatar.cc/150?u=d61',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd62',
@@ -980,7 +1189,7 @@ const dancersList: Dancer[] = [
     rank: 62,
     avatar: 'https://i.pravatar.cc/150?u=d62',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd63',
@@ -993,7 +1202,7 @@ const dancersList: Dancer[] = [
     rank: 63,
     avatar: 'https://i.pravatar.cc/150?u=d63',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd64',
@@ -1006,7 +1215,7 @@ const dancersList: Dancer[] = [
     rank: 64,
     avatar: 'https://i.pravatar.cc/150?u=d64',
     videos: [],
-    crewIds: [],
+    crew: 'Originality',
   },
   {
     id: 'd65',
@@ -1019,7 +1228,7 @@ const dancersList: Dancer[] = [
     rank: 65,
     avatar: 'https://i.pravatar.cc/150?u=d65',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd66',
@@ -1032,7 +1241,7 @@ const dancersList: Dancer[] = [
     rank: 66,
     avatar: 'https://i.pravatar.cc/150?u=d66',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd67',
@@ -1045,7 +1254,7 @@ const dancersList: Dancer[] = [
     rank: 67,
     avatar: 'https://i.pravatar.cc/150?u=d67',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd68',
@@ -1058,7 +1267,7 @@ const dancersList: Dancer[] = [
     rank: 68,
     avatar: 'https://i.pravatar.cc/150?u=d68',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd69',
@@ -1071,7 +1280,7 @@ const dancersList: Dancer[] = [
     rank: 69,
     avatar: 'https://i.pravatar.cc/150?u=d69',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd70',
@@ -1084,7 +1293,7 @@ const dancersList: Dancer[] = [
     rank: 70,
     avatar: 'https://i.pravatar.cc/150?u=d70',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd71',
@@ -1097,7 +1306,7 @@ const dancersList: Dancer[] = [
     rank: 71,
     avatar: 'https://i.pravatar.cc/150?u=d71',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd72',
@@ -1110,7 +1319,7 @@ const dancersList: Dancer[] = [
     rank: 72,
     avatar: 'https://i.pravatar.cc/150?u=d72',
     videos: [],
-    crewIds: [],
+    crew: 'Korean Waackers',
   },
   {
     id: 'd73',
@@ -1123,7 +1332,7 @@ const dancersList: Dancer[] = [
     rank: 73,
     avatar: 'https://i.pravatar.cc/150?u=d73',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd74',
@@ -1136,7 +1345,7 @@ const dancersList: Dancer[] = [
     rank: 74,
     avatar: 'https://i.pravatar.cc/150?u=d74',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd75',
@@ -1149,7 +1358,7 @@ const dancersList: Dancer[] = [
     rank: 75,
     avatar: 'https://i.pravatar.cc/150?u=d75',
     videos: [],
-    crewIds: [],
+    crew: 'Originality',
   },
   {
     id: 'd76',
@@ -1162,7 +1371,7 @@ const dancersList: Dancer[] = [
     rank: 76,
     avatar: 'https://i.pravatar.cc/150?u=d76',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd77',
@@ -1175,7 +1384,7 @@ const dancersList: Dancer[] = [
     rank: 77,
     avatar: 'https://i.pravatar.cc/150?u=d77',
     videos: [],
-    crewIds: [],
+    crew: 'Rivers Crew',
   },
   {
     id: 'd78',
@@ -1188,7 +1397,7 @@ const dancersList: Dancer[] = [
     rank: 78,
     avatar: 'https://i.pravatar.cc/150?u=d78',
     videos: [],
-    crewIds: [],
+    crew: 'Mellow-Deep',
   },
   {
     id: 'd79',
@@ -1201,7 +1410,7 @@ const dancersList: Dancer[] = [
     rank: 79,
     avatar: 'https://i.pravatar.cc/150?u=d79',
     videos: [],
-    crewIds: [],
+    crew: 'Urban Groove',
   },
   {
     id: 'd80',
@@ -1214,7 +1423,7 @@ const dancersList: Dancer[] = [
     rank: 80,
     avatar: 'https://i.pravatar.cc/150?u=d80',
     videos: [],
-    crewIds: [],
+    crew: 'Originality',
   },
   // ... 더 많은 댄서들이 계속됩니다
 ];
@@ -1237,7 +1446,13 @@ competitionsList[2].participants = [
 // 모든 댄서들을 합친 배열
 const allDancers = [...dancersList, ...allAdditionalDancers];
 
+// 크루 멤버들을 실제 댄서 객체로 매핑
+const crewsWithMembers = crewsList.map(crew => ({
+  ...crew,
+  members: allDancers.filter(dancer => dancer.crew === crew.name)
+}));
+
 export const competitions = competitionsList;
 export const dancers = allDancers;
-export const crews = crewsList;
+export const crews = crewsWithMembers;
 export const videos = videosList;

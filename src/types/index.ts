@@ -82,6 +82,7 @@ export interface Crew {
   members: Dancer[]; // Array of dancer objects
   schedules: CrewSchedule[];
   avatar?: string;
+  backgroundImage?: string; // 크루 카드에 사용될 배경 이미지
   createdAt: string;
 }
 
@@ -96,5 +97,47 @@ export interface Dancer {
   totalPoints: number;
   rank: number;
   avatar?: string;
+  backgroundImage?: string; // 랭킹 바에 사용될 배경 이미지
+  profileImage?: string; // 랭킹 바에 사용될 인물 이미지
   videos: Video[];
+  email?: string;
+  bio?: string;
+  education?: Education[];
+  career?: Career[];
+  awards?: Award[];
+  performances?: Performance[];
+  birthDate?: string;
+  phone?: string;
+}
+
+export interface Education {
+  id: string | number;
+  school: string;
+  major: string;
+  period: string;
+  degree: string;
+}
+
+export interface Career {
+  id: string | number;
+  company: string;
+  position: string;
+  period: string;
+  description: string;
+}
+
+export interface Award {
+  id: string | number;
+  name: string;
+  rank: string;
+  date: string;
+  organizer: string;
+}
+
+export interface Performance {
+  id: string | number;
+  name: string;
+  role: string;
+  date: string;
+  location: string;
 }

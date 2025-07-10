@@ -25,20 +25,20 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
 
   const allCrews = useMemo(() => {
     const crews = new Set<string>();
-    dancers.forEach(dancer => dancer.crewIds && dancer.crewIds.forEach(crewId => crews.add(crewId)));
+    dancers.forEach(dancer => dancer.crew && crews.add(dancer.crew));
     return Array.from(crews);
-  }, []);
+  }, [dancers]);
 
   const filteredDancers = useMemo(() => {
     return dancers.filter(dancer => {
       const matchesSearch = dancer.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            dancer.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesGenre = selectedGenre === 'all' || dancer.genres.includes(selectedGenre);
-      const matchesCrew = selectedCrew === 'all' || (dancer.crewIds && dancer.crewIds.includes(selectedCrew));
+      const matchesCrew = selectedCrew === 'all' || dancer.crew === selectedCrew;
       
       return matchesSearch && matchesGenre && matchesCrew;
     });
-  }, [searchTerm, selectedGenre, selectedCrew]);
+  }, [dancers, searchTerm, selectedGenre, selectedCrew]);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -234,11 +234,12 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {filteredDancers.map((dancer) => (
+                <div className="space-y-2">
+                  {filteredDancers.map((dancer, index) => (
                     <DancerListItem
                       key={dancer.id}
                       dancer={dancer}
+                      rank={index + 1}
                       onClick={() => onDancerClick(dancer.id)}
                     />
                   ))}

@@ -1,28 +1,63 @@
 import React, { useState } from 'react';
-import { X, Trophy, Users, Calendar, Instagram, Globe, MessageCircle } from 'lucide-react';
+import { X, Trophy, Users, Instagram, MessageCircle, Calendar, MapPin, Upload, Camera, FileText } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 import { Dancer, Competition, Crew, Message } from '../types';
 import { competitions as allCompetitions } from '../data/mockData';
-import { useTheme } from '../contexts/ThemeContext';
 import MessageModal from './MessageModal';
 import MessageList from './MessageList';
+import DancerResume from './DancerResume';
 
 interface DancerDetailModalProps {
   dancer: Dancer;
   isOpen: boolean;
   onClose: () => void;
   onSelectCompetition: (competition: Competition) => void;
-  onSelectCrew?: (crew: Crew) => void;
-  crews?: Crew[];
-  messages?: Message[];
-  onSendMessage?: (message: Omit<Message, 'id' | 'createdAt'>) => void;
-  onDancerClick?: (dancerId: string) => void;
+  onSelectCrew: (crew: Crew) => void;
+  crews: Crew[];
+  messages: Message[];
+  onSendMessage: (message: Omit<Message, 'id' | 'createdAt'>) => Promise<void>;
+  onDancerClick: (dancerId: string) => void;
+  onUpdateDancer?: (dancerId: string, updates: Partial<Dancer>) => void;
 }
 
-const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, onClose, onSelectCompetition, onSelectCrew, crews, messages = [], onSendMessage, onDancerClick }) => {
+const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ 
+  dancer, 
+  isOpen, 
+  onClose, 
+  onSelectCompetition, 
+  onSelectCrew, 
+  crews, 
+  messages = [], 
+  onSendMessage, 
+  onDancerClick,
+  onUpdateDancer
+}) => {
   const { isDarkMode } = useTheme();
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   if (!isOpen) return null;
+
+  const handleImageUpload = (type: 'background' | 'profile') => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file && onUpdateDancer) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          onUpdateDancer(dancer.id, {
+            [type === 'background' ? 'backgroundImage' : 'profileImage']: imageUrl
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return '🥇';
@@ -78,13 +113,21 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <img
-                  src={dancer.avatar || 'https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg'}
+                  src={dancer.profileImage || dancer.avatar || 'https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg'}
                   alt={dancer.nickname}
                   className="w-16 h-16 rounded-full object-cover ring-4 ring-blue-100"
                 />
                 <div className={`absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getRankColor(dancer.rank)}`}>
                   {getRankIcon(dancer.rank)}
                 </div>
+                {onUpdateDancer && (
+                  <button
+                    onClick={() => handleImageUpload('profile')}
+                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
+                  >
+                    <Camera className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               <div className="flex-1">
                 <h2 className={`text-2xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -109,17 +152,43 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => setShowMessageModal(true)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
-                  isDarkMode 
-                    ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' 
-                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                }`}
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span>메시지 보내기</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                {onUpdateDancer && (
+                  <button
+                    onClick={() => handleImageUpload('background')}
+                    className={`px-3 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                      isDarkMode 
+                        ? 'bg-purple-900 text-purple-300 hover:bg-purple-800' 
+                        : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                    }`}
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>배경</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowResumeModal(true)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                    isDarkMode 
+                      ? 'bg-green-900 text-green-300 hover:bg-green-800' 
+                      : 'bg-green-50 text-green-700 hover:bg-green-100'
+                  }`}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>이력서</span>
+                </button>
+                <button
+                  onClick={() => setShowMessageModal(true)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                    isDarkMode 
+                      ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' 
+                      : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  }`}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>메시지</span>
+                </button>
+              </div>
             </div>
             <button
               onClick={onClose}
@@ -279,11 +348,9 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
                                 }
                               }}
                               className={`flex items-center space-x-2 px-2 py-1 rounded-lg transition-colors ${
-                                onDancerClick 
-                                  ? isDarkMode 
-                                    ? 'hover:bg-gray-600' 
-                                    : 'hover:bg-gray-200'
-                                  : ''
+                                isDarkMode 
+                                  ? 'hover:bg-gray-600' 
+                                  : 'hover:bg-gray-200'
                               }`}
                             >
                               <img
@@ -292,13 +359,9 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
                                 className="w-6 h-6 rounded-full"
                               />
                               <span className={`text-sm ${
-                                onDancerClick 
-                                  ? isDarkMode 
-                                    ? 'text-blue-400 hover:text-blue-300' 
-                                    : 'text-blue-600 hover:text-blue-700'
-                                  : isDarkMode 
-                                    ? 'text-gray-300' 
-                                    : 'text-gray-700'
+                                isDarkMode 
+                                  ? 'text-blue-400 hover:text-blue-300' 
+                                  : 'text-blue-600 hover:text-blue-700'
                               }`}>
                                 {member.nickname}
                               </span>
@@ -358,7 +421,6 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
               >
                 <Instagram className="h-5 w-5" />
                 <span>Instagram 보기</span>
-                <Globe className="h-4 w-4" />
               </a>
             </div>
           )}
@@ -474,7 +536,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
         </div>
 
         {/* Message Modal */}
-        {showMessageModal && onSendMessage && (
+        {showMessageModal && (
           <MessageModal
             isOpen={showMessageModal}
             onClose={() => setShowMessageModal(false)}
@@ -482,6 +544,14 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ dancer, isOpen, o
             targetName={dancer.nickname}
             targetId={dancer.id}
             onSendMessage={handleSendMessage}
+          />
+        )}
+
+        {/* Resume Modal */}
+        {showResumeModal && (
+          <DancerResume
+            dancer={dancer}
+            onClose={() => setShowResumeModal(false)}
           />
         )}
       </div>

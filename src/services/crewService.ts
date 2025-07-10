@@ -74,20 +74,110 @@ export async function fetchCrewById(id: string): Promise<Crew | null> {
   return crews.find(crew => crew.id === id) || null
 }
 
-export async function addScheduleToCrew(crewId: string, schedule: Omit<CrewSchedule, 'id' | 'createdAt'>): Promise<CrewSchedule> {
-  // 실제 구현에서는 별도의 스케줄 테이블에 저장할 예정
-  // 현재는 메모리에서만 관리
-  const newSchedule: CrewSchedule = {
-    ...schedule,
-    id: `schedule_${Date.now()}`,
-    createdAt: new Date().toISOString()
+export async function addScheduleToCrew(crewId: string, schedule: Omit<CrewSchedule, 'id' | 'createdAt'>): Promise<CrewSchedule | null> {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('crew_schedules')
+      .insert({
+        crew_id: crewId,
+        title: schedule.title,
+        description: schedule.description,
+        date: schedule.date,
+        time: schedule.time,
+        location: schedule.location,
+        type: schedule.type,
+        is_public: schedule.isPublic,
+        created_by: userData.user.id
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      date: data.date,
+      time: data.time,
+      location: data.location,
+      type: data.type,
+      isPublic: data.is_public,
+      createdBy: data.created_by,
+      createdAt: data.created_at
+    };
+  } catch (error) {
+    console.error('Error adding schedule:', error);
+    return null;
   }
-  
-  return newSchedule
 }
 
 export async function getCrewSchedules(crewId: string): Promise<CrewSchedule[]> {
-  // 실제 구현에서는 데이터베이스에서 가져올 예정
-  // 현재는 빈 배열 반환
-  return []
+  try {
+    const { data, error } = await supabase
+      .from('crew_schedules')
+      .select('*')
+      .eq('crew_id', crewId)
+      .order('date', { ascending: true })
+      .order('time', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map(schedule => ({
+      id: schedule.id,
+      title: schedule.title,
+      description: schedule.description,
+      date: schedule.date,
+      time: schedule.time,
+      location: schedule.location,
+      type: schedule.type,
+      isPublic: schedule.is_public,
+      createdBy: schedule.created_by,
+      createdAt: schedule.created_at
+    }));
+  } catch (error) {
+    console.error('Error fetching schedules:', error);
+    return [];
+  }
+}
+
+export async function updateSchedule(scheduleId: string, updates: Partial<CrewSchedule>): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('crew_schedules')
+      .update({
+        title: updates.title,
+        description: updates.description,
+        date: updates.date,
+        time: updates.time,
+        location: updates.location,
+        type: updates.type,
+        is_public: updates.isPublic
+      })
+      .eq('id', scheduleId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating schedule:', error);
+    return false;
+  }
+}
+
+export async function deleteSchedule(scheduleId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('crew_schedules')
+      .delete()
+      .eq('id', scheduleId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting schedule:', error);
+    return false;
+  }
 } 

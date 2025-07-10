@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Users, Instagram } from 'lucide-react';
+import { Trophy, Users, Instagram, Crown, Star } from 'lucide-react';
 import { Dancer } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -12,109 +12,138 @@ const DancerCard: React.FC<DancerCardProps> = ({ dancer, onClick }) => {
   const { isDarkMode } = useTheme();
   
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
+    if (rank === 1) return <Crown className="w-4 h-4" />;
+    if (rank === 2) return <Star className="w-4 h-4" />;
+    if (rank === 3) return <Star className="w-4 h-4" />;
     return rank;
   };
 
   const getRankColor = (rank: number) => {
-    if (rank === 1) return isDarkMode ? 'text-yellow-400 bg-yellow-900' : 'text-yellow-600 bg-yellow-50';
-    if (rank === 2) return isDarkMode ? 'text-gray-300 bg-gray-700' : 'text-gray-600 bg-gray-50';
-    if (rank === 3) return isDarkMode ? 'text-amber-400 bg-amber-900' : 'text-amber-600 bg-amber-50';
-    return isDarkMode ? 'text-gray-400 bg-gray-700' : 'text-gray-600 bg-gray-50';
+    if (rank === 1) return 'from-yellow-400 to-yellow-600';
+    if (rank === 2) return 'from-gray-300 to-gray-500';
+    if (rank === 3) return 'from-amber-400 to-amber-600';
+    if (rank <= 10) return 'from-blue-400 to-blue-600';
+    return 'from-purple-400 to-purple-600';
+  };
+
+  const getRankTextColor = (rank: number) => {
+    if (rank === 1) return 'text-yellow-900';
+    if (rank === 2) return 'text-gray-900';
+    if (rank === 3) return 'text-amber-900';
+    return 'text-white';
   };
 
   return (
     <div 
       onClick={onClick}
-      className={`rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border overflow-hidden group ${
-        isDarkMode 
-          ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
-          : 'bg-white border-gray-100'
+      className={`relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl group ${
+        isDarkMode ? 'shadow-lg shadow-gray-900/50' : 'shadow-lg shadow-gray-200/50'
       }`}
+      style={{ height: '280px' }}
     >
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <img
-                src={dancer.avatar || 'https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg'}
-                alt={dancer.nickname}
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-100"
-              />
-              <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getRankColor(dancer.rank)}`}>
-                {getRankIcon(dancer.rank)}
-              </div>
-            </div>
-            <div>
-              <h3 className={`font-bold transition-colors group-hover:text-blue-600 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                {dancer.nickname}
-              </h3>
-              <p className={`text-sm transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {dancer.name}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Trophy className="h-4 w-4 text-yellow-500" />
-              <span className={`text-sm font-medium transition-colors ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                총 포인트
-              </span>
-            </div>
-            <span className="text-lg font-bold text-blue-600">{dancer.totalPoints.toFixed(1)}</span>
-          </div>
-
-          {dancer.crew && (
-            <div className="flex items-center space-x-2">
-              <Users className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-              <span className={`text-sm transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {dancer.crew}
-              </span>
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-1">
-            {dancer.genres.map((genre, index) => (
-              <span
-                key={index}
-                className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
-                  isDarkMode 
-                    ? 'bg-blue-900 text-blue-300' 
-                    : 'bg-blue-50 text-blue-700'
-                }`}
-              >
-                {genre}
-              </span>
-            ))}
-          </div>
-
-          {dancer.sns && (
-            <div className="flex items-center space-x-2 pt-2">
-              <Instagram className="h-4 w-4 text-pink-500" />
-              <a
-                href={dancer.sns}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-sm hover:text-pink-500 transition-colors ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                SNS 보기
-              </a>
-            </div>
-          )}
+      {/* 배경 이미지 */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
+        style={{
+          backgroundImage: `url(${dancer.backgroundImage || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'})`,
+        }}
+      />
+      
+      {/* 그라데이션 오버레이 */}
+      <div className={`absolute inset-0 bg-gradient-to-b ${getRankColor(dancer.rank)} opacity-70`} />
+      
+      {/* 다크 오버레이 */}
+      <div className="absolute inset-0 bg-black/40" />
+      
+      {/* 상단: 랭킹 */}
+      <div className="absolute top-4 left-4">
+        <div className={`w-12 h-12 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-lg font-bold ${getRankTextColor(dancer.rank)}`}>
+          {dancer.rank <= 3 ? getRankIcon(dancer.rank) : dancer.rank}
         </div>
       </div>
+      
+      {/* 상단 우측: 포인트 */}
+      <div className="absolute top-4 right-4 text-right">
+        <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-1">
+          <p className="text-white font-bold text-lg">
+            {dancer.totalPoints.toFixed(1)}
+          </p>
+          <p className="text-white/80 text-xs">
+            포인트
+          </p>
+        </div>
+      </div>
+      
+      {/* 하단: 댄서 정보 */}
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="flex items-end space-x-4">
+          {/* 프로필 이미지 */}
+          <div className="relative">
+            <img
+              src={dancer.profileImage || dancer.avatar || 'https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg'}
+              alt={dancer.nickname}
+              className="w-16 h-16 rounded-full object-cover border-3 border-white/30 shadow-lg"
+            />
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-white"></div>
+          </div>
+          
+          {/* 댄서 정보 */}
+          <div className="flex-1">
+            <h3 className="text-white text-xl font-bold mb-1 drop-shadow-lg">
+              {dancer.nickname}
+            </h3>
+            <p className="text-white/80 text-sm font-medium mb-2">
+              {dancer.name}
+            </p>
+            
+            {/* 크루 정보 */}
+            {dancer.crew && (
+              <div className="flex items-center space-x-2 mb-2">
+                <Users className="w-4 h-4 text-white/70" />
+                <span className="text-white/80 text-sm">
+                  {dancer.crew}
+                </span>
+              </div>
+            )}
+            
+            {/* 장르 태그 */}
+            <div className="flex flex-wrap gap-1">
+              {dancer.genres.slice(0, 2).map((genre, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 text-xs font-medium bg-white/20 backdrop-blur-sm rounded-full text-white border border-white/30"
+                >
+                  {genre}
+                </span>
+              ))}
+              {dancer.genres.length > 2 && (
+                <span className="px-2 py-1 text-xs font-medium bg-white/20 backdrop-blur-sm rounded-full text-white border border-white/30">
+                  +{dancer.genres.length - 2}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* SNS 링크 */}
+        {dancer.sns && (
+          <div className="mt-3 flex justify-end">
+            <a
+              href={dancer.sns}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center space-x-1 px-3 py-1 bg-pink-500/20 backdrop-blur-sm rounded-full text-pink-200 hover:bg-pink-500/30 transition-colors"
+            >
+              <Instagram className="w-4 h-4" />
+              <span className="text-xs">SNS</span>
+            </a>
+          </div>
+        )}
+      </div>
+      
+      {/* 호버 효과 */}
+      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </div>
   );
 };

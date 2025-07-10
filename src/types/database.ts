@@ -4,6 +4,7 @@ export interface Database {
       dancers: {
         Row: {
           id: string
+          user_id: string | null
           nickname: string
           name: string
           genres: string[]
@@ -11,6 +12,12 @@ export interface Database {
           total_points: number
           rank: number
           avatar: string | null
+          background_image: string | null
+          profile_image: string | null
+          email: string | null
+          phone: string | null
+          birth_date: string | null
+          bio: string | null
           created_at: string
           updated_at: string
         }
@@ -23,6 +30,8 @@ export interface Database {
           total_points?: number
           rank?: number
           avatar?: string | null
+          background_image?: string | null
+          profile_image?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -35,6 +44,8 @@ export interface Database {
           total_points?: number
           rank?: number
           avatar?: string | null
+          background_image?: string | null
+          profile_image?: string | null
           created_at?: string
           updated_at?: string
         }

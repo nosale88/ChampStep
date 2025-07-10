@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, Plus, MapPin, Clock, Eye, EyeOff, MessageCircle } from 'lucide-react';
+import { Users, Calendar, Plus, MapPin, Clock, Eye, EyeOff, MessageCircle, ChevronLeft, ChevronRight, Edit2, Upload, Camera, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Crew, Dancer, CrewSchedule, Message } from '../types';
 import MessageModal from './MessageModal';
@@ -12,14 +12,23 @@ interface CrewsPageProps {
   messages?: Message[];
   onSendMessage?: (message: Omit<Message, 'id' | 'createdAt'>) => void;
   onDancerClick?: (dancerId: string) => void;
+  onUpdateCrew?: (crewId: string, updates: Partial<Crew>) => void;
+  currentDancer?: Dancer | null;
 }
 
-const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: propSelectedCrew, messages = [], onSendMessage, onDancerClick }) => {
+type CalendarView = 'month' | 'week' | 'day';
+
+const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: propSelectedCrew, messages = [], onSendMessage, onDancerClick, onUpdateCrew, currentDancer }) => {
   const { isDarkMode } = useTheme();
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(propSelectedCrew || null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState<string>('전체');
+  const [calendarView, setCalendarView] = useState<CalendarView>('month');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [editingCrew, setEditingCrew] = useState<Partial<Crew>>({});
+  const [selectedDate, setSelectedDate] = useState<string>(''); // 선택된 날짜 상태 추가
 
   // prop으로 전달된 selectedCrew가 변경되면 상태 업데이트
   useEffect(() => {
@@ -73,8 +82,36 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
         isPublic: true,
         createdBy: 'current_user'
       });
+      setSelectedDate(''); // 선택된 날짜 초기화
       setShowScheduleModal(false);
     }
+  };
+
+  // 날짜 클릭 시 스케줄 등록 모달 열기
+  const handleDateClick = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    setSelectedDate(dateString);
+    setNewSchedule({
+      ...newSchedule,
+      date: dateString
+    });
+    setShowScheduleModal(true);
+  };
+
+  // 스케줄 모달 닫기
+  const handleCloseScheduleModal = () => {
+    setShowScheduleModal(false);
+    setSelectedDate('');
+    setNewSchedule({
+      title: '',
+      description: '',
+      date: '',
+      time: '',
+      location: '',
+      type: 'practice',
+      isPublic: true,
+      createdBy: 'current_user'
+    });
   };
 
   const getTypeColor = (type: string) => {
@@ -125,10 +162,371 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
     }
   };
 
+  // 크루 멤버인지 확인
+  const isCrewMember = (crew: Crew) => {
+    if (!currentDancer) return false;
+    return crew.members.some(member => member.id === currentDancer.id);
+  };
+
+  // 크루 정보 수정 시작
+  const handleStartEdit = () => {
+    if (selectedCrew) {
+      setEditingCrew({
+        name: selectedCrew.name,
+        genre: selectedCrew.genre,
+        introduction: selectedCrew.introduction,
+        backgroundImage: selectedCrew.backgroundImage
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  // 크루 정보 저장
+  const handleSaveEdit = () => {
+    if (selectedCrew && onUpdateCrew) {
+      onUpdateCrew(selectedCrew.id, editingCrew);
+      setShowEditModal(false);
+      // 로컬 상태도 업데이트
+      setSelectedCrew({
+        ...selectedCrew,
+        ...editingCrew
+      });
+    }
+  };
+
+  // 이미지 업로드 처리
+  const handleImageUpload = (type: 'background' | 'avatar') => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          setEditingCrew({
+            ...editingCrew,
+            [type === 'background' ? 'backgroundImage' : 'avatar']: imageUrl
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
   // 크루에게 온 메시지 필터링
   const crewMessages = selectedCrew 
     ? messages.filter(msg => msg.targetId === selectedCrew.id && msg.targetType === 'crew')
     : [];
+
+  // 캘린더 관련 함수들
+  const getMonthDays = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const days = [];
+    const current = new Date(startDate);
+    
+    for (let i = 0; i < 42; i++) {
+      days.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+    
+    return days;
+  };
+
+  const getWeekDays = (date: Date) => {
+    const days = [];
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() - date.getDay());
+    
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(startOfWeek.getDate() + i);
+      days.push(day);
+    }
+    
+    return days;
+  };
+
+  const formatDate = (date: Date, view: CalendarView) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: view === 'month' ? 'long' : 'short',
+      day: 'numeric'
+    };
+    return date.toLocaleDateString('ko-KR', options);
+  };
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const isSameMonth = (date: Date, currentDate: Date) => {
+    return date.getMonth() === currentDate.getMonth();
+  };
+
+  const getSchedulesForDate = (date: Date) => {
+    if (!selectedCrew) return [];
+    return selectedCrew.schedules.filter(schedule => {
+      const scheduleDate = new Date(schedule.date);
+      return scheduleDate.toDateString() === date.toDateString();
+    });
+  };
+
+  const navigateCalendar = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    switch (calendarView) {
+      case 'month':
+        newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+        break;
+      case 'week':
+        newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+        break;
+      case 'day':
+        newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+        break;
+    }
+    setCurrentDate(newDate);
+  };
+
+  const getCalendarTitle = () => {
+    switch (calendarView) {
+      case 'month':
+        return currentDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+      case 'week':
+        const weekStart = new Date(currentDate);
+        weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        return `${weekStart.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}`;
+      case 'day':
+        return currentDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+  };
+
+  const renderCalendarView = () => {
+    switch (calendarView) {
+      case 'month':
+        return renderMonthView();
+      case 'week':
+        return renderWeekView();
+      case 'day':
+        return renderDayView();
+    }
+  };
+
+  const renderMonthView = () => {
+    const days = getMonthDays(currentDate);
+    const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+
+    return (
+      <div>
+        {/* 요일 헤더 */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {weekDays.map((day, index) => (
+            <div key={day} className={`text-center text-sm font-medium py-2 ${
+              index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* 달력 그리드 */}
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day, index) => {
+            const schedules = getSchedulesForDate(day);
+            const isCurrentMonth = isSameMonth(day, currentDate);
+            const isTodayDate = isToday(day);
+            
+            return (
+              <div
+                key={index}
+                onClick={() => handleDateClick(day)}
+                className={`min-h-[80px] p-1 border transition-colors cursor-pointer hover:bg-blue-50 ${
+                  isDarkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200 hover:bg-blue-50'
+                } ${
+                  isCurrentMonth 
+                    ? isDarkMode ? 'bg-gray-800' : 'bg-white'
+                    : isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
+                } ${
+                  isTodayDate ? 'ring-2 ring-blue-500' : ''
+                }`}
+              >
+                <div className={`text-sm font-medium mb-1 ${
+                  isTodayDate 
+                    ? 'text-blue-500' 
+                    : isCurrentMonth 
+                      ? isDarkMode ? 'text-white' : 'text-gray-900'
+                      : isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                }`}>
+                  {day.getDate()}
+                </div>
+                <div className="space-y-1">
+                  {schedules.slice(0, 2).map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className={`text-xs px-1 py-0.5 rounded text-white truncate ${
+                        schedule.type === 'practice' ? 'bg-blue-500' :
+                        schedule.type === 'performance' ? 'bg-red-500' :
+                        schedule.type === 'meeting' ? 'bg-green-500' :
+                        schedule.type === 'workshop' ? 'bg-purple-500' :
+                        'bg-orange-500'
+                      }`}
+                    >
+                      {schedule.title}
+                    </div>
+                  ))}
+                  {schedules.length > 2 && (
+                    <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      +{schedules.length - 2}개 더
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderWeekView = () => {
+    const days = getWeekDays(currentDate);
+    const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+
+    return (
+      <div>
+        {/* 요일 헤더 */}
+        <div className="grid grid-cols-7 gap-2 mb-4">
+          {days.map((day, index) => (
+            <div key={index} className="text-center">
+              <div className={`text-sm font-medium ${
+                index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                {weekDays[index]}
+              </div>
+              <div className={`text-lg font-bold mt-1 ${
+                isToday(day) 
+                  ? 'text-blue-500' 
+                  : isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                {day.getDate()}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* 주간 스케줄 */}
+        <div className="grid grid-cols-7 gap-2">
+          {days.map((day, index) => {
+            const schedules = getSchedulesForDate(day);
+            const isTodayDate = isToday(day);
+            
+            return (
+              <div
+                key={index}
+                onClick={() => handleDateClick(day)}
+                className={`min-h-[200px] p-2 border rounded-lg cursor-pointer transition-colors hover:bg-blue-50 ${
+                  isDarkMode ? 'border-gray-700 bg-gray-800 hover:bg-gray-700' : 'border-gray-200 bg-white hover:bg-blue-50'
+                } ${
+                  isTodayDate ? 'ring-2 ring-blue-500' : ''
+                }`}
+              >
+                <div className="space-y-2">
+                  {schedules.map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className={`p-2 rounded text-xs ${
+                        schedule.type === 'practice' ? 'bg-blue-100 text-blue-800' :
+                        schedule.type === 'performance' ? 'bg-red-100 text-red-800' :
+                        schedule.type === 'meeting' ? 'bg-green-100 text-green-800' :
+                        schedule.type === 'workshop' ? 'bg-purple-100 text-purple-800' :
+                        'bg-orange-100 text-orange-800'
+                      }`}
+                    >
+                      <div className="font-medium">{schedule.title}</div>
+                      <div className="text-xs opacity-75">{schedule.time}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDayView = () => {
+    const schedules = getSchedulesForDate(currentDate);
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+
+    return (
+      <div className="space-y-4">
+        <div className={`text-center text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          {formatDate(currentDate, 'day')}
+        </div>
+        
+        <div className="space-y-2">
+          {hours.map((hour) => {
+            const hourSchedules = schedules.filter(schedule => {
+              const scheduleHour = parseInt(schedule.time.split(':')[0]);
+              return scheduleHour === hour;
+            });
+            
+            return (
+              <div
+                key={hour}
+                onClick={() => handleDateClick(currentDate)}
+                className={`flex border-b cursor-pointer hover:bg-blue-50 p-2 rounded transition-colors ${
+                  isDarkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200 hover:bg-blue-50'
+                } pb-2`}
+              >
+                <div className={`w-16 text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {hour.toString().padStart(2, '0')}:00
+                </div>
+                <div className="flex-1 ml-4">
+                  {hourSchedules.map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className={`p-3 rounded-lg mb-2 ${
+                        schedule.type === 'practice' ? 'bg-blue-100 text-blue-800' :
+                        schedule.type === 'performance' ? 'bg-red-100 text-red-800' :
+                        schedule.type === 'meeting' ? 'bg-green-100 text-green-800' :
+                        schedule.type === 'workshop' ? 'bg-purple-100 text-purple-800' :
+                        'bg-orange-100 text-orange-800'
+                      }`}
+                    >
+                      <div className="font-medium">{schedule.title}</div>
+                      <div className="text-sm opacity-75">{schedule.time}</div>
+                      {schedule.location && (
+                        <div className="text-sm opacity-75 flex items-center mt-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {schedule.location}
+                        </div>
+                      )}
+                      {schedule.description && (
+                        <div className="text-sm mt-2">{schedule.description}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   if (selectedCrew) {
     return (
@@ -163,21 +561,131 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowMessageModal(true)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
-                  isDarkMode 
-                    ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' 
-                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                }`}
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span>메시지 보내기</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                {isCrewMember(selectedCrew) && (
+                  <button
+                    onClick={handleStartEdit}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                      isDarkMode 
+                        ? 'bg-purple-900 text-purple-300 hover:bg-purple-800' 
+                        : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                    }`}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                    <span>크루 정보 수정</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowMessageModal(true)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                    isDarkMode 
+                      ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' 
+                      : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  }`}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>메시지 보내기</span>
+                </button>
+              </div>
             </div>
             <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
               {selectedCrew.introduction}
             </p>
+          </div>
+
+          {/* 스케줄 캘린더 - 메인 영역 */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6 mb-6`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
+                <Calendar className="mr-2 h-5 w-5" />
+                스케줄 캘린더
+              </h2>
+              <button
+                onClick={() => setShowScheduleModal(true)}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors flex items-center"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                스케줄 추가
+              </button>
+            </div>
+
+            {/* 캘린더 컨트롤 */}
+            <div className="flex items-center justify-between mb-6">
+              {/* 뷰 전환 탭 */}
+              <div className={`flex rounded-lg p-1 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                {[
+                  { key: 'month', label: '월간' },
+                  { key: 'week', label: '주간' },
+                  { key: 'day', label: '일간' }
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setCalendarView(key as CalendarView)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      calendarView === key
+                        ? 'bg-blue-500 text-white shadow-sm'
+                        : isDarkMode
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-600'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 날짜 네비게이션 */}
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => navigateCalendar('prev')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDarkMode 
+                      ? 'hover:bg-gray-700 text-gray-300' 
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                
+                <div className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {getCalendarTitle()}
+                </div>
+                
+                <button
+                  onClick={() => navigateCalendar('next')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDarkMode 
+                      ? 'hover:bg-gray-700 text-gray-300' 
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+                
+                <button
+                  onClick={() => setCurrentDate(new Date())}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  오늘
+                </button>
+              </div>
+            </div>
+
+            {/* 캘린더 뷰 */}
+            <div className="min-h-[400px]">
+              {renderCalendarView()}
+            </div>
+            
+            {/* 캘린더 사용법 안내 */}
+            <div className={`mt-4 p-3 rounded-lg text-sm ${
+              isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-blue-50 text-blue-700'
+            }`}>
+              💡 <strong>팁:</strong> 캘린더의 날짜를 클릭하면 해당 날짜로 스케줄을 등록할 수 있습니다.
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -240,21 +748,12 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
               </div>
             </div>
 
-            {/* 스케줄 캘린더 */}
+            {/* 최근 스케줄 목록 */}
             <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
-                  <Calendar className="mr-2 h-5 w-5" />
-                  스케줄
-                </h2>
-                <button
-                  onClick={() => setShowScheduleModal(true)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors flex items-center"
-                >
-                  <Plus className="mr-1 h-4 w-4" />
-                  추가
-                </button>
-              </div>
+              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
+                <Clock className="mr-2 h-5 w-5" />
+                최근 스케줄
+              </h2>
               
               {selectedCrew.schedules.length === 0 ? (
                 <p className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -262,7 +761,7 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {selectedCrew.schedules.map((schedule) => (
+                  {selectedCrew.schedules.slice(0, 5).map((schedule) => (
                     <div
                       key={schedule.id}
                       className={`p-3 rounded-lg border ${
@@ -322,9 +821,27 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
         {showScheduleModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-md`}>
-              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
-                스케줄 추가
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  스케줄 추가
+                  {selectedDate && (
+                    <span className="text-sm font-normal text-blue-500 ml-2">
+                      ({new Date(selectedDate).toLocaleDateString('ko-KR', { 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })})
+                    </span>
+                  )}
+                </h3>
+                <button
+                  onClick={handleCloseScheduleModal}
+                  className={`p-1 rounded-lg transition-colors ${
+                    isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
@@ -439,20 +956,20 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
                   </label>
                 </div>
               </div>
-              <div className="flex space-x-3 mt-6">
+              <div className="flex space-x-3 pt-4">
                 <button
-                  onClick={() => setShowScheduleModal(false)}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium ${
+                  onClick={handleCloseScheduleModal}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  } transition-colors`}
+                  }`}
                 >
                   취소
                 </button>
                 <button
                   onClick={handleAddSchedule}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors"
                 >
                   추가
                 </button>
@@ -471,6 +988,132 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
             targetId={selectedCrew.id}
             onSendMessage={handleSendMessage}
           />
+        )}
+
+        {/* 크루 정보 수정 모달 */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 w-full max-w-md`}>
+              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+                크루 정보 수정
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                    크루명
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCrew.name || ''}
+                    onChange={(e) => setEditingCrew({...editingCrew, name: e.target.value})}
+                    className={`w-full px-3 py-2 border rounded-lg ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                    장르
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCrew.genre || ''}
+                    onChange={(e) => setEditingCrew({...editingCrew, genre: e.target.value})}
+                    className={`w-full px-3 py-2 border rounded-lg ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                    소개
+                  </label>
+                  <textarea
+                    value={editingCrew.introduction || ''}
+                    onChange={(e) => setEditingCrew({...editingCrew, introduction: e.target.value})}
+                    className={`w-full px-3 py-2 border rounded-lg ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                    배경 이미지
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    {editingCrew.backgroundImage && (
+                      <img
+                        src={editingCrew.backgroundImage}
+                        alt="배경"
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                    )}
+                    <button
+                      onClick={() => handleImageUpload('background')}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>업로드</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                    크루 로고
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    {editingCrew.avatar && (
+                      <img
+                        src={editingCrew.avatar}
+                        alt="로고"
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                    )}
+                    <button
+                      onClick={() => handleImageUpload('avatar')}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Camera className="h-4 w-4" />
+                      <span>변경</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  } transition-colors`}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -532,41 +1175,74 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
               <div
                 key={crew.id}
                 onClick={() => handleCrewClick(crew)}
-                className={`${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'} 
-                  rounded-xl shadow-lg p-6 cursor-pointer transition-all duration-300 hover:shadow-xl`}
+                className={`relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl group ${
+                  isDarkMode ? 'shadow-lg shadow-gray-900/50' : 'shadow-lg shadow-gray-200/50'
+                }`}
+                style={{ height: '300px' }}
               >
-                <div className="flex items-center space-x-4 mb-4">
-                  <img
-                    src={crew.avatar}
-                    alt={crew.name}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div>
-                    <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {crew.name}
-                    </h3>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {crew.genre}
-                    </p>
+                {/* 배경 이미지 */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    backgroundImage: `url(${crew.backgroundImage || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'})`,
+                  }}
+                />
+                
+                {/* 그라데이션 오버레이 */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70" />
+                
+                {/* 상단: 장르 태그 */}
+                <div className="absolute top-4 right-4">
+                  <span className="px-3 py-1 text-xs font-medium bg-white/20 backdrop-blur-sm rounded-full text-white border border-white/30">
+                    {crew.genre}
+                  </span>
+                </div>
+                
+                {/* 하단: 크루 정보 */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <img
+                      src={crew.avatar}
+                      alt={crew.name}
+                      className="w-16 h-16 rounded-full border-3 border-white/30 shadow-lg"
+                    />
+                    <div className="flex-1">
+                      <h3 className="text-white text-xl font-bold mb-1 drop-shadow-lg">
+                        {crew.name}
+                      </h3>
+                      <p className="text-white/80 text-sm font-medium">
+                        {crew.genre} 크루
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-white/90 text-sm mb-4 line-clamp-2 drop-shadow-sm">
+                    {crew.introduction}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <Users className="h-4 w-4 text-white/70" />
+                        <span className="text-white/90 text-sm font-medium">
+                          {crew.members.length}명
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4 text-white/70" />
+                        <span className="text-white/90 text-sm font-medium">
+                          {crew.schedules.length}개
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-white/80 text-sm">
+                      자세히 보기 →
+                    </div>
                   </div>
                 </div>
-                <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-sm mb-4 line-clamp-3`}>
-                  {crew.introduction}
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {crew.members.length}명
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {crew.schedules.length}개 스케줄
-                    </span>
-                  </div>
-                </div>
+                
+                {/* 호버 효과 */}
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             ))}
           </div>
