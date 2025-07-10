@@ -33,46 +33,63 @@ function AppContent() {
       try {
         console.log('📊 Fetching data from services...');
         
-        // 실제 데이터 로딩 (타임아웃 없이)
-        const [dancersData, competitionsData, crewsData] = await Promise.all([
+        // 실제 데이터 로딩 - 각 서비스별로 독립적으로 처리
+        const [dancersData, competitionsData, crewsData] = await Promise.allSettled([
           fetchDancers(),
           fetchCompetitions(),
           fetchCrews()
         ]);
         
-        console.log('✅ Data fetched successfully:', {
-          dancers: dancersData.length,
-          competitions: competitionsData.length,
-          crews: crewsData.length
+        // 성공한 데이터만 추출
+        const dancers = dancersData.status === 'fulfilled' ? dancersData.value : [];
+        const competitions = competitionsData.status === 'fulfilled' ? competitionsData.value : [];
+        const crews = crewsData.status === 'fulfilled' ? crewsData.value : [];
+        
+        console.log('✅ Data fetch completed:', {
+          dancers: dancers.length,
+          competitions: competitions.length,
+          crews: crews.length,
+          dancersStatus: dancersData.status,
+          competitionsStatus: competitionsData.status,
+          crewsStatus: crewsData.status
         });
         
-        // 실제 데이터가 있으면 사용
-        if (dancersData.length > 0 || competitionsData.length > 0 || crewsData.length > 0) {
-          console.log('🎯 Using real data from database');
-          setDancers(dancersData);
-          setCompetitions(competitionsData);
-          setCrews(crewsData);
-        } else {
-          console.log('⚠️ No real data found, using mock data');
-          const { dancers } = await import('./data/mockData');
-          const { competitions } = await import('./data/mockData');
-          const { crews } = await import('./data/mockData');
-          
+        // 각 데이터 타입별로 개별 처리
+        if (dancers.length > 0) {
+          console.log('🎯 Using real dancer data from database');
           setDancers(dancers);
-          setCompetitions(competitions);
-          setCrews(crews);
+        } else {
+          console.log('⚠️ No dancer data found, using mock data');
+          const { dancers: mockDancers } = await import('./data/mockData');
+          setDancers(mockDancers);
         }
-      } catch (error) {
-        console.error('❌ Error loading data:', error);
-        // 오류 시에만 목데이터 사용
-        console.log('🔄 Using mock data as fallback due to error');
-        const { dancers } = await import('./data/mockData');
-        const { competitions } = await import('./data/mockData');
-        const { crews } = await import('./data/mockData');
         
-        setDancers(dancers);
-        setCompetitions(competitions);
-        setCrews(crews);
+        if (competitions.length > 0) {
+          console.log('🎯 Using real competition data from database');
+          setCompetitions(competitions);
+        } else {
+          console.log('⚠️ No competition data found, using mock data');
+          const { competitions: mockCompetitions } = await import('./data/mockData');
+          setCompetitions(mockCompetitions);
+        }
+        
+        if (crews.length > 0) {
+          console.log('🎯 Using real crew data from database');
+          setCrews(crews);
+        } else {
+          console.log('⚠️ No crew data found, using mock data');
+          const { crews: mockCrews } = await import('./data/mockData');
+          setCrews(mockCrews);
+        }
+        
+      } catch (error) {
+        console.error('❌ Critical error loading data:', error);
+        // 완전한 오류 시에만 목데이터 사용
+        console.log('🔄 Using mock data as complete fallback');
+        const mockData = await import('./data/mockData');
+        setDancers(mockData.dancers);
+        setCompetitions(mockData.competitions);
+        setCrews(mockData.crews);
       } finally {
         console.log('🏁 Data loading completed, setting loading to false');
         setLoading(false);

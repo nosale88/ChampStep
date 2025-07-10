@@ -4,9 +4,11 @@ import { dancers } from '../data/mockData'
 
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
-    // 5초 타임아웃으로 증가
+    console.log('🔍 Fetching dancers from Supabase...');
+    
+    // 배포 환경에서는 10초 타임아웃 (더 긴 시간 필요)
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 5000)
+      setTimeout(() => reject(new Error('Timeout')), 10000)
     })
 
     const supabasePromise = supabase
@@ -17,26 +19,27 @@ export async function fetchDancers(): Promise<Dancer[]> {
     const { data, error } = await Promise.race([supabasePromise, timeoutPromise])
 
     if (error) {
-      console.error('Error fetching dancers from Supabase:', error)
-      // 타임아웃이 아닌 다른 오류의 경우 재시도
-      if (error.message !== 'Timeout') {
-        console.log('🔄 재시도 중...')
+      console.error('❌ Error fetching dancers from Supabase:', error)
+      
+      // 네트워크 오류가 아닌 경우 재시도
+      if (error.message !== 'Timeout' && !error.message.includes('fetch')) {
+        console.log('🔄 Retrying dancer fetch...')
         const { data: retryData, error: retryError } = await supabase
           .from('dancers')
           .select('*')
           .order('rank', { ascending: true })
         
         if (!retryError && retryData && retryData.length > 0) {
-          console.log(`✅ 재시도 성공: ${retryData.length}명의 댄서 데이터`)
+          console.log(`✅ Retry successful: ${retryData.length} dancers`)
           return retryData.map(dancer => ({
             id: dancer.id,
             nickname: dancer.nickname,
             name: dancer.name,
             crew: dancer.crew,
-            genres: dancer.genres,
+            genres: dancer.genres || [],
             sns: dancer.sns || '',
-            totalPoints: dancer.total_points,
-            rank: dancer.rank,
+            totalPoints: dancer.total_points || 0,
+            rank: dancer.rank || 999,
             avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
             profileImage: dancer.profile_image,
             backgroundImage: dancer.background_image,
@@ -52,22 +55,24 @@ export async function fetchDancers(): Promise<Dancer[]> {
           }))
         }
       }
-      console.log('⚠️ 목데이터 사용')
+      
+      // 타임아웃이나 네트워크 오류 시 목데이터 사용
+      console.log('⚠️ Using mock data due to network issues')
       return dancers
     }
 
     // 실제 데이터가 있으면 사용
     if (data && data.length > 0) {
-      console.log(`✅ Supabase에서 ${data.length}명의 댄서 데이터를 가져왔습니다`)
+      console.log(`✅ Successfully fetched ${data.length} dancers from Supabase`)
       return data.map(dancer => ({
         id: dancer.id,
         nickname: dancer.nickname,
         name: dancer.name,
         crew: dancer.crew,
-        genres: dancer.genres,
+        genres: dancer.genres || [],
         sns: dancer.sns || '',
-        totalPoints: dancer.total_points,
-        rank: dancer.rank,
+        totalPoints: dancer.total_points || 0,
+        rank: dancer.rank || 999,
         avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
         profileImage: dancer.profile_image,
         backgroundImage: dancer.background_image,
@@ -83,11 +88,11 @@ export async function fetchDancers(): Promise<Dancer[]> {
       }))
     }
 
-    console.log('⚠️ Supabase에서 댄서 데이터를 찾을 수 없어 목데이터를 사용합니다')
+    console.log('⚠️ No dancers found in Supabase, using mock data')
     return dancers
   } catch (error) {
-    console.error('Error in fetchDancers:', error)
-    console.log('⚠️ 오류 발생으로 목데이터를 사용합니다')
+    console.error('❌ Critical error in fetchDancers:', error)
+    console.log('⚠️ Using mock data as fallback')
     return dancers
   }
 }

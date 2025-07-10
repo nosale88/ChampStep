@@ -4,9 +4,11 @@ import { competitions } from '../data/mockData'
 
 export async function fetchCompetitions(): Promise<Competition[]> {
   try {
-    // 5초 타임아웃으로 증가
+    console.log('🔍 Fetching competitions from Supabase...');
+    
+    // 배포 환경에서는 10초 타임아웃 (더 긴 시간 필요)
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 5000)
+      setTimeout(() => reject(new Error('Timeout')), 10000)
     })
 
     const supabasePromise = supabase
@@ -17,17 +19,18 @@ export async function fetchCompetitions(): Promise<Competition[]> {
     const { data, error } = await Promise.race([supabasePromise, timeoutPromise])
 
     if (error) {
-      console.error('Error fetching competitions from Supabase:', error)
-      // 타임아웃이 아닌 다른 오류의 경우 재시도
-      if (error.message !== 'Timeout') {
-        console.log('🔄 재시도 중...')
+      console.error('❌ Error fetching competitions from Supabase:', error)
+      
+      // 네트워크 오류가 아닌 경우 재시도
+      if (error.message !== 'Timeout' && !error.message.includes('fetch')) {
+        console.log('🔄 Retrying competition fetch...')
         const { data: retryData, error: retryError } = await supabase
           .from('competitions')
           .select('*')
           .order('date', { ascending: false })
         
         if (!retryError && retryData && retryData.length > 0) {
-          console.log(`✅ 재시도 성공: ${retryData.length}개의 대회 데이터`)
+          console.log(`✅ Retry successful: ${retryData.length} competitions`)
           return retryData.map(comp => ({
             id: comp.id,
             managerName: comp.manager_name || '',
@@ -63,13 +66,15 @@ export async function fetchCompetitions(): Promise<Competition[]> {
           }))
         }
       }
-      console.log('⚠️ 목데이터 사용')
+      
+      // 타임아웃이나 네트워크 오류 시 목데이터 사용
+      console.log('⚠️ Using mock data due to network issues')
       return competitions
     }
 
     // 실제 데이터가 있으면 사용
     if (data && data.length > 0) {
-      console.log(`✅ Supabase에서 ${data.length}개의 대회 데이터를 가져왔습니다`)
+      console.log(`✅ Successfully fetched ${data.length} competitions from Supabase`)
       return data.map(comp => ({
         id: comp.id,
         managerName: comp.manager_name || '',
@@ -105,11 +110,11 @@ export async function fetchCompetitions(): Promise<Competition[]> {
       }))
     }
 
-    console.log('⚠️ Supabase에서 대회 데이터를 찾을 수 없어 목데이터를 사용합니다')
+    console.log('⚠️ No competitions found in Supabase, using mock data')
     return competitions
   } catch (error) {
-    console.error('Error in fetchCompetitions:', error)
-    console.log('⚠️ 오류 발생으로 목데이터를 사용합니다')
+    console.error('❌ Critical error in fetchCompetitions:', error)
+    console.log('⚠️ Using mock data as fallback')
     return competitions
   }
 }

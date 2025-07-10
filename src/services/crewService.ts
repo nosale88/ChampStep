@@ -45,7 +45,12 @@ function levenshteinDistance(str1: string, str2: string): number {
 
 export async function fetchCrews(): Promise<Crew[]> {
   try {
-    console.log('🔍 Supabase에서 크루 데이터 가져오는 중...')
+    console.log('🔍 Fetching crews from Supabase...')
+    
+    // 배포 환경에서는 10초 타임아웃 (더 긴 시간 필요)
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout')), 10000)
+    })
     
     // 크루 데이터와 댄서 데이터를 병렬로 가져오기
     const crewsPromise = supabase
@@ -59,14 +64,45 @@ export async function fetchCrews(): Promise<Crew[]> {
       .not('crew', 'is', null)
       .order('rank', { ascending: true })
 
-    const [crewsResult, dancersResult] = await Promise.all([crewsPromise, dancersPromise])
+    const [crewsResult, dancersResult] = await Promise.race([
+      Promise.all([crewsPromise, dancersPromise]),
+      timeoutPromise
+    ]) as any
 
     const { data: crewsData, error: crewsError } = crewsResult
     const { data: dancersData, error: dancersError } = dancersResult
 
     if (crewsError) {
       console.error('❌ Error fetching crews from Supabase:', crewsError)
-      throw crewsError
+      
+      // 네트워크 오류가 아닌 경우 재시도
+      if (crewsError.message !== 'Timeout' && !crewsError.message.includes('fetch')) {
+        console.log('🔄 Retrying crew fetch...')
+        const { data: retryData, error: retryError } = await supabase
+          .from('crews')
+          .select('*')
+          .order('member_count', { ascending: false })
+        
+        if (!retryError && retryData && retryData.length > 0) {
+          console.log(`✅ Retry successful: ${retryData.length} crews`)
+          // 재시도 성공 시 댄서 데이터 없이라도 크루 데이터 반환
+          return retryData.map(crew => ({
+            id: crew.id,
+            name: crew.name,
+            genre: 'Hip-hop', // 기본값
+            introduction: crew.description || `${crew.name} 크루입니다.`,
+            members: [], // 댄서 데이터 없이
+            schedules: [],
+            backgroundImage: undefined,
+            createdAt: crew.created_at,
+            member_count: crew.member_count
+          }))
+        }
+      }
+      
+      // 타임아웃이나 네트워크 오류 시 목데이터 사용
+      console.log('⚠️ Using mock data due to network issues')
+      return crews
     }
 
     if (dancersError) {
@@ -75,79 +111,72 @@ export async function fetchCrews(): Promise<Crew[]> {
     }
 
     if (!crewsData || crewsData.length === 0) {
-      console.log('⚠️ Supabase에서 크루 데이터를 찾을 수 없습니다')
-      return []
+      console.log('⚠️ No crews found in Supabase, using mock data')
+      return crews
     }
 
-    console.log(`✅ Supabase에서 ${crewsData.length}개의 크루 데이터를 가져왔습니다`)
+    console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
     
-    // 댄서 데이터를 크루별로 그룹화 (원본 크루명 유지)
-    const dancersByCrewName = (dancersData || []).reduce((acc, dancer) => {
-      if (dancer.crew) {
-        const crewName = dancer.crew.trim()
-        
-        if (!acc[crewName]) {
-          acc[crewName] = []
-        }
-        acc[crewName].push({
-          id: dancer.id,
-          nickname: dancer.nickname,
-          rank: dancer.rank,
-          totalPoints: dancer.total_points || 0,
-          genres: dancer.genres || [],
-          profileImage: dancer.profile_image,
-          crew: dancer.crew,
-          bio: dancer.bio || '',
-          achievements: dancer.achievements || [],
-          socialLinks: dancer.social_links || {},
-          createdAt: dancer.created_at
-        })
-      }
-      return acc
-    }, {} as Record<string, Dancer[]>)
-
-    // 디버깅: 댄서 데이터 확인
-    console.log('🔍 댄서별 크루 정보:')
-    Object.keys(dancersByCrewName).forEach(crewName => {
-      console.log(`  ${crewName}: ${dancersByCrewName[crewName].length}명`)
-    })
-
-    return crewsData.map(crew => {
-      // 정확한 매칭 시도
-      let matchedDancers = dancersByCrewName[crew.name] || []
+    // 댄서 데이터로 크루별 멤버 매칭
+    const dancersByCrewName = new Map<string, Dancer[]>()
+    
+    if (dancersData && dancersData.length > 0) {
+      console.log(`✅ Successfully fetched ${dancersData.length} dancers for crew matching`)
       
-      // 정확한 매칭이 안 되면 유사도 기반 매칭 시도
-      if (matchedDancers.length === 0) {
-        const dancerCrewNames = Object.keys(dancersByCrewName)
-        let bestMatch = ''
-        let bestSimilarity = 0
-        
-        for (const dancerCrewName of dancerCrewNames) {
-          const similarity = calculateSimilarity(crew.name, dancerCrewName)
-          if (similarity > bestSimilarity && similarity > 0.7) { // 70% 이상 유사도
-            bestSimilarity = similarity
-            bestMatch = dancerCrewName
+      dancersData.forEach((dancer: any) => {
+        if (dancer.crew) {
+          const crewName = dancer.crew.trim()
+          if (!dancersByCrewName.has(crewName)) {
+            dancersByCrewName.set(crewName, [])
+          }
+          
+          dancersByCrewName.get(crewName)!.push({
+            id: dancer.id,
+            nickname: dancer.nickname,
+            name: dancer.name,
+            crew: dancer.crew,
+            genres: dancer.genres || [],
+            sns: dancer.sns || '',
+            totalPoints: dancer.total_points || 0,
+            rank: dancer.rank || 999,
+            avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
+            profileImage: dancer.profile_image,
+            backgroundImage: dancer.background_image,
+            bio: dancer.bio,
+            birthDate: dancer.birth_date,
+            phone: dancer.phone,
+            email: dancer.email,
+            instagramUrl: dancer.instagram_url,
+            youtubeUrl: dancer.youtube_url,
+            twitterUrl: dancer.twitter_url,
+            competitions: [],
+            videos: []
+          })
+        }
+      })
+    }
+
+    return crewsData.map((crew: any) => {
+      // 크루 이름과 일치하는 댄서들 찾기
+      const exactMatches = dancersByCrewName.get(crew.name) || []
+      
+      // 유사한 이름의 크루도 찾기 (오타나 변형 고려)
+      const similarMatches: Dancer[] = []
+      if (exactMatches.length === 0) {
+        for (const [crewName, dancers] of dancersByCrewName.entries()) {
+          if (calculateSimilarity(crew.name, crewName) > 0.8) {
+            similarMatches.push(...dancers)
           }
         }
-        
-        if (bestMatch) {
-          matchedDancers = dancersByCrewName[bestMatch]
-          console.log(`🔄 ${crew.name} -> ${bestMatch} (유사도: ${(bestSimilarity * 100).toFixed(1)}%)`)
-        }
       }
       
-      // Rivers Crew 특별 디버깅
-      if (crew.name.toLowerCase().includes('rivers')) {
-        console.log(`🔍 ${crew.name} 디버깅:`)
-        console.log(`  - DB에서 member_count: ${crew.member_count}`)
-        console.log(`  - 실제 매칭된 댄서 수: ${matchedDancers.length}`)
-        console.log(`  - 매칭된 댄서들:`, matchedDancers.map((d: Dancer) => d.nickname))
-        
-        // 가능한 매칭 후보들 확인
-        const possibleMatches = Object.keys(dancersByCrewName).filter(name => 
-          name.toLowerCase().includes('rivers') || name.toLowerCase().includes('river')
-        )
-        console.log(`  - 가능한 매칭 후보들:`, possibleMatches)
+      const matchedDancers = exactMatches.length > 0 ? exactMatches : similarMatches
+      
+      // 실제 멤버 수 업데이트
+      const actualMemberCount = matchedDancers.length
+      
+      if (actualMemberCount > 0) {
+        console.log(`✅ Matched ${actualMemberCount} dancers to crew: ${crew.name}`)
       }
 
       return {
@@ -158,14 +187,14 @@ export async function fetchCrews(): Promise<Crew[]> {
         members: matchedDancers,
         schedules: [], // 스케줄은 별도로 불러오기
         backgroundImage: undefined,
-        createdAt: crew.created_at
+        createdAt: crew.created_at,
+        member_count: actualMemberCount || crew.member_count
       }
     })
 
   } catch (error) {
-    console.error('❌ Error in fetchCrews:', error)
-    // 실제 데이터베이스 오류 시에만 목데이터 사용
-    console.log('⚠️ 데이터베이스 오류로 인해 목데이터 사용')
+    console.error('❌ Critical error in fetchCrews:', error)
+    console.log('⚠️ Using mock data as fallback')
     return crews
   }
 }
