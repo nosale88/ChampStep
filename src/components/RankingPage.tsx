@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Trophy, TrendingUp, Grid3X3, List } from 'lucide-react';
-import DancerCard from './DancerCard';
-import DancerListItem from './DancerListItem';
+import { Search, Filter, Trophy, TrendingUp, Grid3X3, List, ChevronDown } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Dancer } from '../types';
+import DancerCard from './DancerCard';
+import DancerListItem from './DancerListItem';
 
 interface RankingPageProps {
   onDancerClick: (dancerId: string) => void;
@@ -16,23 +16,28 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [selectedCrew, setSelectedCrew] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false);
 
-  const allGenres = useMemo(() => {
+  const availableGenres = useMemo(() => {
     const genres = new Set<string>();
-    dancers.forEach(dancer => dancer.genres.forEach(genre => genres.add(genre)));
-    return Array.from(genres);
-  }, []);
+    dancers.forEach(dancer => {
+      dancer.genres.forEach(genre => genres.add(genre));
+    });
+    return Array.from(genres).sort();
+  }, [dancers]);
 
-  const allCrews = useMemo(() => {
+  const availableCrews = useMemo(() => {
     const crews = new Set<string>();
-    dancers.forEach(dancer => dancer.crew && crews.add(dancer.crew));
-    return Array.from(crews);
+    dancers.forEach(dancer => {
+      if (dancer.crew) crews.add(dancer.crew);
+    });
+    return Array.from(crews).sort();
   }, [dancers]);
 
   const filteredDancers = useMemo(() => {
     return dancers.filter(dancer => {
-      const matchesSearch = dancer.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           dancer.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = dancer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           dancer.nickname.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesGenre = selectedGenre === 'all' || dancer.genres.includes(selectedGenre);
       const matchesCrew = selectedCrew === 'all' || dancer.crew === selectedCrew;
       
@@ -46,102 +51,134 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
       <section className={`shadow-sm border-b transition-colors duration-300 ${
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center mb-8">
-            <h1 className={`text-3xl font-bold mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className={`text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               댄서 랭킹
             </h1>
-            <p className={`max-w-2xl mx-auto transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`max-w-2xl mx-auto px-4 text-sm sm:text-base transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               대회 수상 내역을 바탕으로 산정된 공정한 댄서 랭킹을 확인하세요
             </p>
           </div>
 
           {/* Search and Filters */}
-          <div className={`rounded-2xl p-6 transition-colors duration-300 ${
-            isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
-          }`}>
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-400'
-                  }`} />
-                  <input
-                    type="text"
-                    placeholder="댄서 이름이나 닉네임으로 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      isDarkMode 
-                        ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400'
-                        : 'bg-white border-gray-200 text-gray-900'
-                    }`}
-                  />
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`} />
+              <input
+                type="text"
+                placeholder="댄서 이름 또는 닉네임으로 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg border transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+              />
+            </div>
+
+            {/* Filter Toggle Button (Mobile) */}
+            <div className="sm:hidden">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Filter className="h-4 w-4" />
+                  <span>필터</span>
                 </div>
-              </div>
-              
-              <div className="flex gap-4">
+                <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+
+            {/* Filters */}
+            <div className={`space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-4 ${
+              showFilters ? 'block' : 'hidden sm:grid'
+            }`}>
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  장르
+                </label>
                 <select
                   value={selectedGenre}
                   onChange={(e) => setSelectedGenre(e.target.value)}
-                  className={`px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`w-full px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-800 border-gray-600 text-white'
-                      : 'bg-white border-gray-200 text-gray-900'
-                  }`}
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 >
                   <option value="all">모든 장르</option>
-                  {allGenres.map(genre => (
+                  {availableGenres.map(genre => (
                     <option key={genre} value={genre}>{genre}</option>
                   ))}
                 </select>
-                
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  크루
+                </label>
                 <select
                   value={selectedCrew}
                   onChange={(e) => setSelectedCrew(e.target.value)}
-                  className={`px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`w-full px-3 py-2 rounded-lg border transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-800 border-gray-600 text-white'
-                      : 'bg-white border-gray-200 text-gray-900'
-                  }`}
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 >
                   <option value="all">모든 크루</option>
-                  {allCrews.map(crew => (
+                  {availableCrews.map(crew => (
                     <option key={crew} value={crew}>{crew}</option>
                   ))}
                 </select>
+              </div>
 
-                {/* View Mode Toggle */}
-                <div className={`flex border rounded-xl overflow-hidden transition-colors ${
-                  isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  보기 방식
+                </label>
+                <div className={`flex border rounded-lg overflow-hidden transition-colors ${
+                  isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
                 }`}>
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-3 transition-colors ${
+                    className={`flex-1 p-2 sm:p-3 transition-colors flex items-center justify-center ${
                       viewMode === 'grid' 
                         ? isDarkMode 
                           ? 'bg-blue-900 text-blue-300' 
                           : 'bg-blue-50 text-blue-600'
                         : isDarkMode
-                          ? 'text-gray-400 hover:bg-gray-700'
+                          ? 'text-gray-400 hover:bg-gray-600'
                           : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
-                    <Grid3X3 className="h-5 w-5" />
+                    <Grid3X3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="ml-2 text-sm sm:text-base">그리드</span>
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-3 transition-colors ${
+                    className={`flex-1 p-2 sm:p-3 transition-colors flex items-center justify-center ${
                       viewMode === 'list' 
                         ? isDarkMode 
                           ? 'bg-blue-900 text-blue-300' 
                           : 'bg-blue-50 text-blue-600'
                         : isDarkMode
-                          ? 'text-gray-400 hover:bg-gray-700'
+                          ? 'text-gray-400 hover:bg-gray-600'
                           : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
-                    <List className="h-5 w-5" />
+                    <List className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="ml-2 text-sm sm:text-base">리스트</span>
                   </button>
                 </div>
               </div>
@@ -151,11 +188,11 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
       </section>
 
       {/* Ranking Stats */}
-      <section className={`py-8 transition-colors duration-300 ${
+      <section className={`py-4 sm:py-6 lg:py-8 transition-colors duration-300 ${
         isDarkMode ? 'bg-gray-800' : 'bg-white'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             {[
               { 
                 icon: Trophy, 
@@ -176,17 +213,17 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
                 color: isDarkMode ? 'text-purple-400 bg-purple-900' : 'text-purple-600 bg-purple-50' 
               }
             ].map(({ icon: Icon, label, value, color }, index) => (
-              <div key={index} className={`flex items-center space-x-4 p-4 rounded-xl transition-colors duration-300 ${
+              <div key={index} className={`flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg sm:rounded-xl transition-colors duration-300 ${
                 isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
               }`}>
-                <div className={`p-3 rounded-lg ${color}`}>
-                  <Icon className="h-6 w-6" />
+                <div className={`p-2 sm:p-3 rounded-lg ${color}`}>
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <div>
-                  <p className={`text-2xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <p className={`text-lg sm:text-2xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {value}
                   </p>
-                  <p className={`text-sm transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <p className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     {label}
                   </p>
                 </div>
@@ -197,34 +234,39 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
       </section>
 
       {/* Ranking List */}
-      <section className={`py-8 transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <section className={`py-4 sm:py-6 lg:py-8 transition-colors duration-300 ${
+        isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {filteredDancers.length === 0 ? (
-            <div className="text-center py-16">
-              <div className={`mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                <Search className="h-16 w-16 mx-auto" />
-              </div>
-              <h3 className={`text-xl font-semibold mb-2 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <div className="text-center py-8 sm:py-12">
+              <Trophy className={`h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 opacity-50 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`} />
+              <h3 className={`text-lg sm:text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 검색 결과가 없습니다
               </h3>
-              <p className={`transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 다른 검색어나 필터를 시도해보세요
               </p>
             </div>
           ) : (
             <>
               {viewMode === 'list' && (
-                <div className="flex justify-between items-center mb-8">
-                  <h2 className={`text-2xl font-bold transition-colors ${
+                <div className="flex justify-between items-center mb-4 sm:mb-6 lg:mb-8">
+                  <h2 className={`text-lg sm:text-xl lg:text-2xl font-bold transition-colors ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    포인트 규정
+                    랭킹 결과
                   </h2>
+                  <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    총 {filteredDancers.length}명
+                  </div>
                 </div>
               )}
               
               {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {filteredDancers.map((dancer) => (
                     <DancerCard
                       key={dancer.id}
@@ -234,7 +276,7 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
                   ))}
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 sm:space-y-3">
                   {filteredDancers.map((dancer, index) => (
                     <DancerListItem
                       key={dancer.id}

@@ -3,6 +3,7 @@ export interface Video {
   title: string;
   url: string;
   thumbnail: string;
+  description?: string; // 추가
   type: 'performance' | 'battle' | 'highlight' | 'recap' | 'interview';
   competitionId?: string;
   dancerId?: string;
@@ -108,6 +109,10 @@ export interface Dancer {
   performances?: Performance[];
   birthDate?: string;
   phone?: string;
+  // 소셜 미디어 URL 추가
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  twitterUrl?: string;
 }
 
 export interface Education {

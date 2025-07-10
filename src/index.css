@@ -1,3 +1,202 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 모바일 최적화 기본 설정 */
+@layer base {
+  html {
+    /* 모바일에서 텍스트 크기 조정 방지 */
+    -webkit-text-size-adjust: 100%;
+    /* 터치 액션 최적화 */
+    touch-action: manipulation;
+  }
+  
+  body {
+    /* 스크롤 개선 */
+    -webkit-overflow-scrolling: touch;
+    /* 모바일 사파리에서 바운스 효과 방지 */
+    overscroll-behavior: none;
+  }
+}
+
+/* 모바일 최적화 컴포넌트 */
+@layer components {
+  /* 터치 친화적인 버튼 */
+  .btn-touch {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+  
+  /* 모바일 카드 스타일 */
+  .card-mobile {
+    @apply rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  /* 모바일 입력 필드 */
+  .input-mobile {
+    @apply text-base sm:text-sm; /* iOS에서 줌 방지를 위해 16px 이상 */
+  }
+  
+  /* 안전 영역 패딩 (노치 대응) */
+  .safe-area-padding {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .safe-area-padding-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-padding-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 모바일 최적화 유틸리티 */
+@layer utilities {
+  /* 터치 대상 크기 최적화 */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* 스크롤 스냅 */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .scroll-snap-y {
+    scroll-snap-type: y mandatory;
+  }
+  
+  .scroll-snap-start {
+    scroll-snap-align: start;
+  }
+  
+  .scroll-snap-center {
+    scroll-snap-align: center;
+  }
+  
+  /* 텍스트 라인 클램프 */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  
+  /* 모바일 전용 숨김/표시 */
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+  
+  .desktop-only {
+    @apply hidden sm:block;
+  }
+  
+  /* 터치 하이라이트 제거 */
+  .no-touch-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* 스크롤바 스타일링 */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 2px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.7);
+  }
+  
+  /* 모바일 최적화 애니메이션 */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 모바일 전용 그라데이션 */
+  .gradient-mobile {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  /* 모바일 카드 호버 효과 */
+  .card-hover-mobile {
+    @apply transition-all duration-200 hover:scale-[1.02] active:scale-[0.98];
+  }
+  
+  /* 모바일 버튼 피드백 */
+  .btn-feedback {
+    @apply transition-all duration-150 active:scale-95;
+  }
+}
+
+/* 모바일 브라우저별 최적화 */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari 전용 스타일 */
+  .ios-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 다크 모드 최적화 */
+@media (prefers-color-scheme: dark) {
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(75, 85, 99, 0.5);
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(75, 85, 99, 0.7);
+  }
+}
+
+/* 고해상도 디스플레이 최적화 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi-optimized {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* 접근성 최적화 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
