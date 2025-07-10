@@ -9,9 +9,9 @@ import ImageUpload from './ImageUpload';
 
 const ProfilePage: React.FC = () => {
   const { isDarkMode } = useTheme();
-  const { user, dancer, updateProfile } = useAuth();
+  const { user, dancer, updateProfile, loading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [crews, setCrews] = useState<Crew[]>([]);
   const [showImageUpload, setShowImageUpload] = useState<'avatar' | 'background' | null>(null);
   
@@ -60,7 +60,7 @@ const ProfilePage: React.FC = () => {
   const handleSave = async () => {
     if (!user || !dancer) return;
     
-    setLoading(true);
+    setProfileLoading(true);
     try {
       const { error } = await updateProfile({
         ...dancer,
@@ -82,7 +82,7 @@ const ProfilePage: React.FC = () => {
       console.error('Error updating profile:', error);
       alert('프로필 업데이트 중 오류가 발생했습니다.');
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
@@ -114,7 +114,22 @@ const ProfilePage: React.FC = () => {
 
   const availableGenres = ['Hip-Hop', 'Popping', 'Locking', 'Breaking', 'House', 'Krump', 'Waacking', 'Voguing', 'Jazz', 'Contemporary'];
 
-  if (!user || !dancer) {
+  // 로딩 중일 때
+  if (loading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
+      }`}>
+        <div className={`text-center px-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-sm sm:text-base text-gray-500">프로필을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 인증되지 않았을 때
+  if (!user) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
         isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
@@ -123,6 +138,21 @@ const ProfilePage: React.FC = () => {
           <User className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 opacity-50" />
           <h2 className="text-xl sm:text-2xl font-bold mb-2">로그인이 필요합니다</h2>
           <p className="text-sm sm:text-base text-gray-500">프로필을 관리하려면 먼저 로그인해주세요.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 댄서 프로필이 없을 때 (로그인은 되었지만 프로필이 아직 생성되지 않음)
+  if (!dancer) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        isDarkMode ? 'bg-gray-900' : 'bg-gray-50'
+      }`}>
+        <div className={`text-center px-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">프로필을 생성하는 중...</h2>
+          <p className="text-sm sm:text-base text-gray-500">잠시만 기다려주세요.</p>
         </div>
       </div>
     );
@@ -379,15 +409,15 @@ const ProfilePage: React.FC = () => {
             <div className="mt-6 sm:mt-8 flex justify-end">
               <button
                 onClick={handleSave}
-                disabled={loading}
+                disabled={profileLoading}
                 className={`w-full sm:w-auto px-4 sm:px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 ${
-                  loading
+                  profileLoading
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-blue-500 text-white hover:bg-blue-600'
                 }`}
               >
                 <Save className="h-4 w-4" />
-                <span>{loading ? '저장 중...' : '저장'}</span>
+                <span>{profileLoading ? '저장 중...' : '저장'}</span>
               </button>
             </div>
           </div>
