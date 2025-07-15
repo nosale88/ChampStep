@@ -57,6 +57,11 @@ function AppContent() {
           crewsStatus: crewsData.status
         });
         
+        // 실제 데이터 내용도 로그로 확인
+        console.log('👥 Dancers data:', dancers.slice(0, 3));
+        console.log('🏆 Competitions data:', competitions.slice(0, 3));
+        console.log('👨‍👩‍👧‍👦 Crews data:', crews.slice(0, 3));
+        
         // 데이터 설정
         setDancers(dancers);
         setCompetitions(competitions);
