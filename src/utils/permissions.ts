@@ -176,6 +176,7 @@ export const usePermissions = () => {
     // 임시 구현 - 실제로는 인증 시스템에서 가져와야 함
     return {
       id: 'current-user-id',
+      name: '테스트 사용자',
       email: 'user@example.com',
       role: 'user' as const
     };

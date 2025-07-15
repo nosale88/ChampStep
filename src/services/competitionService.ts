@@ -7,7 +7,7 @@ export async function fetchCompetitions(): Promise<Competition[]> {
     
     // 3초 타임아웃으로 줄여서 빠른 응답
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 3000)
+      setTimeout(() => reject(new Error('Timeout')), 10000)
     })
 
     const supabasePromise = supabase

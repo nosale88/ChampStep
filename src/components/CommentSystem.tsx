@@ -18,6 +18,7 @@ interface CommentSystemProps {
   };
   dancers: Dancer[];
   crews: Crew[];
+  loading?: boolean;
 }
 
 const CommentSystem: React.FC<CommentSystemProps> = ({
@@ -29,7 +30,8 @@ const CommentSystem: React.FC<CommentSystemProps> = ({
   onDeleteComment,
   currentUser,
   dancers,
-  crews
+  crews,
+  loading = false
 }) => {
   const { isDarkMode } = useTheme();
   const [newComment, setNewComment] = useState('');

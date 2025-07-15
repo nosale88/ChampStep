@@ -14,7 +14,9 @@ import CompetitionDetailModal from './components/CompetitionDetailModal';
 import { fetchDancers } from './services/dancerService';
 import { fetchCompetitions } from './services/competitionService';
 import { fetchCrews } from './services/crewService';
-import { Competition, Dancer, Crew, Message } from './types';
+import { addComment, updateComment, deleteComment } from './services/commentService';
+
+import { Competition, Dancer, Crew, Message, Comment } from './types';
 
 function AppContent() {
   const { isDarkMode } = useTheme();
@@ -27,6 +29,7 @@ function AppContent() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [crews, setCrews] = useState<Crew[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,7 +46,7 @@ function AppContent() {
           fetchCrews()
         ]);
         
-        // 성공한 데이터만 추출
+        // 실제 Supabase 데이터만 사용 (목 데이터 fallback 제거)
         const dancers = dancersData.status === 'fulfilled' ? dancersData.value : [];
         const competitions = competitionsData.status === 'fulfilled' ? competitionsData.value : [];
         const crews = crewsData.status === 'fulfilled' ? crewsData.value : [];
@@ -138,6 +141,88 @@ function AppContent() {
     setDancers(prev => prev.map(d => d.id === dancerId ? { ...d, ...updates } : d));
   }, []);
 
+  const handleAddComment = useCallback(async (comment: Omit<Comment, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newComment = await addComment(comment);
+      if (newComment) {
+        if (comment.parentId) {
+          // 답글인 경우: 부모 댓글의 replies 배열에 추가
+          setComments(prev => prev.map(c => 
+            c.id === comment.parentId 
+              ? { ...c, replies: [...(c.replies || []), newComment] }
+              : c
+          ));
+        } else {
+          // 일반 댓글인 경우: 댓글 목록에 추가
+          setComments(prev => [...prev, newComment]);
+        }
+        console.log('✅ Comment added to Supabase:', newComment);
+      } else {
+        console.error('❌ Failed to add comment to Supabase');
+      }
+    } catch (error) {
+      console.error('❌ Error adding comment:', error);
+    }
+  }, []);
+
+  const handleUpdateComment = useCallback(async (commentId: string, content: string) => {
+    try {
+      const success = await updateComment(commentId, content);
+      if (success) {
+        setComments(prev => prev.map(comment => {
+          // 메인 댓글 수정
+          if (comment.id === commentId) {
+            return { ...comment, content, updatedAt: new Date().toISOString() };
+          }
+          
+          // 답글 수정
+          if (comment.replies) {
+            const updatedReplies = comment.replies.map(reply => 
+              reply.id === commentId 
+                ? { ...reply, content, updatedAt: new Date().toISOString() }
+                : reply
+            );
+            return { ...comment, replies: updatedReplies };
+          }
+          
+          return comment;
+        }));
+        console.log('✅ Comment updated in Supabase:', commentId, content);
+      } else {
+        console.error('❌ Failed to update comment in Supabase');
+      }
+    } catch (error) {
+      console.error('❌ Error updating comment:', error);
+    }
+  }, []);
+
+  const handleDeleteComment = useCallback(async (commentId: string) => {
+    try {
+      const success = await deleteComment(commentId);
+      if (success) {
+        setComments(prev => {
+          // 먼저 메인 댓글에서 찾기
+          const mainComment = prev.find(c => c.id === commentId);
+          if (mainComment) {
+            // 메인 댓글 삭제
+            return prev.filter(comment => comment.id !== commentId);
+          }
+          
+          // 답글에서 찾기
+          return prev.map(comment => ({
+            ...comment,
+            replies: comment.replies?.filter(reply => reply.id !== commentId) || []
+          }));
+        });
+        console.log('✅ Comment deleted from Supabase:', commentId);
+      } else {
+        console.error('❌ Failed to delete comment from Supabase');
+      }
+    } catch (error) {
+      console.error('❌ Error deleting comment:', error);
+    }
+  }, []);
+
   const handleUpdateCrew = useCallback((crewId: string, updates: Partial<Crew>) => {
     setCrews(prev => prev.map(c => c.id === crewId ? { ...c, ...updates } : c));
   }, []);
@@ -223,19 +308,10 @@ function AppContent() {
           onSelectCrew={handleSelectCrewFromDancer}
           crews={crews}
           dancers={dancers}
-          comments={[]}
-          onAddComment={async (comment) => {
-            // 댓글 추가 로직 구현
-            console.log('Add comment:', comment);
-          }}
-          onUpdateComment={async (commentId: string, content: string) => {
-            // 댓글 수정 로직 구현
-            console.log('Update comment:', commentId, content);
-          }}
-          onDeleteComment={async (commentId: string) => {
-            // 댓글 삭제 로직 구현
-            console.log('Delete comment:', commentId);
-          }}
+          comments={comments.filter(c => c.targetType === 'dancer' && c.targetId === selectedDancer.id)}
+          onAddComment={handleAddComment}
+          onUpdateComment={handleUpdateComment}
+          onDeleteComment={handleDeleteComment}
           onDancerClick={handleSelectDancerFromCrew}
           onUpdateDancer={handleUpdateDancer}
         />

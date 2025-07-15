@@ -48,7 +48,7 @@ export async function fetchCrews(): Promise<Crew[]> {
     
     // 3초 타임아웃으로 줄여서 빠른 응답
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 3000)
+      setTimeout(() => reject(new Error('Timeout')), 10000)
     })
     
     // 크루 데이터만 먼저 가져오기 (속도 개선)
@@ -88,17 +88,47 @@ export async function fetchCrews(): Promise<Crew[]> {
       
       if (!retryError && retryData && retryData.length > 0) {
         console.log(`✅ Quick retry successful: ${retryData.length} crews`)
-        return retryData.map((crew: any) => ({
-          id: crew.id,
-          name: crew.name,
-          genre: 'Hip-hop',
-          introduction: crew.description || `${crew.name} 크루입니다.`,
-          members: [], // 댄서 매칭 생략으로 속도 개선
-          schedules: [],
-          backgroundImage: undefined,
-          createdAt: crew.created_at,
-          member_count: crew.member_count || 0
-        }))
+        
+        // 재시도 시에도 댄서 매칭 시도
+        const { data: retryDancersData } = await supabase
+          .from('dancers')
+          .select('*')
+          .not('crew', 'is', null)
+          .order('rank', { ascending: true })
+          .limit(100) // 재시도시 제한적 데이터
+        
+        return retryData.map((crew: any) => {
+          const matchingDancers = retryDancersData?.filter((dancer: any) => {
+            if (!dancer.crew) return false
+            return dancer.crew.toLowerCase().trim() === crew.name.toLowerCase().trim() ||
+                   calculateSimilarity(dancer.crew, crew.name) >= 0.8
+          }) || []
+          
+          return {
+            id: crew.id,
+            name: crew.name,
+            genre: 'Hip-hop',
+            introduction: crew.description || `${crew.name} 크루입니다.`,
+            members: matchingDancers.map((dancer: any) => ({
+              id: dancer.id,
+              nickname: dancer.nickname,
+              name: dancer.name,
+              crew: dancer.crew,
+              genres: dancer.genres || ['Hip-hop'],
+              rank: dancer.rank,
+              totalPoints: dancer.total_points || 0,
+              profileImage: dancer.profile_image,
+              competitions: [],
+              awards: [],
+              videos: [],
+              createdAt: dancer.created_at
+            })),
+            schedules: [],
+            backgroundImage: undefined,
+            createdAt: crew.created_at,
+            member_count: matchingDancers.length
+          }
+        })
       }
       
       // 재시도도 실패하면 빈 배열 반환
@@ -113,41 +143,59 @@ export async function fetchCrews(): Promise<Crew[]> {
 
     console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
     
-    // 빠른 로딩을 위해 댄서 매칭은 백그라운드에서 처리하고 일단 크루 데이터만 반환
-    const quickCrews = crewsData.map((crew: any) => ({
-      id: crew.id,
-      name: crew.name,
-      genre: 'Hip-hop',
-      introduction: crew.description || `${crew.name} 크루입니다.`,
-      members: [], // 일단 빈 배열로 빠른 로딩
-      schedules: [],
-      backgroundImage: undefined,
-      createdAt: crew.created_at,
-      member_count: crew.member_count || 0
-    }))
-
-    // 백그라운드에서 댄서 매칭 (비동기로 처리, 결과에 영향 없음)
-    setTimeout(async () => {
-      try {
-        console.log('🔄 Background: Fetching dancers for crew matching...')
-        const { data: dancersData } = await supabase
-          .from('dancers')
-          .select('*')
-          .not('crew', 'is', null)
-          .order('rank', { ascending: true })
-          .limit(200) // 상위 200명만
+    // 댄서 데이터도 함께 가져와서 크루별로 매칭
+    console.log('🔄 Fetching dancers for crew matching...')
+    const { data: dancersData } = await supabase
+      .from('dancers')
+      .select('*')
+      .not('crew', 'is', null)
+      .order('rank', { ascending: true })
+    
+    console.log(`✅ Fetched ${dancersData?.length || 0} dancers for matching`)
+    
+    // 크루별로 댄서 매칭
+    const crewsWithMembers = crewsData.map((crew: any) => {
+      // 크루 이름과 댄서의 크루 필드를 매칭
+      const matchingDancers = dancersData?.filter((dancer: any) => {
+        if (!dancer.crew) return false
         
-        if (dancersData && dancersData.length > 0) {
-          console.log(`✅ Background: Fetched ${dancersData.length} dancers for matching`)
-          // 여기서 실제 매칭 로직을 수행할 수 있지만, 
-          // 현재는 빠른 로딩이 우선이므로 생략
+        // 정확한 매칭 우선
+        if (dancer.crew.toLowerCase().trim() === crew.name.toLowerCase().trim()) {
+          return true
         }
-      } catch (error) {
-        console.log('Background dancer matching failed:', error)
+        
+        // 유사도 기반 매칭 (0.8 이상)
+        const similarity = calculateSimilarity(dancer.crew, crew.name)
+        return similarity >= 0.8
+      }) || []
+      
+      return {
+        id: crew.id,
+        name: crew.name,
+        genre: 'Hip-hop',
+        introduction: crew.description || `${crew.name} 크루입니다.`,
+        members: matchingDancers.map((dancer: any) => ({
+          id: dancer.id,
+          nickname: dancer.nickname,
+          name: dancer.name,
+          crew: dancer.crew,
+          genres: dancer.genres || ['Hip-hop'],
+          rank: dancer.rank,
+          totalPoints: dancer.total_points || 0,
+          profileImage: dancer.profile_image,
+          competitions: [],
+          awards: [],
+          videos: [],
+          createdAt: dancer.created_at
+        })),
+        schedules: [],
+        backgroundImage: undefined,
+        createdAt: crew.created_at,
+        member_count: matchingDancers.length // 실제 매칭된 댄서 수
       }
-    }, 0)
+    })
 
-    return quickCrews
+    return crewsWithMembers
 
   } catch (error) {
     console.error('❌ Critical error in fetchCrews:', error)

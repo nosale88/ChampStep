@@ -5,16 +5,16 @@ export async function fetchDancers(): Promise<Dancer[]> {
   try {
     console.log('🔍 Fetching dancers from Supabase...');
     
-    // 3초 타임아웃으로 줄여서 빠른 응답
+    // 10초 타임아웃으로 늘려서 안정적인 연결
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 3000)
+      setTimeout(() => reject(new Error('Timeout')), 10000)
     })
 
     const supabasePromise = supabase
       .from('dancers')
       .select('*')
       .order('rank', { ascending: true })
-      .limit(100) // 상위 100명만 가져와서 속도 개선
+      // 모든 댄서 데이터 가져오기
 
     const { data, error } = await Promise.race([supabasePromise, timeoutPromise])
 
@@ -37,7 +37,7 @@ export async function fetchDancers(): Promise<Dancer[]> {
         .from('dancers')
         .select('*')
         .order('rank', { ascending: true })
-        .limit(50) // 재시도 시 더 적은 데이터
+        // 재시도 시에도 모든 데이터 가져오기
       
       const { data: retryData, error: retryError } = await Promise.race([retryPromise, quickRetryPromise])
       

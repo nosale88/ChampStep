@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Trophy, Users, Instagram, MessageCircle, Calendar, Upload, Camera, FileText, Briefcase, Edit2, Lock } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Dancer, Competition, Crew, Comment, UserPermission } from '../types';
 import CommentSystem from './CommentSystem';
+import { fetchComments } from '../services/commentService';
 import DancerResume from './DancerResume';
 import PortfolioAdmin from './PortfolioAdmin';
 import { usePermissions } from '../utils/permissions';
@@ -45,6 +46,29 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [showPortfolioAdmin, setShowPortfolioAdmin] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [dancerComments, setDancerComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+
+  // 댓글 로드
+  useEffect(() => {
+    const loadComments = async () => {
+      if (!isOpen || !dancer.id) return;
+      
+      setLoadingComments(true);
+      try {
+        const comments = await fetchComments('dancer', dancer.id);
+        setDancerComments(comments);
+        console.log('✅ Comments loaded for dancer:', dancer.id, comments.length);
+      } catch (error) {
+        console.error('❌ Error loading comments:', error);
+        setDancerComments([]);
+      } finally {
+        setLoadingComments(false);
+      }
+    };
+
+    loadComments();
+  }, [isOpen, dancer.id]);
   
   // 권한 확인
   const canEdit = canEditDancer(dancer, permissions);
@@ -584,14 +608,16 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
           {/* Comments Section */}
           <div className="mt-8">
             <CommentSystem
-              comments={comments}
+              targetType="dancer"
+              targetId={dancer.id}
+              comments={dancerComments}
               currentUser={currentUser}
               dancers={dancers}
               crews={crews}
               onAddComment={onAddComment}
               onUpdateComment={onUpdateComment}
               onDeleteComment={onDeleteComment}
-              canComment={canAddComment}
+              loading={loadingComments}
             />
           </div>
         </div>
