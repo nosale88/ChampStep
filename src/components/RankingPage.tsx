@@ -54,10 +54,10 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="text-center mb-6 sm:mb-8">
             <h1 className={`text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              댄서 랭킹
+              댄서 스텝
             </h1>
             <p className={`max-w-2xl mx-auto px-4 text-sm sm:text-base transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              대회 수상 내역을 바탕으로 산정된 공정한 댄서 랭킹을 확인하세요
+              대회 수상 내역을 바탕으로 산정된 공정한 댄서 스텝을 확인하세요
             </p>
           </div>
 
@@ -257,7 +257,7 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
                   <h2 className={`text-lg sm:text-xl lg:text-2xl font-bold transition-colors ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    랭킹 결과
+                    스텝 결과
                   </h2>
                   <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     총 {filteredDancers.length}명

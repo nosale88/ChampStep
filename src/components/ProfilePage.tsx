@@ -430,7 +430,7 @@ const ProfilePage: React.FC = () => {
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
                 <span className={`text-sm sm:text-base ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  총 포인트
+                  총 스텝 점수
                 </span>
                 <span className={`font-bold text-blue-500 text-sm sm:text-base`}>
                   {dancer.totalPoints.toFixed(1)}
@@ -438,7 +438,7 @@ const ProfilePage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className={`text-sm sm:text-base ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  전체 랭킹
+                  전체 스텝
                 </span>
                 <span className={`font-bold text-sm sm:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   #{dancer.rank}

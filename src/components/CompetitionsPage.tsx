@@ -1,20 +1,33 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Calendar, Trophy, ChevronDown, Filter } from 'lucide-react';
+import { Search, Calendar, Trophy, ChevronDown, Filter, Plus, Upload } from 'lucide-react';
 import CompetitionCard from './CompetitionCard';
+import CompetitionUpload from './CompetitionUpload';
 import { useTheme } from '../contexts/ThemeContext';
-import { Competition } from '../types';
+import { Competition, Dancer, Crew } from '../types';
+import { uploadCompetition, updateCompetition } from '../services/competitionService';
 
 interface CompetitionsPageProps {
   onCompetitionClick: (competitionId: string) => void;
   competitions: Competition[];
+  dancers: Dancer[];
+  crews: Crew[];
+  onUpdateCompetitions?: (competitions: Competition[]) => void;
 }
 
-const CompetitionsPage: React.FC<CompetitionsPageProps> = ({ onCompetitionClick, competitions }) => {
+const CompetitionsPage: React.FC<CompetitionsPageProps> = ({ 
+  onCompetitionClick, 
+  competitions, 
+  dancers, 
+  crews,
+  onUpdateCompetitions
+}) => {
   const { isDarkMode } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [showFilters, setShowFilters] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null);
 
   const allGenres = useMemo(() => {
     const genres = new Set<string>();
@@ -42,6 +55,44 @@ const CompetitionsPage: React.FC<CompetitionsPageProps> = ({ onCompetitionClick,
     });
   }, [competitions, searchTerm, selectedGenre, sortBy]);
 
+  const handleSaveCompetition = async (competition: Competition) => {
+    try {
+      let savedCompetition;
+      
+      if (editingCompetition) {
+        // 기존 대회 수정
+        savedCompetition = await updateCompetition(competition);
+      } else {
+        // 새 대회 생성
+        savedCompetition = await uploadCompetition(competition);
+      }
+
+      if (savedCompetition && onUpdateCompetitions) {
+        if (editingCompetition) {
+          // 기존 대회 업데이트
+          const updatedCompetitions = competitions.map(comp => 
+            comp.id === competition.id ? savedCompetition : comp
+          );
+          onUpdateCompetitions(updatedCompetitions);
+        } else {
+          // 새 대회 추가
+          onUpdateCompetitions([savedCompetition, ...competitions]);
+        }
+      }
+
+      setShowUploadModal(false);
+      setEditingCompetition(null);
+    } catch (error) {
+      console.error('Error saving competition:', error);
+      alert('대회 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleEditCompetition = (competition: Competition) => {
+    setEditingCompetition(competition);
+    setShowUploadModal(true);
+  };
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
@@ -49,13 +100,27 @@ const CompetitionsPage: React.FC<CompetitionsPageProps> = ({ onCompetitionClick,
         isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              대회 목록
-            </h1>
-            <p className={`max-w-2xl mx-auto px-4 text-sm sm:text-base transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              다양한 댄스 대회 정보를 확인하고 참가 신청하세요
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
+            <div className="text-center sm:text-left mb-4 sm:mb-0">
+              <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                대회 목록
+              </h1>
+              <p className={`text-sm sm:text-base transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                다양한 댄스 대회 정보를 확인하고 참가 신청하세요
+              </p>
+            </div>
+            <div className="flex justify-center sm:justify-end">
+              <button
+                onClick={() => {
+                  setEditingCompetition(null);
+                  setShowUploadModal(true);
+                }}
+                className="flex items-center space-x-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+              >
+                <Plus className="w-5 h-5" />
+                <span>새 대회 등록</span>
+              </button>
+            </div>
           </div>
 
           {/* Search and Filters */}
@@ -229,6 +294,19 @@ const CompetitionsPage: React.FC<CompetitionsPageProps> = ({ onCompetitionClick,
           )}
         </div>
       </section>
+
+      {/* Competition Upload Modal */}
+      <CompetitionUpload
+        isOpen={showUploadModal}
+        onClose={() => {
+          setShowUploadModal(false);
+          setEditingCompetition(null);
+        }}
+        onSave={handleSaveCompetition}
+        dancers={dancers}
+        crews={crews}
+        editingCompetition={editingCompetition}
+      />
     </div>
   );
 };

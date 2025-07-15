@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { X, Trophy, Users, Instagram, MessageCircle, Calendar, MapPin, Upload, Camera, FileText } from 'lucide-react';
+import { X, Trophy, Users, Instagram, MessageCircle, Calendar, Upload, Camera, FileText, Briefcase, Edit2, Lock } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { Dancer, Competition, Crew, Message } from '../types';
-import { competitions as allCompetitions } from '../data/mockData';
-import MessageModal from './MessageModal';
-import MessageList from './MessageList';
+import { Dancer, Competition, Crew, Comment, UserPermission } from '../types';
+import CommentSystem from './CommentSystem';
 import DancerResume from './DancerResume';
+import PortfolioAdmin from './PortfolioAdmin';
+import { usePermissions } from '../utils/permissions';
 
 interface DancerDetailModalProps {
   dancer: Dancer;
@@ -14,10 +14,14 @@ interface DancerDetailModalProps {
   onSelectCompetition: (competition: Competition) => void;
   onSelectCrew: (crew: Crew) => void;
   crews: Crew[];
-  messages: Message[];
-  onSendMessage: (message: Omit<Message, 'id' | 'createdAt'>) => Promise<void>;
+  comments: Comment[];
+  onAddComment: (comment: Omit<Comment, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  onUpdateComment?: (commentId: string, content: string) => Promise<void>;
+  onDeleteComment?: (commentId: string) => Promise<void>;
   onDancerClick: (dancerId: string) => void;
   onUpdateDancer?: (dancerId: string, updates: Partial<Dancer>) => void;
+  permissions?: UserPermission[];
+  dancers: Dancer[];
 }
 
 const DancerDetailModal: React.FC<DancerDetailModalProps> = ({ 
@@ -27,15 +31,24 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   onSelectCompetition, 
   onSelectCrew, 
   crews, 
-  messages = [], 
-  onSendMessage, 
+  comments = [], 
+  onAddComment, 
+  onUpdateComment,
+  onDeleteComment,
   onDancerClick,
-  onUpdateDancer
+  onUpdateDancer,
+  permissions = [],
+  dancers = []
 }) => {
   const { isDarkMode } = useTheme();
-  const [showMessageModal, setShowMessageModal] = useState(false);
+  const { canEditDancer, canComment, currentUser } = usePermissions();
   const [showResumeModal, setShowResumeModal] = useState(false);
+  const [showPortfolioAdmin, setShowPortfolioAdmin] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  
+  // 권한 확인
+  const canEdit = canEditDancer(dancer, permissions);
+  const canAddComment = canComment('dancer', dancer.id, permissions);
   
   if (!isOpen) return null;
 
@@ -91,14 +104,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
     }
   };
 
-  const handleSendMessage = async (message: Omit<Message, 'id' | 'createdAt'>) => {
-    if (onSendMessage) {
-      await onSendMessage(message);
-    }
-  };
 
-  // 댄서에게 온 메시지 필터링
-  const dancerMessages = messages.filter(msg => msg.targetId === dancer.id && msg.targetType === 'dancer');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -178,16 +184,65 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                   <span>이력서</span>
                 </button>
                 <button
-                  onClick={() => setShowMessageModal(true)}
+                  onClick={() => window.open(`/portfolio/${dancer.nickname}`, '_blank')}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
                     isDarkMode 
-                      ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' 
-                      : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                      ? 'bg-purple-900 text-purple-300 hover:bg-purple-800' 
+                      : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
                   }`}
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  <span>메시지</span>
+                  <Briefcase className="h-4 w-4" />
+                  <span>포트폴리오</span>
                 </button>
+                {onUpdateDancer && (
+                  <button
+                    onClick={() => setShowPortfolioAdmin(true)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                      isDarkMode 
+                        ? 'bg-orange-900 text-orange-300 hover:bg-orange-800' 
+                        : 'bg-orange-50 text-orange-700 hover:bg-orange-100'
+                    }`}
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    <span>포트폴리오 편집</span>
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    onClick={() => setIsEditMode(!isEditMode)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+                      isEditMode
+                        ? isDarkMode 
+                          ? 'bg-red-900 text-red-300 hover:bg-red-800' 
+                          : 'bg-red-50 text-red-700 hover:bg-red-100'
+                        : isDarkMode 
+                          ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' 
+                          : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                    }`}
+                  >
+                    {isEditMode ? (
+                      <>
+                        <X className="h-4 w-4" />
+                        <span>편집 취소</span>
+                      </>
+                    ) : (
+                      <>
+                        <Edit2 className="h-4 w-4" />
+                        <span>편집</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                {!canEdit && (
+                  <div className={`px-4 py-2 rounded-lg font-medium flex items-center space-x-2 ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-gray-400' 
+                      : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    <Lock className="h-4 w-4" />
+                    <span>편집 권한 없음</span>
+                  </div>
+                )}
               </div>
             </div>
             <button
@@ -215,7 +270,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                     {dancer.totalPoints.toFixed(1)}
                   </p>
                   <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
-                    총 랭킹 포인트
+                    총 스텝 점수
                   </p>
                 </div>
               </div>
@@ -247,7 +302,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                     #{dancer.rank}
                   </p>
                   <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
-                    현재 랭킹
+                    현재 스텝
                   </p>
                 </div>
               </div>
@@ -470,7 +525,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                           <span className="text-lg font-bold text-blue-600">{position}위</span>
                         </div>
                         <div className={`text-sm transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          +{points.toFixed(1)} 포인트
+                          +{points.toFixed(1)} 스텝
                         </div>
                       </div>
                     </div>
@@ -491,7 +546,8 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {dancer.videos.map((video) => {
-                  const competition = allCompetitions.find(c => c.id === video.competitionId);
+                  // TODO: 실제 대회 데이터를 props나 context에서 가져와야 함
+                  const competition = undefined;
                   return (
                     <div key={video.id} className={`rounded-lg overflow-hidden shadow-md transition-all ${isDarkMode ? 'bg-gray-700' : 'bg-white'}`}>
                       <a href={video.url} target="_blank" rel="noopener noreferrer" className="block relative group">
@@ -525,33 +581,37 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
             </div>
           )}
 
-          {/* Messages Section */}
+          {/* Comments Section */}
           <div className="mt-8">
-            <MessageList 
-              messages={dancerMessages}
-              targetType="dancer"
-              targetName={dancer.nickname}
+            <CommentSystem
+              comments={comments}
+              currentUser={currentUser}
+              dancers={dancers}
+              crews={crews}
+              onAddComment={onAddComment}
+              onUpdateComment={onUpdateComment}
+              onDeleteComment={onDeleteComment}
+              canComment={canAddComment}
             />
           </div>
         </div>
 
-        {/* Message Modal */}
-        {showMessageModal && (
-          <MessageModal
-            isOpen={showMessageModal}
-            onClose={() => setShowMessageModal(false)}
-            targetType="dancer"
-            targetName={dancer.nickname}
-            targetId={dancer.id}
-            onSendMessage={handleSendMessage}
-          />
-        )}
+
 
         {/* Resume Modal */}
         {showResumeModal && (
           <DancerResume
             dancer={dancer}
             onClose={() => setShowResumeModal(false)}
+          />
+        )}
+
+        {/* Portfolio Admin Modal */}
+        {showPortfolioAdmin && onUpdateDancer && (
+          <PortfolioAdmin
+            dancer={dancer}
+            onUpdateDancer={(dancerId, updates) => onUpdateDancer(dancerId, updates)}
+            onClose={() => setShowPortfolioAdmin(false)}
           />
         )}
       </div>

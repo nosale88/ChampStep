@@ -2,11 +2,12 @@ import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Dancer } from '../types';
 import { TrendingUp, TrendingDown, Minus, Crown, Star } from 'lucide-react';
+import StepExplanation from './StepExplanation';
 
 interface DancerListItemProps {
   dancer: Dancer;
   onClick: () => void;
-  rank?: number; // 실제 표시할 랭킹 (배열 인덱스와 다를 수 있음)
+  rank?: number; // 실제 표시할 스텝 (배열 인덱스와 다를 수 있음)
 }
 
 const DancerListItem: React.FC<DancerListItemProps> = ({ dancer, onClick, rank }) => {
@@ -36,7 +37,7 @@ const DancerListItem: React.FC<DancerListItemProps> = ({ dancer, onClick, rank }
   };
 
   const getStatusIcon = () => {
-    // 랜덤하게 상승/하락/유지 상태 표시 (실제로는 이전 랭킹과 비교)
+    // 랜덤하게 상승/하락/유지 상태 표시 (실제로는 이전 스텝과 비교)
     const statuses = [
       { icon: TrendingUp, color: 'text-green-400', bg: 'bg-green-500' },
       { icon: TrendingDown, color: 'text-red-400', bg: 'bg-red-500' },
@@ -72,7 +73,7 @@ const DancerListItem: React.FC<DancerListItemProps> = ({ dancer, onClick, rank }
       
       {/* 콘텐츠 */}
       <div className="relative h-full flex items-center justify-between px-6">
-        {/* 왼쪽: 랭킹 */}
+        {/* 왼쪽: 스텝 */}
         <div className="flex items-center space-x-4">
           <div className={`w-16 h-16 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold ${getRankTextColor(displayRank)}`}>
             {displayRank <= 3 ? getRankIcon(displayRank) : displayRank}
@@ -113,19 +114,21 @@ const DancerListItem: React.FC<DancerListItemProps> = ({ dancer, onClick, rank }
                 {displayRank}
               </p>
               <p className="text-xs text-white/80 font-medium">
-                {displayRank <= 3 ? '전체랭킹' : '현재순위'}
+                {displayRank <= 3 ? '전체스텝' : '현재순위'}
               </p>
             </div>
           </div>
           
-          <div className="text-white/90 text-sm">
-            <p className="font-semibold">
-              {dancer.totalPoints.toFixed(2)}점
-            </p>
-            <p className="text-xs">
-              {Math.random() > 0.5 ? '+' : ''}{(Math.random() * 2 - 1).toFixed(2)}%
-            </p>
-          </div>
+          <StepExplanation stepScore={dancer.totalPoints}>
+            <div className="text-white/90 text-sm cursor-help">
+              <p className="font-semibold">
+                {dancer.totalPoints.toFixed(2)} 스텝
+              </p>
+              <p className="text-xs">
+                {Math.random() > 0.5 ? '+' : ''}{(Math.random() * 2 - 1).toFixed(2)}%
+              </p>
+            </div>
+          </StepExplanation>
         </div>
       </div>
       

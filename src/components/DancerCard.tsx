@@ -2,6 +2,7 @@ import React from 'react';
 import { Trophy, Users, Instagram, Crown, Star } from 'lucide-react';
 import { Dancer } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import StepExplanation from './StepExplanation';
 
 interface DancerCardProps {
   dancer: Dancer;
@@ -55,23 +56,25 @@ const DancerCard: React.FC<DancerCardProps> = ({ dancer, onClick }) => {
       {/* 다크 오버레이 */}
       <div className="absolute inset-0 bg-black/40" />
       
-      {/* 상단: 랭킹 */}
+      {/* 상단: 스텝 */}
       <div className="absolute top-4 left-4">
         <div className={`w-12 h-12 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-lg font-bold ${getRankTextColor(dancer.rank)}`}>
           {dancer.rank <= 3 ? getRankIcon(dancer.rank) : dancer.rank}
         </div>
       </div>
       
-      {/* 상단 우측: 포인트 */}
+      {/* 상단 우측: 스텝 점수 */}
       <div className="absolute top-4 right-4 text-right">
-        <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-1">
-          <p className="text-white font-bold text-lg">
-            {dancer.totalPoints.toFixed(1)}
-          </p>
-          <p className="text-white/80 text-xs">
-            포인트
-          </p>
-        </div>
+        <StepExplanation stepScore={dancer.totalPoints}>
+          <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-1 cursor-help">
+            <p className="text-white font-bold text-lg">
+              {dancer.totalPoints.toFixed(1)}
+            </p>
+            <p className="text-white/80 text-xs">
+              스텝
+            </p>
+          </div>
+        </StepExplanation>
       </div>
       
       {/* 하단: 댄서 정보 */}

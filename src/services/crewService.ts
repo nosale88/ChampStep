@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { Crew, Dancer, CrewSchedule } from '../types'
-import { crews } from '../data/mockData'
+import { Crew, CrewSchedule } from '../types'
 
 // 문자열 유사도 계산 함수 (레벤슈타인 거리 기반)
 function calculateSimilarity(str1: string, str2: string): number {
@@ -69,8 +68,8 @@ export async function fetchCrews(): Promise<Crew[]> {
       
       // 타임아웃 시 즉시 목데이터 사용
       if (crewsError.message === 'Timeout') {
-        console.log('⏰ Timeout - using mock data immediately')
-        return crews
+        console.log('⏰ Timeout - returning empty array')
+        return []
       }
       
       // 다른 오류는 빠른 재시도 (1초 타임아웃)
@@ -102,14 +101,14 @@ export async function fetchCrews(): Promise<Crew[]> {
         }))
       }
       
-      // 재시도도 실패하면 즉시 목데이터 사용
-      console.log('⚠️ Using mock data after quick retry failed')
-      return crews
+      // 재시도도 실패하면 빈 배열 반환
+      console.log('⚠️ Returning empty array after quick retry failed')
+      return []
     }
 
     if (!crewsData || crewsData.length === 0) {
-      console.log('⚠️ No crews found in Supabase, using mock data')
-      return crews
+      console.log('⚠️ No crews found in Supabase, returning empty array')
+      return []
     }
 
     console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
@@ -152,8 +151,8 @@ export async function fetchCrews(): Promise<Crew[]> {
 
   } catch (error) {
     console.error('❌ Critical error in fetchCrews:', error)
-    console.log('⚠️ Using mock data as fallback')
-    return crews
+    console.log('⚠️ Returning empty array as fallback')
+    return []
   }
 }
 
@@ -359,5 +358,35 @@ export async function deleteSchedule(scheduleId: string): Promise<boolean> {
   } catch (error) {
     console.error('Error deleting schedule:', error);
     return false;
+  }
+}
+
+// 크루 검색 (프로필 연동용)
+export async function searchCrews(query: string, limit: number = 50): Promise<Crew[]> {
+  try {
+    const { data, error } = await supabase
+      .from('crews')
+      .select('*')
+      .ilike('name', `%${query}%`)
+      .order('member_count', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    return (data || []).map(crew => ({
+      id: crew.id,
+      name: crew.name,
+      genre: crew.genre || 'Hip-hop',
+      introduction: crew.description || `${crew.name} 크루입니다.`,
+      members: [],
+      schedules: [],
+      backgroundImage: crew.background_image,
+      createdAt: crew.created_at,
+      member_count: crew.member_count || 0
+    }));
+  } catch (error) {
+    console.error('Error searching crews:', error);
+    // 오류 시 빈 배열 반환
+    return [];
   }
 } 

@@ -758,7 +758,7 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
                         {member.nickname}
                       </p>
                       <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {member.name} • 랭킹 #{member.rank}
+                        {member.name} • 스텝 #{member.rank}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-1">

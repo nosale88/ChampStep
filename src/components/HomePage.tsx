@@ -33,7 +33,7 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
             <p className={`text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-4 transition-colors duration-300 ${
               isDarkMode ? 'text-gray-300' : 'text-blue-100'
             }`}>
-              전국 댄서들의 대회 수상 내역을 기반으로 한 투명하고 공정한 랭킹 시스템
+              전국 댄서들의 대회 수상 내역을 기반으로 한 투명하고 공정한 스텝 시스템
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
               <button className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -41,7 +41,7 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
                   ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
                   : 'bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl'
               }`}>
-                랭킹 보기
+                스텝 보기
               </button>
               <button className={`border-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
                 isDarkMode
@@ -63,7 +63,7 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
               { icon: Trophy, label: '등록된 댄서', value: dancers.length, color: isDarkMode ? 'text-yellow-400' : 'text-yellow-600' },
               { icon: Calendar, label: '등록된 대회', value: competitions.length, color: isDarkMode ? 'text-blue-400' : 'text-blue-600' },
               { icon: TrendingUp, label: '총 참여 기록', value: '12', color: isDarkMode ? 'text-green-400' : 'text-green-600' },
-              { icon: Star, label: '평균 랭킹 점수', value: '22.3', color: isDarkMode ? 'text-purple-400' : 'text-purple-600' }
+              { icon: Star, label: '평균 스텝 점수', value: '22.3', color: isDarkMode ? 'text-purple-400' : 'text-purple-600' }
             ].map(({ icon: Icon, label, value, color }, index) => (
               <div key={index} className={`text-center p-4 sm:p-6 rounded-xl sm:rounded-2xl transition-all duration-300 hover:scale-105 ${
                 isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
@@ -86,10 +86,10 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className={`text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              🏆 현재 랭킹 TOP 3
+              🏆 현재 스텝 TOP 3
             </h2>
             <p className={`max-w-2xl mx-auto px-4 text-sm sm:text-base transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              대회 수상 내역을 바탕으로 산정된 현재 최고 랭킹 댄서들을 만나보세요
+              대회 수상 내역을 바탕으로 산정된 현재 최고 스텝 댄서들을 만나보세요
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
@@ -142,8 +142,8 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
             {[
               {
                 icon: Trophy,
-                title: '실시간 랭킹',
-                description: '대회 결과를 바탕으로 한 실시간 댄서 랭킹 시스템',
+                title: '실시간 스텝',
+                description: '대회 결과를 바탕으로 한 실시간 댄서 스텝 시스템',
                 color: isDarkMode ? 'text-yellow-400 bg-yellow-900' : 'text-yellow-600 bg-yellow-50'
               },
               {
@@ -166,8 +166,8 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
               },
               {
                 icon: Target,
-                title: '포인트 시스템',
-                description: '투명하고 공정한 포인트 산정 시스템',
+                title: '스텝 시스템',
+                description: '투명하고 공정한 스텝 점수 산정 시스템',
                 color: isDarkMode ? 'text-red-400 bg-red-900' : 'text-red-600 bg-red-50'
               },
               {
@@ -210,7 +210,7 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
                 ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
                 : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
             }`}>
-              <span>랭킹 확인하기</span>
+              <span>스텝 확인하기</span>
               <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button className={`border-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${

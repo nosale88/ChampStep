@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Crown, Menu, X, Moon, Sun, LogIn, LogOut, User, Home, Trophy, Calendar, Users } from 'lucide-react';
+import { Crown, Menu, X, Moon, Sun, LogIn, LogOut, User, Home, Trophy, Calendar, Users, Shield } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import LoginModal from './LoginModal';
 
-type View = 'home' | 'ranking' | 'competitions' | 'crews' | 'profile';
+type View = 'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin';
 
 interface HeaderProps {
   currentView: View;
@@ -13,16 +13,17 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { user, dancer, signOut } = useAuth();
+  const { user, dancer, signOut, isAdmin } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const navItems = [
     { key: 'home', label: '홈', icon: Home },
-    { key: 'ranking', label: '랭킹', icon: Trophy },
+    { key: 'ranking', label: '스텝', icon: Trophy },
     { key: 'competitions', label: '대회', icon: Calendar },
     { key: 'crews', label: '크루', icon: Users },
-    ...(user ? [{ key: 'profile', label: '내 정보', icon: User }] : [])
+    ...(user ? [{ key: 'profile', label: '내 정보', icon: User }] : []),
+    ...(isAdmin ? [{ key: 'admin', label: '관리자', icon: Shield }] : [])
   ];
 
   const handleNavClick = (view: View) => {

@@ -2,12 +2,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { Dancer } from '../types';
+import { isAdmin } from '../utils/adminUtils';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   dancer: Dancer | null;
   loading: boolean;
+  isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, userData: { name: string; nickname: string }) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
@@ -23,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [dancer, setDancer] = useState<Dancer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
 
   useEffect(() => {
     console.log('🚀 AuthContext initializing...');
@@ -60,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         console.log('🚪 User signed out, clearing dancer profile');
         setDancer(null);
+        setUserIsAdmin(false);
         setLoading(false); // 로그아웃 시 로딩 완료
       }
     });
@@ -106,11 +110,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchDancerProfile = async (userId: string) => {
     try {
       console.log('🔍 Fetching dancer profile for user:', userId);
-      setLoading(true); // 프로필 로딩 시작
+      setLoading(true);
       
-      // 1초 타임아웃으로 줄임 (빠른 응답)
+      // 타임아웃을 3초로 증가 (너무 짧으면 네트워크 지연 시 문제)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 1000);
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000);
       });
       
       const fetchPromise = supabase
@@ -123,17 +127,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ Error fetching dancer profile:', error);
-        // 프로필이 없을 경우 - 로딩 완료하고 온보딩으로 이동
         if (error.code === 'PGRST116') {
           console.log('🔄 No profile found - will show onboarding');
-          setDancer(null);
-          setLoading(false);
-          return;
         } else if (error.message === 'Profile fetch timeout') {
           console.log('⏰ Profile fetch timeout - will show onboarding');
-          setDancer(null);
-          setLoading(false);
-          return;
+        } else {
+          console.log('🔄 Other error occurred - will show onboarding');
         }
         setDancer(null);
         setLoading(false);
@@ -142,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data) {
         console.log('✅ Dancer profile loaded:', data.nickname);
-        setDancer({
+        const dancerData = {
           id: data.id,
           nickname: data.nickname,
           name: data.name,
@@ -157,17 +156,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: data.email,
           phone: data.phone,
           birthDate: data.birth_date,
-          bio: data.bio
-        });
+          bio: data.bio,
+          isAdmin: data.is_admin || isAdmin(data.email || '')
+        };
+        setDancer(dancerData);
+        setUserIsAdmin(dancerData.isAdmin || false);
       } else {
         console.log('🔄 No profile data - will show onboarding');
         setDancer(null);
+        setUserIsAdmin(false);
       }
       
-      setLoading(false); // 성공 시 로딩 완료
+      setLoading(false);
     } catch (error) {
       console.error('❌ Error fetching dancer profile:', error);
-      // 타임아웃이나 기타 오류 시 온보딩으로 이동
       console.log('🔄 Error occurred - will show onboarding');
       setDancer(null);
       setLoading(false);
@@ -299,24 +301,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setSession(null);
       setDancer(null);
+      setUserIsAdmin(false);
+      setLoading(false);
       
       // Supabase 로그아웃 실행
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('❌ Supabase signOut error:', error);
-        // 에러가 있어도 로컬 상태는 이미 초기화됨
       }
       
-      // 브라우저 캐시 강제 정리
+      // 브라우저 캐시 정리 (새로고침 제거)
       if (typeof window !== 'undefined') {
-        // 로컬 스토리지에서 Supabase 관련 데이터 제거
         Object.keys(localStorage).forEach(key => {
           if (key.startsWith('supabase.') || key.startsWith('sb-')) {
             localStorage.removeItem(key);
           }
         });
         
-        // 세션 스토리지도 정리
         Object.keys(sessionStorage).forEach(key => {
           if (key.startsWith('supabase.') || key.startsWith('sb-')) {
             sessionStorage.removeItem(key);
@@ -326,20 +327,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('✅ Signed out successfully');
       
-      // 페이지 새로고침으로 완전한 상태 초기화
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-      
     } catch (error) {
       console.error('❌ Error signing out:', error);
-      // 에러가 있어도 로컬 상태는 초기화하고 새로고침
       setUser(null);
       setSession(null);
       setDancer(null);
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      setUserIsAdmin(false);
+      setLoading(false);
     }
   };
 
@@ -431,6 +425,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       session,
       dancer,
       loading,
+      isAdmin: userIsAdmin,
       signIn,
       signUp,
       signInWithGoogle,
