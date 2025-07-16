@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { Dancer } from '../types';
+import { getValidAvatarUrl } from '../utils/avatarUtils';
 import { isAdmin } from '../utils/adminUtils';
 
 interface AuthContextType {
@@ -96,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         genres: [],
         total_points: 0,
         rank: 999,
-        avatar: avatarUrl || `https://i.pravatar.cc/150?u=${user.id}`
+        avatar: getValidAvatarUrl(avatarUrl, user.id)
       });
 
       if (error) {
@@ -150,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sns: data.sns || '',
           totalPoints: data.total_points || 0,
           rank: data.rank || 999,
-          avatar: data.avatar || `https://i.pravatar.cc/150?u=${data.id}`,
+          avatar: getValidAvatarUrl(data.avatar, data.id),
           competitions: [],
           videos: [],
           email: data.email,
@@ -189,7 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         genres: [],
         total_points: 0,
         rank: 999,
-        avatar: `https://i.pravatar.cc/150?u=${userId}`
+        avatar: getValidAvatarUrl(null, userId)
       });
 
       if (error) {
@@ -206,7 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sns: '',
           totalPoints: 0,
           rank: 999,
-          avatar: `https://i.pravatar.cc/150?u=${userId}`,
+          avatar: getValidAvatarUrl(null, userId),
           competitions: [],
           videos: [],
           email: user.data.user.email,
@@ -252,7 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           genres: [],
           total_points: 0,
           rank: 999,
-          avatar: `https://i.pravatar.cc/150?u=${authData.user.id}`
+          avatar: getValidAvatarUrl(null, authData.user.id)
         });
         
         if (profileError) throw profileError;
@@ -384,7 +385,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phone: updates.phone || '',
             birth_date: updates.birthDate || '',
             crew: updates.crew || '',
-            avatar: updates.avatar || `https://i.pravatar.cc/150?u=${user.id}`,
+            avatar: getValidAvatarUrl(updates.avatar, user.id),
             total_points: 0,
             rank: 999
           })
@@ -403,7 +404,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sns: data.sns || '',
           totalPoints: data.total_points || 0,
           rank: data.rank || 999,
-          avatar: data.avatar || `https://i.pravatar.cc/150?u=${data.id}`,
+          avatar: getValidAvatarUrl(data.avatar, data.id),
           competitions: [],
           videos: [],
           email: data.email,

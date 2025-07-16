@@ -42,6 +42,18 @@ function levenshteinDistance(str1: string, str2: string): number {
   return matrix[str2.length][str1.length]
 }
 
+// 다양한 댄스 장르 목록
+const DANCE_GENRES = [
+  'Hip-hop', 'Popping', 'Locking', 'Breaking', 'House', 
+  'Krump', 'Waacking', 'Voguing', 'Jazz', 'Contemporary',
+  'Choreography', 'All Style', 'Freestyle'
+];
+
+// 랜덤 장르 선택 함수
+const getRandomGenre = (): string => {
+  return DANCE_GENRES[Math.floor(Math.random() * DANCE_GENRES.length)];
+};
+
 export async function fetchCrews(): Promise<Crew[]> {
   try {
     console.log('🔍 Fetching crews from Supabase...')
@@ -107,7 +119,7 @@ export async function fetchCrews(): Promise<Crew[]> {
           return {
             id: crew.id,
             name: crew.name,
-            genre: 'Hip-hop',
+            genre: getRandomGenre(),
             introduction: crew.description || `${crew.name} 크루입니다.`,
             members: matchingDancers.map((dancer: any) => ({
               id: dancer.id,
@@ -172,7 +184,7 @@ export async function fetchCrews(): Promise<Crew[]> {
       return {
         id: crew.id,
         name: crew.name,
-        genre: 'Hip-hop',
+        genre: getRandomGenre(),
         introduction: crew.description || `${crew.name} 크루입니다.`,
         members: matchingDancers.map((dancer: any) => ({
           id: dancer.id,
@@ -241,7 +253,7 @@ export async function createCrew(crewData: {
     return {
       id: data.id,
       name: data.name,
-      genre: 'Hip-hop', // 기본값
+      genre: getRandomGenre(), // 랜덤 장르
       introduction: data.description || `${data.name} 크루입니다.`,
       members: [],
       schedules: [],

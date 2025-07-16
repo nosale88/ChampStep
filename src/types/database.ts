@@ -22,6 +22,7 @@ export interface Database {
           instagram_url: string | null
           youtube_url: string | null
           twitter_url: string | null
+          is_admin: boolean | null
           created_at: string
           updated_at: string
         }
@@ -45,6 +46,7 @@ export interface Database {
           instagram_url?: string | null
           youtube_url?: string | null
           twitter_url?: string | null
+          is_admin?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -68,6 +70,7 @@ export interface Database {
           instagram_url?: string | null
           youtube_url?: string | null
           twitter_url?: string | null
+          is_admin?: boolean | null
           created_at?: string
           updated_at?: string
         }

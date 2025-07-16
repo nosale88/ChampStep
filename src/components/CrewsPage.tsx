@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, Plus, MapPin, Clock, Eye, EyeOff, MessageCircle, ChevronLeft, ChevronRight, Edit2, Upload, Camera, X } from 'lucide-react';
+import { Users, Calendar, Plus, MapPin, Clock, Eye, EyeOff, MessageCircle, ChevronLeft, ChevronRight, Edit2, Upload, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Crew, Dancer, CrewSchedule, Message } from '../types';
 import MessageModal from './MessageModal';
@@ -226,8 +226,8 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
     }
   };
 
-  // 이미지 업로드 처리
-  const handleImageUpload = (type: 'background' | 'avatar') => {
+  // 배경 이미지 업로드 처리
+  const handleImageUpload = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -239,7 +239,7 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
           const imageUrl = e.target?.result as string;
           setEditingCrew({
             ...editingCrew,
-            [type === 'background' ? 'backgroundImage' : 'avatar']: imageUrl
+            backgroundImage: imageUrl
           });
         };
         reader.readAsDataURL(file);
@@ -1088,7 +1088,7 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
                       />
                     )}
                     <button
-                      onClick={() => handleImageUpload('background')}
+                      onClick={handleImageUpload}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
                         isDarkMode 
                           ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
@@ -1102,27 +1102,18 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
                 </div>
                 <div>
                   <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                    크루 로고
+                    크루 아바타 (팀 이름 첫 글자)
                   </label>
                   <div className="flex items-center space-x-3">
-                    {editingCrew.avatar && (
-                      <img
-                        src={editingCrew.avatar}
-                        alt="로고"
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                    )}
-                    <button
-                      onClick={() => handleImageUpload('avatar')}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
-                        isDarkMode 
-                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      <Camera className="h-4 w-4" />
-                      <span>변경</span>
-                    </button>
+                    {/* 팀 이름 첫 글자 미리보기 */}
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <span className="text-white text-2xl font-bold">
+                        {(editingCrew.name || selectedCrew?.name || 'T').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      팀 이름의 첫 글자가 자동으로 표시됩니다
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1212,11 +1203,11 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
                 }`}
                 style={{ height: '300px' }}
               >
-                {/* 배경 이미지 */}
+                {/* 배경 이미지 - 춤 관련 이미지 */}
                 <div 
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
                   style={{
-                    backgroundImage: `url(${crew.backgroundImage || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'})`,
+                    backgroundImage: `url(${crew.backgroundImage || 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'})`,
                   }}
                 />
                 
@@ -1233,11 +1224,12 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
                 {/* 하단: 크루 정보 */}
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <div className="flex items-center space-x-4 mb-4">
-                    <img
-                      src={crew.avatar}
-                      alt={crew.name}
-                      className="w-16 h-16 rounded-full border-3 border-white/30 shadow-lg"
-                    />
+                    {/* 팀 이름 첫 글자 아바타 */}
+                    <div className="w-16 h-16 rounded-full border-3 border-white/30 shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <span className="text-white text-2xl font-bold">
+                        {crew.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
                     <div className="flex-1">
                       <h3 className="text-white text-xl font-bold mb-1 drop-shadow-lg">
                         {crew.name}

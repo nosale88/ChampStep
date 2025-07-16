@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { Dancer, Competition } from '../types'
+import { getValidAvatarUrl } from '../utils/avatarUtils'
 
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
@@ -52,7 +53,7 @@ export async function fetchDancers(): Promise<Dancer[]> {
           sns: dancer.sns || '',
           totalPoints: dancer.total_points || 0,
           rank: dancer.rank || 999,
-          avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
+          avatar: getValidAvatarUrl(dancer.avatar, dancer.id),
           profileImage: dancer.profile_image,
           backgroundImage: dancer.background_image,
           bio: dancer.bio,
@@ -62,6 +63,7 @@ export async function fetchDancers(): Promise<Dancer[]> {
           instagramUrl: dancer.instagram_url,
           youtubeUrl: dancer.youtube_url,
           twitterUrl: dancer.twitter_url,
+          isAdmin: dancer.is_admin || false,
           competitions: [],
           videos: [],
         }))
@@ -84,7 +86,7 @@ export async function fetchDancers(): Promise<Dancer[]> {
         sns: dancer.sns || '',
         totalPoints: dancer.total_points || 0,
         rank: dancer.rank || 999,
-        avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
+        avatar: getValidAvatarUrl(dancer.avatar, dancer.id),
         profileImage: dancer.profile_image,
         backgroundImage: dancer.background_image,
         bio: dancer.bio,
@@ -94,6 +96,7 @@ export async function fetchDancers(): Promise<Dancer[]> {
         instagramUrl: dancer.instagram_url,
         youtubeUrl: dancer.youtube_url,
         twitterUrl: dancer.twitter_url,
+        isAdmin: dancer.is_admin || false,
         competitions: [],
         videos: [],
       }))
@@ -130,7 +133,7 @@ export async function fetchDancerById(id: string): Promise<Dancer | null> {
       sns: data.sns || '',
       totalPoints: data.total_points,
       rank: data.rank,
-      avatar: data.avatar || `https://i.pravatar.cc/150?u=${data.id}`,
+      avatar: getValidAvatarUrl(data.avatar, data.id),
       profileImage: data.profile_image,
       backgroundImage: data.background_image,
       bio: data.bio,
@@ -140,6 +143,7 @@ export async function fetchDancerById(id: string): Promise<Dancer | null> {
       instagramUrl: data.instagram_url,
       youtubeUrl: data.youtube_url,
       twitterUrl: data.twitter_url,
+      isAdmin: data.is_admin || false,
       competitions: [],
       videos: [],
     }
@@ -192,7 +196,7 @@ export async function fetchDancerByNickname(nickname: string): Promise<Dancer | 
     sns: data.sns || '',
     totalPoints: data.total_points,
     rank: data.rank,
-    avatar: data.avatar || `https://i.pravatar.cc/150?u=${data.id}`,
+    avatar: getValidAvatarUrl(data.avatar, data.id),
     profileImage: data.profile_image,
     backgroundImage: data.background_image,
     bio: data.bio,
@@ -202,6 +206,7 @@ export async function fetchDancerByNickname(nickname: string): Promise<Dancer | 
     instagramUrl: data.instagram_url,
     youtubeUrl: data.youtube_url,
     twitterUrl: data.twitter_url,
+    isAdmin: data.is_admin || false,
     competitions: [], // Empty for now
     videos: videos || [],
     awards: awards || [],
@@ -404,7 +409,7 @@ export async function searchDancers(query: string, limit: number = 50): Promise<
       sns: dancer.sns || '',
       totalPoints: dancer.total_points || 0,
       rank: dancer.rank || 999,
-      avatar: dancer.avatar || `https://i.pravatar.cc/150?u=${dancer.id}`,
+      avatar: getValidAvatarUrl(dancer.avatar, dancer.id),
       profileImage: dancer.profile_image,
       backgroundImage: dancer.background_image,
       bio: dancer.bio,
@@ -414,6 +419,7 @@ export async function searchDancers(query: string, limit: number = 50): Promise<
       instagramUrl: dancer.instagram_url,
       youtubeUrl: dancer.youtube_url,
       twitterUrl: dancer.twitter_url,
+      isAdmin: dancer.is_admin || false,
       competitions: [],
       videos: []
     }));

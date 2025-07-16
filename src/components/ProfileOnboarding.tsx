@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Crew } from '../types';
 import { fetchCrews, createCrew } from '../services/crewService';
 import { uploadImage } from '../services/storageService';
+import { getValidAvatarUrl } from '../utils/avatarUtils';
 import ImageUpload from './ImageUpload';
 
 interface ProfileFormData {
@@ -38,7 +39,7 @@ const ProfileOnboarding: React.FC = () => {
     genres: [],
     sns: '',
     crew: '',
-    avatar: `https://i.pravatar.cc/150?u=${user?.id || 'default'}`
+    avatar: getValidAvatarUrl(null, user?.id || 'default')
   });
 
   const availableGenres = [
