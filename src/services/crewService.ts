@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { Crew, CrewSchedule } from '../types'
+import { mockCrews } from '../data/mockData'
 
 // 문자열 유사도 계산 함수 (레벤슈타인 거리 기반)
 function calculateSimilarity(str1: string, str2: string): number {
@@ -80,8 +81,8 @@ export async function fetchCrews(): Promise<Crew[]> {
       
       // 타임아웃 시 즉시 목데이터 사용
       if (crewsError.message === 'Timeout') {
-        console.log('⏰ Timeout - returning empty array')
-        return []
+        console.log('⏰ Timeout - returning mock data')
+        return mockCrews
       }
       
       // 다른 오류는 빠른 재시도 (1초 타임아웃)
@@ -143,14 +144,14 @@ export async function fetchCrews(): Promise<Crew[]> {
         })
       }
       
-      // 재시도도 실패하면 빈 배열 반환
-      console.log('⚠️ Returning empty array after quick retry failed')
-      return []
+      // 재시도도 실패하면 목 데이터 반환
+      console.log('⚠️ Returning mock data after quick retry failed')
+      return mockCrews
     }
 
     if (!crewsData || crewsData.length === 0) {
-      console.log('⚠️ No crews found in Supabase, returning empty array')
-      return []
+      console.log('⚠️ No crews found in Supabase, returning mock data')
+      return mockCrews
     }
 
     console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
@@ -211,8 +212,8 @@ export async function fetchCrews(): Promise<Crew[]> {
 
   } catch (error) {
     console.error('❌ Critical error in fetchCrews:', error)
-    console.log('⚠️ Returning empty array as fallback')
-    return []
+    console.log('⚠️ Returning mock data as fallback')
+    return mockCrews
   }
 }
 

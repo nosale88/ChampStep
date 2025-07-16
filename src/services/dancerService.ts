@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { Dancer, Competition } from '../types'
 import { getValidAvatarUrl } from '../utils/avatarUtils'
+import { mockDancers } from '../data/mockData'
 
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
@@ -24,8 +25,8 @@ export async function fetchDancers(): Promise<Dancer[]> {
       
       // 타임아웃 시 즉시 목데이터 사용
       if (error.message === 'Timeout') {
-        console.log('⏰ Timeout - returning empty array')
-        return []
+        console.log('⏰ Timeout - returning mock data')
+        return mockDancers
       }
       
       // 다른 오류는 빠른 재시도 (1초 타임아웃)
@@ -69,9 +70,9 @@ export async function fetchDancers(): Promise<Dancer[]> {
         }))
       }
       
-      // 재시도도 실패하면 빈 배열 반환
-      console.log('⚠️ Returning empty array after quick retry failed')
-      return []
+      // 재시도도 실패하면 목 데이터 반환
+      console.log('⚠️ Quick retry failed, returning mock data')
+      return mockDancers
     }
 
     // 실제 데이터가 있으면 사용
@@ -102,12 +103,12 @@ export async function fetchDancers(): Promise<Dancer[]> {
       }))
     }
 
-    console.log('⚠️ No dancers found in Supabase, returning empty array')
-    return []
+    console.log('⚠️ No dancers found in Supabase, returning mock data')
+    return mockDancers
   } catch (error) {
     console.error('❌ Critical error in fetchDancers:', error)
-    console.log('⚠️ Returning empty array as fallback')
-    return []
+    console.log('⚠️ Returning mock data as fallback')
+    return mockDancers
   }
 }
 
