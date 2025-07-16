@@ -7,108 +7,59 @@ export async function fetchDancers(): Promise<Dancer[]> {
   try {
     console.log('🔍 Fetching dancers from Supabase...');
     
-    // 10초 타임아웃으로 늘려서 안정적인 연결
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 10000)
-    })
-
-    const supabasePromise = supabase
+    const { data, error } = await supabase
       .from('dancers')
-      .select('*')
+      .select(`
+        id,
+        nickname,
+        name,
+        crew,
+        genres,
+        sns,
+        total_points,
+        rank,
+        avatar
+      `)
       .order('rank', { ascending: true })
-      // 모든 댄서 데이터 가져오기
-
-    const { data, error } = await Promise.race([supabasePromise, timeoutPromise])
 
     if (error) {
       console.error('❌ Error fetching dancers from Supabase:', error)
-      
-      // 타임아웃 시 즉시 목데이터 사용
-      if (error.message === 'Timeout') {
-        console.log('⏰ Timeout - returning mock data')
-        return mockDancers
-      }
-      
-      // 다른 오류는 빠른 재시도 (1초 타임아웃)
-      console.log('🔄 Quick retry...')
-      const quickRetryPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Quick retry timeout')), 1000)
-      })
-      
-      const retryPromise = supabase
-        .from('dancers')
-        .select('*')
-        .order('rank', { ascending: true })
-        // 재시도 시에도 모든 데이터 가져오기
-      
-      const { data: retryData, error: retryError } = await Promise.race([retryPromise, quickRetryPromise])
-      
-      if (!retryError && retryData && retryData.length > 0) {
-        console.log(`✅ Quick retry successful: ${retryData.length} dancers`)
-        return retryData.map(dancer => ({
-          id: dancer.id,
-          nickname: dancer.nickname,
-          name: dancer.name,
-          crew: dancer.crew,
-          genres: dancer.genres || [],
-          sns: dancer.sns || '',
-          totalPoints: dancer.total_points || 0,
-          rank: dancer.rank || 999,
-          avatar: getValidAvatarUrl(dancer.avatar, dancer.id),
-          profileImage: dancer.profile_image,
-          backgroundImage: dancer.background_image,
-          bio: dancer.bio,
-          birthDate: dancer.birth_date,
-          phone: dancer.phone,
-          email: dancer.email,
-          instagramUrl: dancer.instagram_url,
-          youtubeUrl: dancer.youtube_url,
-          twitterUrl: dancer.twitter_url,
-          isAdmin: dancer.is_admin || false,
-          competitions: [],
-          videos: [],
-        }))
-      }
-      
-      // 재시도도 실패하면 목 데이터 반환
-      console.log('⚠️ Quick retry failed, returning mock data')
-      return mockDancers
+      return []
     }
 
-    // 실제 데이터가 있으면 사용
-    if (data && data.length > 0) {
-      console.log(`✅ Successfully fetched ${data.length} dancers from Supabase`)
-      return data.map(dancer => ({
-        id: dancer.id,
-        nickname: dancer.nickname,
-        name: dancer.name,
-        crew: dancer.crew,
-        genres: dancer.genres || [],
-        sns: dancer.sns || '',
-        totalPoints: dancer.total_points || 0,
-        rank: dancer.rank || 999,
-        avatar: getValidAvatarUrl(dancer.avatar, dancer.id),
-        profileImage: dancer.profile_image,
-        backgroundImage: dancer.background_image,
-        bio: dancer.bio,
-        birthDate: dancer.birth_date,
-        phone: dancer.phone,
-        email: dancer.email,
-        instagramUrl: dancer.instagram_url,
-        youtubeUrl: dancer.youtube_url,
-        twitterUrl: dancer.twitter_url,
-        isAdmin: dancer.is_admin || false,
-        competitions: [],
-        videos: [],
-      }))
+    console.log(`✅ Successfully fetched ${data?.length || 0} dancers from Supabase`)
+    
+    if (!data || data.length === 0) {
+      console.log('⚠️ No dancers found in database')
+      return []
     }
 
-    console.log('⚠️ No dancers found in Supabase, returning mock data')
-    return mockDancers
+    return data.map(dancer => ({
+      id: dancer.id,
+      nickname: dancer.nickname,
+      name: dancer.name,
+      crew: dancer.crew,
+      genres: dancer.genres || [],
+      sns: dancer.sns || '',
+      totalPoints: dancer.total_points || 0,
+      rank: dancer.rank || 999,
+      avatar: getValidAvatarUrl(dancer.avatar, dancer.id),
+      profileImage: dancer.avatar, // 임시로 avatar 사용
+      backgroundImage: undefined,
+      bio: undefined,
+      birthDate: undefined,
+      phone: undefined,
+      email: undefined,
+      instagramUrl: undefined,
+      youtubeUrl: undefined,
+      twitterUrl: undefined,
+      isAdmin: false,
+      competitions: [],
+      videos: [],
+    }))
   } catch (error) {
     console.error('❌ Critical error in fetchDancers:', error)
-    console.log('⚠️ Returning mock data as fallback')
-    return mockDancers
+    return []
   }
 }
 

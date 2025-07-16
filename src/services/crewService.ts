@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase'
 import { Crew, CrewSchedule } from '../types'
-import { mockCrews } from '../data/mockData'
 
 // 문자열 유사도 계산 함수 (레벤슈타인 거리 기반)
 function calculateSimilarity(str1: string, str2: string): number {
@@ -43,14 +42,13 @@ function levenshteinDistance(str1: string, str2: string): number {
   return matrix[str2.length][str1.length]
 }
 
-// 다양한 댄스 장르 목록
+// 댄스 장르 목록
 const DANCE_GENRES = [
-  'Hip-hop', 'Popping', 'Locking', 'Breaking', 'House', 
-  'Krump', 'Waacking', 'Voguing', 'Jazz', 'Contemporary',
-  'Choreography', 'All Style', 'Freestyle'
+  'Hip-hop', 'Breaking', 'Popping', 'Locking', 'Waacking', 'House', 
+  'Krump', 'Choreography', 'Contemporary', 'Jazz', 'Ballet', 'Commercial'
 ];
 
-// 랜덤 장르 선택 함수
+// 랜덤 장르 선택
 const getRandomGenre = (): string => {
   return DANCE_GENRES[Math.floor(Math.random() * DANCE_GENRES.length)];
 };
@@ -59,99 +57,20 @@ export async function fetchCrews(): Promise<Crew[]> {
   try {
     console.log('🔍 Fetching crews from Supabase...')
     
-    // 3초 타임아웃으로 줄여서 빠른 응답
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), 10000)
-    })
-    
-    // 크루 데이터만 먼저 가져오기 (속도 개선)
-    const crewsPromise = supabase
+    // 크루 데이터 가져오기
+    const { data: crewsData, error: crewsError } = await supabase
       .from('crews')
       .select('*')
       .order('member_count', { ascending: false })
-      .limit(30) // 상위 30개 크루만
-
-    const { data: crewsData, error: crewsError } = await Promise.race([
-      crewsPromise,
-      timeoutPromise
-    ]) as any
 
     if (crewsError) {
       console.error('❌ Error fetching crews from Supabase:', crewsError)
-      
-      // 타임아웃 시 즉시 목데이터 사용
-      if (crewsError.message === 'Timeout') {
-        console.log('⏰ Timeout - returning mock data')
-        return mockCrews
-      }
-      
-      // 다른 오류는 빠른 재시도 (1초 타임아웃)
-      console.log('🔄 Quick retry...')
-      const quickRetryPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Quick retry timeout')), 1000)
-      })
-      
-      const retryPromise = supabase
-        .from('crews')
-        .select('*')
-        .order('member_count', { ascending: false })
-        .limit(15) // 재시도 시 더 적은 데이터
-      
-      const { data: retryData, error: retryError } = await Promise.race([retryPromise, quickRetryPromise])
-      
-      if (!retryError && retryData && retryData.length > 0) {
-        console.log(`✅ Quick retry successful: ${retryData.length} crews`)
-        
-        // 재시도 시에도 댄서 매칭 시도
-        const { data: retryDancersData } = await supabase
-          .from('dancers')
-          .select('*')
-          .not('crew', 'is', null)
-          .order('rank', { ascending: true })
-          .limit(100) // 재시도시 제한적 데이터
-        
-        return retryData.map((crew: any) => {
-          const matchingDancers = retryDancersData?.filter((dancer: any) => {
-            if (!dancer.crew) return false
-            return dancer.crew.toLowerCase().trim() === crew.name.toLowerCase().trim() ||
-                   calculateSimilarity(dancer.crew, crew.name) >= 0.8
-          }) || []
-          
-          return {
-            id: crew.id,
-            name: crew.name,
-            genre: getRandomGenre(),
-            introduction: crew.description || `${crew.name} 크루입니다.`,
-            members: matchingDancers.map((dancer: any) => ({
-              id: dancer.id,
-              nickname: dancer.nickname,
-              name: dancer.name,
-              crew: dancer.crew,
-              genres: dancer.genres || ['Hip-hop'],
-              rank: dancer.rank,
-              totalPoints: dancer.total_points || 0,
-              profileImage: dancer.profile_image,
-              competitions: [],
-              awards: [],
-              videos: [],
-              createdAt: dancer.created_at
-            })),
-            schedules: [],
-            backgroundImage: undefined,
-            createdAt: crew.created_at,
-            member_count: matchingDancers.length
-          }
-        })
-      }
-      
-      // 재시도도 실패하면 목 데이터 반환
-      console.log('⚠️ Returning mock data after quick retry failed')
-      return mockCrews
+      return []
     }
 
     if (!crewsData || crewsData.length === 0) {
-      console.log('⚠️ No crews found in Supabase, returning mock data')
-      return mockCrews
+      console.log('⚠️ No crews found in Supabase')
+      return []
     }
 
     console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
@@ -160,7 +79,7 @@ export async function fetchCrews(): Promise<Crew[]> {
     console.log('🔄 Fetching dancers for crew matching...')
     const { data: dancersData } = await supabase
       .from('dancers')
-      .select('*')
+      .select('id, nickname, name, crew, genres, rank, total_points, avatar')
       .not('crew', 'is', null)
       .order('rank', { ascending: true })
     
@@ -177,15 +96,14 @@ export async function fetchCrews(): Promise<Crew[]> {
           return true
         }
         
-        // 유사도 기반 매칭 (0.8 이상)
-        const similarity = calculateSimilarity(dancer.crew, crew.name)
-        return similarity >= 0.8
+        // 유사도 매칭 (80% 이상)
+        return calculateSimilarity(dancer.crew, crew.name) >= 0.8
       }) || []
       
       return {
         id: crew.id,
         name: crew.name,
-        genre: getRandomGenre(),
+        genre: getRandomGenre(), // 장르는 랜덤으로 할당
         introduction: crew.description || `${crew.name} 크루입니다.`,
         members: matchingDancers.map((dancer: any) => ({
           id: dancer.id,
@@ -195,16 +113,13 @@ export async function fetchCrews(): Promise<Crew[]> {
           genres: dancer.genres || ['Hip-hop'],
           rank: dancer.rank,
           totalPoints: dancer.total_points || 0,
-          profileImage: dancer.profile_image,
+          avatar: dancer.avatar,
           competitions: [],
-          awards: [],
-          videos: [],
-          createdAt: dancer.created_at
+          videos: []
         })),
         schedules: [],
-        backgroundImage: undefined,
-        createdAt: crew.created_at,
-        member_count: matchingDancers.length // 실제 매칭된 댄서 수
+        createdAt: crew.created_at || new Date().toISOString(),
+        member_count: matchingDancers.length || crew.member_count || 0
       }
     })
 
@@ -212,217 +127,102 @@ export async function fetchCrews(): Promise<Crew[]> {
 
   } catch (error) {
     console.error('❌ Critical error in fetchCrews:', error)
-    console.log('⚠️ Returning mock data as fallback')
-    return mockCrews
+    return []
   }
 }
 
 export async function fetchCrewById(id: string): Promise<Crew | null> {
-  const crews = await fetchCrews()
-  return crews.find(crew => crew.id === id) || null
-}
-
-export async function createCrew(crewData: {
-  name: string;
-  description: string;
-  founded_year: number;
-  location: string;
-  member_count: number;
-}): Promise<Crew | null> {
   try {
-    console.log('🔄 새 크루 생성 중:', crewData.name)
-    
     const { data, error } = await supabase
       .from('crews')
-      .insert({
-        name: crewData.name,
-        description: crewData.description,
-        founded_year: crewData.founded_year,
-        location: crewData.location,
-        member_count: crewData.member_count
-      })
-      .select()
+      .select('*')
+      .eq('id', id)
       .single()
 
-    if (error) {
-      console.error('❌ Error creating crew:', error)
-      throw error
+    if (error || !data) {
+      console.error('Error fetching crew by id:', error)
+      return null
     }
 
-    console.log('✅ 크루 생성 성공:', data.name)
-    
+    // 해당 크루의 댄서들 가져오기
+    const { data: dancersData } = await supabase
+      .from('dancers')
+      .select('*')
+      .eq('crew', data.name)
+
     return {
       id: data.id,
       name: data.name,
-      genre: getRandomGenre(), // 랜덤 장르
+      genre: getRandomGenre(),
       introduction: data.description || `${data.name} 크루입니다.`,
-      members: [],
+      members: dancersData?.map((dancer: any) => ({
+        id: dancer.id,
+        nickname: dancer.nickname,
+        name: dancer.name,
+        crew: dancer.crew,
+        genres: dancer.genres || ['Hip-hop'],
+        rank: dancer.rank,
+        totalPoints: dancer.total_points || 0,
+        avatar: dancer.avatar,
+        competitions: [],
+        videos: []
+      })) || [],
       schedules: [],
-      backgroundImage: undefined,
-      createdAt: data.created_at
+      createdAt: data.created_at,
+      member_count: data.member_count || 0
     }
   } catch (error) {
-    console.error('❌ Error in createCrew:', error)
+    console.error('Error in fetchCrewById:', error)
     return null
   }
 }
 
-export async function addScheduleToCrew(crewId: string, schedule: Omit<CrewSchedule, 'id' | 'createdAt'>): Promise<CrewSchedule | null> {
+export async function fetchCrewByName(name: string): Promise<Crew | null> {
   try {
-    console.log('🔄 Adding schedule to crew:', crewId, schedule);
-    
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      console.error('❌ User not authenticated');
-      throw new Error('Not authenticated');
-    }
-
-    // 크루 이름 가져오기
-    const { data: crewData } = await supabase
-      .from('crews')
-      .select('name')
-      .eq('id', crewId)
-      .single();
-
-    if (!crewData) {
-      console.error('❌ Crew not found');
-      throw new Error('Crew not found');
-    }
-
-    console.log('✅ Found crew:', crewData.name);
-
-    // 실제 테이블 구조에 맞게 데이터 삽입
     const { data, error } = await supabase
-      .from('crew_schedules')
-      .insert({
-        crew_name: crewData.name,  // crew_id 대신 crew_name 사용
-        title: schedule.title,
-        description: schedule.description,
-        date: schedule.date,
-        start_time: schedule.time,  // time 대신 start_time 사용
-        location: schedule.location,
-        // type과 is_public 필드는 실제 테이블에 없을 수 있으므로 제거
-        // type: schedule.type,
-        // is_public: schedule.isPublic,
-        // created_by: userData.user.id
-      })
-      .select()
-      .single();
+      .from('crews')
+      .select('*')
+      .eq('name', name)
+      .single()
 
-    if (error) {
-      console.error('❌ Error inserting schedule:', error);
-      throw error;
+    if (error || !data) {
+      console.error('Error fetching crew by name:', error)
+      return null
     }
 
-    console.log('✅ Schedule added successfully:', data);
+    // 해당 크루의 댄서들 가져오기
+    const { data: dancersData } = await supabase
+      .from('dancers')
+      .select('*')
+      .eq('crew', name)
 
     return {
       id: data.id,
-      title: data.title,
-      description: data.description || '',
-      date: data.date,
-      time: data.start_time,
-      location: data.location || '',
-      type: 'practice', // 기본값
-      isPublic: true,   // 기본값
-      createdBy: userData.user.id,
-      createdAt: data.created_at
-    };
-  } catch (error) {
-    console.error('❌ Error adding schedule:', error);
-    return null;
-  }
-}
-
-export async function getCrewSchedules(crewId: string): Promise<CrewSchedule[]> {
-  try {
-    console.log('🔍 Fetching schedules for crew:', crewId);
-    
-    // 크루 이름 가져오기
-    const { data: crewData } = await supabase
-      .from('crews')
-      .select('name')
-      .eq('id', crewId)
-      .single();
-
-    if (!crewData) {
-      console.error('❌ Crew not found');
-      return [];
+      name: data.name,
+      genre: getRandomGenre(),
+      introduction: data.description || `${data.name} 크루입니다.`,
+      members: dancersData?.map((dancer: any) => ({
+        id: dancer.id,
+        nickname: dancer.nickname,
+        name: dancer.name,
+        crew: dancer.crew,
+        genres: dancer.genres || ['Hip-hop'],
+        rank: dancer.rank,
+        totalPoints: dancer.total_points || 0,
+        avatar: dancer.avatar,
+        competitions: [],
+        videos: []
+      })) || [],
+      schedules: [],
+      createdAt: data.created_at,
+      member_count: data.member_count || 0
     }
-
-    console.log('✅ Found crew for schedule fetch:', crewData.name);
-
-    const { data, error } = await supabase
-      .from('crew_schedules')
-      .select('*')
-      .eq('crew_name', crewData.name)  // crew_id 대신 crew_name 사용
-      .order('date', { ascending: true })
-      .order('start_time', { ascending: true });  // time 대신 start_time 사용
-
-    if (error) {
-      console.error('❌ Error fetching schedules:', error);
-      throw error;
-    }
-
-    console.log(`✅ Found ${data?.length || 0} schedules for ${crewData.name}`);
-
-    return (data || []).map(schedule => ({
-      id: schedule.id,
-      title: schedule.title,
-      description: schedule.description || '',
-      date: schedule.date,
-      time: schedule.start_time,
-      location: schedule.location || '',
-      type: 'practice', // 기본값 (실제 테이블에 type 컬럼이 없을 수 있음)
-      isPublic: true,   // 기본값 (실제 테이블에 is_public 컬럼이 없을 수 있음)
-      createdBy: 'system', // 기본값 (실제 테이블에 created_by 컬럼이 없을 수 있음)
-      createdAt: schedule.created_at
-    }));
   } catch (error) {
-    console.error('❌ Error fetching schedules:', error);
-    return [];
+    console.error('Error in fetchCrewByName:', error)
+    return null
   }
 }
 
-export async function updateSchedule(scheduleId: string, updates: Partial<CrewSchedule>): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('crew_schedules')
-      .update({
-        title: updates.title,
-        description: updates.description,
-        date: updates.date,
-        time: updates.time,
-        location: updates.location,
-        type: updates.type,
-        is_public: updates.isPublic
-      })
-      .eq('id', scheduleId);
-
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error('Error updating schedule:', error);
-    return false;
-  }
-}
-
-export async function deleteSchedule(scheduleId: string): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('crew_schedules')
-      .delete()
-      .eq('id', scheduleId);
-
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error('Error deleting schedule:', error);
-    return false;
-  }
-}
-
-// 크루 검색 (프로필 연동용)
 export async function searchCrews(query: string, limit: number = 50): Promise<Crew[]> {
   try {
     const { data, error } = await supabase
@@ -430,24 +230,94 @@ export async function searchCrews(query: string, limit: number = 50): Promise<Cr
       .select('*')
       .ilike('name', `%${query}%`)
       .order('member_count', { ascending: false })
-      .limit(limit);
+      .limit(limit)
 
-    if (error) throw error;
+    if (error) throw error
 
     return (data || []).map(crew => ({
       id: crew.id,
       name: crew.name,
-      genre: crew.genre || 'Hip-hop',
+      genre: getRandomGenre(),
       introduction: crew.description || `${crew.name} 크루입니다.`,
       members: [],
       schedules: [],
-      backgroundImage: crew.background_image,
       createdAt: crew.created_at,
       member_count: crew.member_count || 0
-    }));
+    }))
   } catch (error) {
-    console.error('Error searching crews:', error);
-    // 오류 시 빈 배열 반환
-    return [];
+    console.error('Error searching crews:', error)
+    return []
   }
-} 
+}
+
+export async function addCrewSchedule(schedule: Omit<CrewSchedule, 'id' | 'createdAt'>): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('crew_schedules')
+      .insert({
+        crew_name: schedule.title, // 임시 매핑
+        title: schedule.title,
+        description: schedule.description,
+        date: schedule.date,
+        start_time: schedule.time,
+        location: schedule.location,
+        type: schedule.type,
+        is_public: schedule.isPublic,
+        created_by: schedule.createdBy
+      })
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    console.error('Error adding crew schedule:', error)
+    return false
+  }
+}
+
+export async function fetchCrewSchedules(crewName: string): Promise<CrewSchedule[]> {
+  try {
+    const { data, error } = await supabase
+      .from('crew_schedules')
+      .select('*')
+      .eq('crew_name', crewName)
+      .order('date', { ascending: true })
+
+    if (error) throw error
+
+    return (data || []).map(schedule => ({
+      id: schedule.id,
+      title: schedule.title,
+      description: schedule.description,
+      date: schedule.date,
+      time: schedule.start_time,
+      location: schedule.location,
+      type: schedule.type,
+      isPublic: schedule.is_public,
+      createdBy: schedule.created_by,
+      createdAt: schedule.created_at
+    }))
+  } catch (error) {
+    console.error('Error fetching crew schedules:', error)
+    return []
+  }
+}
+
+export async function createCrew(crew: Omit<Crew, 'id' | 'createdAt' | 'members' | 'schedules'>): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('crews')
+      .insert({
+        name: crew.name,
+        description: crew.introduction,
+        member_count: crew.member_count || 0
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data.id
+  } catch (error) {
+    console.error('Error creating crew:', error)
+    return null
+  }
+}
