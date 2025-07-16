@@ -172,13 +172,15 @@ const ProfilePage: React.FC = () => {
             )}
             <div className="absolute inset-0 bg-black bg-opacity-30" />
             
-            {/* 배경 이미지 업로드 버튼 */}
-            <button
-              onClick={() => setShowImageUpload('background')}
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-lg text-white transition-colors"
-            >
-              <Image className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
+            {/* 배경 이미지 업로드 버튼 - 관리자만 가능 */}
+            {user && isAdmin && (
+              <button
+                onClick={() => setShowImageUpload('background')}
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-lg text-white transition-colors"
+              >
+                <Image className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            )}
             
             {/* 프로필 이미지 */}
             <div className="absolute -bottom-8 sm:-bottom-16 left-4 sm:left-8">
@@ -188,12 +190,15 @@ const ProfilePage: React.FC = () => {
                   alt={formData.name}
                   className="w-16 h-16 sm:w-32 sm:h-32 rounded-full border-2 sm:border-4 border-white shadow-lg object-cover"
                 />
-                <button
-                  onClick={() => setShowImageUpload('avatar')}
-                  className="absolute bottom-0 right-0 sm:bottom-2 sm:right-2 p-1 sm:p-2 bg-blue-500 hover:bg-blue-600 rounded-full text-white shadow-lg transition-colors"
-                >
-                  <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
-                </button>
+                {/* 프로필 이미지 업로드 버튼 - 관리자만 가능 */}
+                {user && isAdmin && (
+                  <button
+                    onClick={() => setShowImageUpload('avatar')}
+                    className="absolute bottom-0 right-0 sm:bottom-2 sm:right-2 p-1 sm:p-2 bg-blue-500 hover:bg-blue-600 rounded-full text-white shadow-lg transition-colors"
+                  >
+                    <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
