@@ -5,7 +5,7 @@ import { Dancer, Competition, Crew, Comment, UserPermission } from '../types';
 import CommentSystem from './CommentSystem';
 import { fetchComments } from '../services/commentService';
 import DancerResume from './DancerResume';
-import PortfolioAdmin from './PortfolioAdmin';
+
 import { usePermissions } from '../utils/permissions';
 
 interface DancerDetailModalProps {
@@ -44,7 +44,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   const { isDarkMode } = useTheme();
   const { canEditDancer, canComment, currentUser } = usePermissions();
   const [showResumeModal, setShowResumeModal] = useState(false);
-  const [showPortfolioAdmin, setShowPortfolioAdmin] = useState(false);
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [dancerComments, setDancerComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -218,19 +218,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                   <Briefcase className="h-4 w-4" />
                   <span>포트폴리오</span>
                 </button>
-                {onUpdateDancer && (
-                  <button
-                    onClick={() => setShowPortfolioAdmin(true)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
-                      isDarkMode 
-                        ? 'bg-orange-900 text-orange-300 hover:bg-orange-800' 
-                        : 'bg-orange-50 text-orange-700 hover:bg-orange-100'
-                    }`}
-                  >
-                    <Briefcase className="h-4 w-4" />
-                    <span>포트폴리오 편집</span>
-                  </button>
-                )}
+
                 {canEdit && (
                   <button
                     onClick={() => setIsEditMode(!isEditMode)}
@@ -632,14 +620,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
           />
         )}
 
-        {/* Portfolio Admin Modal */}
-        {showPortfolioAdmin && onUpdateDancer && (
-          <PortfolioAdmin
-            dancer={dancer}
-            onUpdateDancer={(dancerId, updates) => onUpdateDancer(dancerId, updates)}
-            onClose={() => setShowPortfolioAdmin(false)}
-          />
-        )}
+
       </div>
     </div>
   );
