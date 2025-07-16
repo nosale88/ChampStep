@@ -150,7 +150,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                 <div className={`absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getRankColor(dancer.rank)}`}>
                   {getRankIcon(dancer.rank)}
                 </div>
-                {onUpdateDancer && (
+                {onUpdateDancer && canEditDancer(dancer) && (
                   <button
                     onClick={() => handleImageUpload('profile')}
                     className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
@@ -183,7 +183,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                 )}
               </div>
               <div className="flex items-center space-x-2">
-                {onUpdateDancer && (
+                {onUpdateDancer && canEditDancer(dancer) && (
                   <button
                     onClick={() => handleImageUpload('background')}
                     className={`px-3 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${

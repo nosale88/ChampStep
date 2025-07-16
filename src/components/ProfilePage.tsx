@@ -186,7 +186,7 @@ const ProfilePage: React.FC = () => {
             <div className="absolute -bottom-8 sm:-bottom-16 left-4 sm:left-8">
               <div className="relative">
                 <img
-                  src={getValidAvatarUrl(formData.avatar, user.id)}
+                  src={getValidAvatarUrl(formData.avatar, user?.id || '')}
                   alt={formData.name}
                   className="w-16 h-16 sm:w-32 sm:h-32 rounded-full border-2 sm:border-4 border-white shadow-lg object-cover"
                 />
