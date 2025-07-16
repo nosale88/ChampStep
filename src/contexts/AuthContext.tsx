@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { Dancer } from '../types';
 import { getValidAvatarUrl } from '../utils/avatarUtils';
-import { isAdmin } from '../utils/adminUtils';
+import { isAdmin, isAdminSync } from '../utils/adminUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -158,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phone: data.phone,
           birthDate: data.birth_date,
           bio: data.bio,
-          isAdmin: data.is_admin || isAdmin(data.email || '')
+          isAdmin: data.is_admin || isAdminSync(data.email || '')
         };
         setDancer(dancerData);
         setUserIsAdmin(dancerData.isAdmin || false);

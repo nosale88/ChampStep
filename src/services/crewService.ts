@@ -58,9 +58,9 @@ export async function fetchCrews(): Promise<Crew[]> {
   try {
     console.log('🔍 Fetching crews from Supabase...')
     
-    // Supabase 연결 시도 (타임아웃 5초)
+    // Supabase 연결 시도 (타임아웃 10초)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), 5000)
+      setTimeout(() => reject(new Error('Timeout')), 10000)
     );
     
     // 크루 데이터 가져오기
@@ -73,6 +73,7 @@ export async function fetchCrews(): Promise<Crew[]> {
 
     if (crewsError) {
       console.error('❌ Error fetching crews from Supabase:', crewsError)
+      console.error('Error details:', JSON.stringify(crewsError, null, 2))
       console.log('🔄 Falling back to mock crews...')
       return mockCrews;
     }
@@ -136,6 +137,7 @@ export async function fetchCrews(): Promise<Crew[]> {
 
   } catch (error) {
     console.error('❌ Critical error in fetchCrews:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     console.log('🔄 Using mock crews as fallback...')
     return mockCrews;
   }
