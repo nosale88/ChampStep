@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { Crew, CrewSchedule } from '../types'
+import { mockCrews } from '../data/mockData'
 
 // 문자열 유사도 계산 함수 (레벤슈타인 거리 기반)
 function calculateSimilarity(str1: string, str2: string): number {
@@ -57,20 +58,28 @@ export async function fetchCrews(): Promise<Crew[]> {
   try {
     console.log('🔍 Fetching crews from Supabase...')
     
+    // Supabase 연결 시도 (타임아웃 5초)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 5000)
+    );
+    
     // 크루 데이터 가져오기
-    const { data: crewsData, error: crewsError } = await supabase
+    const supabasePromise = supabase
       .from('crews')
       .select('*')
-      .order('member_count', { ascending: false })
+      .order('member_count', { ascending: false });
+
+    const { data: crewsData, error: crewsError } = await Promise.race([supabasePromise, timeoutPromise]) as any;
 
     if (crewsError) {
       console.error('❌ Error fetching crews from Supabase:', crewsError)
-      return []
+      console.log('🔄 Falling back to mock crews...')
+      return mockCrews;
     }
 
     if (!crewsData || crewsData.length === 0) {
-      console.log('⚠️ No crews found in Supabase')
-      return []
+      console.log('⚠️ No crews found in Supabase, using mock data')
+      return mockCrews;
     }
 
     console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
@@ -127,7 +136,8 @@ export async function fetchCrews(): Promise<Crew[]> {
 
   } catch (error) {
     console.error('❌ Critical error in fetchCrews:', error)
-    return []
+    console.log('🔄 Using mock crews as fallback...')
+    return mockCrews;
   }
 }
 

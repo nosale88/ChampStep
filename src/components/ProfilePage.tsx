@@ -11,7 +11,7 @@ import ProfileOnboarding from './ProfileOnboarding';
 
 const ProfilePage: React.FC = () => {
   const { isDarkMode } = useTheme();
-  const { user, dancer, updateProfile, loading } = useAuth();
+  const { user, dancer, updateProfile, loading, isAdmin } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [crews, setCrews] = useState<Crew[]>([]);
@@ -209,17 +209,20 @@ const ProfilePage: React.FC = () => {
                   @{formData.nickname}
                 </p>
               </div>
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto ${
-                  isEditing
-                    ? isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                }`}
-              >
-                {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-                <span>{isEditing ? '취소' : '편집'}</span>
-              </button>
+              {/* 편집 버튼 - 관리자만 가능 */}
+              {user && isAdmin && (
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 w-full sm:w-auto ${
+                    isEditing
+                      ? isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  {isEditing ? <X className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                  <span>{isEditing ? '취소' : '편집'}</span>
+                </button>
+              )}
             </div>
             
             {formData.bio && (

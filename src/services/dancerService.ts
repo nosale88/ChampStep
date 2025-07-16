@@ -7,7 +7,12 @@ export async function fetchDancers(): Promise<Dancer[]> {
   try {
     console.log('🔍 Fetching dancers from Supabase...');
     
-    const { data, error } = await supabase
+    // Supabase 연결 시도 (타임아웃 5초)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 5000)
+    );
+    
+    const supabasePromise = supabase
       .from('dancers')
       .select(`
         id,
@@ -20,18 +25,26 @@ export async function fetchDancers(): Promise<Dancer[]> {
         rank,
         avatar
       `)
-      .order('rank', { ascending: true })
+      .order('rank', { ascending: true });
+
+    const { data, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
 
     if (error) {
-      console.error('❌ Error fetching dancers from Supabase:', error)
-      return []
+      console.error('❌ Error fetching dancers from Supabase:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      console.log('🔄 Falling back to mock data...')
+      return mockDancers;
     }
 
     console.log(`✅ Successfully fetched ${data?.length || 0} dancers from Supabase`)
     
     if (!data || data.length === 0) {
-      console.log('⚠️ No dancers found in database')
-      return []
+      console.log('⚠️ No dancers found in database, using mock data')
+      return mockDancers;
     }
 
     return data.map(dancer => ({
@@ -59,7 +72,8 @@ export async function fetchDancers(): Promise<Dancer[]> {
     }))
   } catch (error) {
     console.error('❌ Critical error in fetchDancers:', error)
-    return []
+    console.log('🔄 Using mock data as fallback...')
+    return mockDancers;
   }
 }
 

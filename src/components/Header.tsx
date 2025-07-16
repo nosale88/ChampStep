@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Crown, Menu, X, Moon, Sun, LogIn, LogOut, User, Home, Trophy, Calendar, Users, Shield, Bell, MessageCircle, Settings, ExternalLink } from 'lucide-react';
+import { Crown, Menu, X, Moon, Sun, LogIn, LogOut, User, Home, Trophy, Calendar, Users, Shield, Bell, MessageCircle, Settings, ExternalLink, UserPlus } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import LoginModal from './LoginModal';
 import ProfileEditModal from './ProfileEditModal';
+import DancerRegistrationModal from './DancerRegistrationModal';
 
 type View = 'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin';
 
@@ -21,6 +22,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showProfileEditModal, setShowProfileEditModal] = useState(false);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   
   // 임시 알림 및 댓글 데이터
   const notifications = [
@@ -236,16 +238,26 @@ const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
                   <div className="relative" ref={profileRef}>
                     <button
                       onClick={() => setShowProfileMenu(!showProfileMenu)}
-                      className={`flex items-center space-x-2 px-2 sm:px-3 py-1 rounded-lg transition-colors ${
-                        isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
-                      }`}
+                      className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden transition-all hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      title={dancer?.nickname || user.email}
                     >
-                      <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className={`text-xs sm:text-sm font-medium ${
-                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                      } max-w-20 sm:max-w-none truncate`}>
-                        {dancer?.nickname || user.email}
-                      </span>
+                      {dancer?.avatar || dancer?.profileImage ? (
+                        <img
+                          src={dancer.avatar || dancer.profileImage}
+                          alt={dancer.nickname || 'Profile'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full flex items-center justify-center text-white font-semibold text-sm sm:text-base ${
+                        dancer?.avatar || dancer?.profileImage ? 'hidden' : ''
+                      } bg-gradient-to-br from-blue-500 to-purple-600`}>
+                        {(dancer?.nickname || user.email)?.charAt(0).toUpperCase()}
+                      </div>
                     </button>
                     
                     {/* 프로필 드롭다운 */}
@@ -266,18 +278,34 @@ const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
                             <User className="h-4 w-4" />
                             <span>내 프로필</span>
                           </button>
+                          {/* 댄서/크루 등록 */}
                           <button
                             onClick={() => {
-                              setShowProfileEditModal(true);
+                              setShowRegistrationModal(true);
                               setShowProfileMenu(false);
                             }}
                             className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
                               isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
                             }`}
                           >
-                            <Settings className="h-4 w-4" />
-                            <span>프로필 편집</span>
+                            <UserPlus className="h-4 w-4" />
+                            <span>댄서/크루 등록</span>
                           </button>
+                          {/* 프로필 편집 - 관리자만 가능 */}
+                          {user && isAdmin && (
+                            <button
+                              onClick={() => {
+                                setShowProfileEditModal(true);
+                                setShowProfileMenu(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
+                                isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+                              }`}
+                            >
+                              <Settings className="h-4 w-4" />
+                              <span>프로필 편집</span>
+                            </button>
+                          )}
                           <hr className={`my-2 ${
                             isDarkMode ? 'border-gray-700' : 'border-gray-200'
                           }`} />
@@ -424,10 +452,18 @@ const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
       <ProfileEditModal 
         isOpen={showProfileEditModal} 
         onClose={() => setShowProfileEditModal(false)}
-        onSave={(updatedData) => {
-          // TODO: Supabase에 업데이트 로직 추가
-          console.log('프로필 업데이트:', updatedData);
+        onSave={(data) => {
+          console.log('프로필 업데이트:', data);
+          // TODO: 실제 프로필 업데이트 로직 구현
           setShowProfileEditModal(false);
+        }}
+      />
+      <DancerRegistrationModal
+        isOpen={showRegistrationModal}
+        onClose={() => setShowRegistrationModal(false)}
+        onSuccess={() => {
+          // 등록 성공 시 처리
+          console.log('댄서/크루 등록 성공');
         }}
       />
     </>
