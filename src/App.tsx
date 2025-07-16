@@ -36,15 +36,25 @@ function AppContent() {
     const loadData = async () => {
       console.log('🚀 Starting data load...');
       
+      // 최대 15초 타임아웃 설정
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Data loading timeout')), 15000);
+      });
+      
       try {
         console.log('📊 Fetching data from services...');
         
-        // 병렬로 모든 데이터 로딩 (타임아웃 제거하여 성능 개선)
-        const [dancersData, competitionsData, crewsData] = await Promise.allSettled([
+        // 타임아웃과 함께 데이터 로딩
+        const dataPromise = Promise.allSettled([
           fetchDancers(),
           fetchCompetitions(), 
           fetchCrews()
         ]);
+        
+        const [dancersData, competitionsData, crewsData] = await Promise.race([
+          dataPromise,
+          timeoutPromise
+        ]) as PromiseSettledResult<any>[];
         
         // 실제 Supabase 데이터만 사용 (목 데이터 fallback 제거)
         const dancers = dancersData.status === 'fulfilled' ? dancersData.value : [];
@@ -72,6 +82,7 @@ function AppContent() {
         
       } catch (error) {
         console.error('❌ Critical error loading data:', error);
+        // 타임아웃이나 에러 발생 시 빈 배열로 설정하여 앱이 계속 작동하도록 함
         setDancers([]);
         setCompetitions([]);
         setCrews([]);
