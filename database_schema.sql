@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS dancer_claim_requests (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  dancer_id UUID NOT NULL REFERENCES dancers(id) ON DELETE CASCADE,
+  dancer_id TEXT NOT NULL REFERENCES dancers(id) ON DELETE CASCADE,
   requested_nickname VARCHAR(100) NOT NULL,
   requested_name VARCHAR(100) NOT NULL,
   requested_genres TEXT[] DEFAULT '{}',
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS dancer_claim_requests (
 CREATE TABLE IF NOT EXISTS crew_claim_requests (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  crew_id UUID NOT NULL REFERENCES crews(id) ON DELETE CASCADE,
+  crew_id TEXT NOT NULL REFERENCES crews(id) ON DELETE CASCADE,
   requested_name VARCHAR(100) NOT NULL,
   requested_description TEXT,
   requested_genres TEXT[] DEFAULT '{}',
