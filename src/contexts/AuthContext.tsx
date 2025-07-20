@@ -169,7 +169,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         setDancer(dancerData);
-        setUserIsAdmin(dancerData.isAdmin || false);
+        
+        // 관리자 권한 확인 (비동기)
+        if (data.email) {
+          console.log('🔍 Checking admin status for:', data.email);
+          try {
+            const adminStatus = await isAdmin(data.email);
+            console.log('🔍 Admin status result:', adminStatus);
+            setUserIsAdmin(adminStatus);
+          } catch (error) {
+            console.error('🔍 Error checking admin status:', error);
+            // 폴백으로 동기 방식 사용
+            const fallbackAdmin = isAdminSync(data.email);
+            console.log('🔍 Fallback admin check:', fallbackAdmin);
+            setUserIsAdmin(fallbackAdmin);
+          }
+        } else {
+          setUserIsAdmin(false);
+        }
       } else {
         console.log('🔄 No profile data - will show onboarding');
         setDancer(null);

@@ -2,7 +2,12 @@ import { supabase } from '../lib/supabase';
 
 // 관리자 권한 확인 (비동기)
 export const isAdmin = async (email: string): Promise<boolean> => {
-  if (!email) return false;
+  if (!email) {
+    console.log('🔍 Admin check: No email provided');
+    return false;
+  }
+  
+  console.log('🔍 Admin check: Checking email in database:', email);
   
   try {
     const { data, error } = await supabase
@@ -12,14 +17,18 @@ export const isAdmin = async (email: string): Promise<boolean> => {
       .single();
     
     if (error) {
-      console.log('Admin check error:', error.message);
-      return false;
+      console.log('🔍 Admin check DB error:', error.message);
+      console.log('🔍 Falling back to hardcoded admin list');
+      return isAdminSync(email);
     }
     
-    return !!data;
+    const isAdmin = !!data;
+    console.log('🔍 Admin check DB result:', { email, isAdmin, data });
+    return isAdmin;
   } catch (error) {
-    console.error('Error checking admin status:', error);
-    return false;
+    console.error('🔍 Error checking admin status:', error);
+    console.log('🔍 Falling back to hardcoded admin list');
+    return isAdminSync(email);
   }
 };
 
