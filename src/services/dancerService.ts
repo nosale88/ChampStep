@@ -6,10 +6,12 @@ import { mockDancers } from '../data/mockData'
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
     console.log('🔍 Fetching dancers from Supabase...');
+    console.log('🔍 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('🔍 Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
     
-    // Supabase 연결 시도 (타임아웃 5초)
+    // Supabase 연결 시도 (타임아웃 10초 - 배포환경용)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), 5000)
+      setTimeout(() => reject(new Error('Timeout')), 10000)
     );
     
     const supabasePromise = supabase
