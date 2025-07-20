@@ -192,6 +192,7 @@ export interface Dancer {
   competitions: Competition[];
   totalPoints: number;
   rank: number;
+  stepScore?: number; // 스텝 점수 추가
   avatar?: string;
   backgroundImage?: string; // 스텝 바에 사용될 배경 이미지
   profileImage?: string; // 스텝 바에 사용될 인물 이미지

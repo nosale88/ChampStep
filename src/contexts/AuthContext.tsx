@@ -160,6 +160,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           bio: data.bio,
           isAdmin: data.is_admin || isAdminSync(data.email || '')
         };
+        
+        console.log('👤 User admin status:', {
+          email: data.email,
+          dbIsAdmin: data.is_admin,
+          syncIsAdmin: isAdminSync(data.email || ''),
+          finalIsAdmin: dancerData.isAdmin
+        });
+        
         setDancer(dancerData);
         setUserIsAdmin(dancerData.isAdmin || false);
       } else {

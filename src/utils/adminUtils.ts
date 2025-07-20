@@ -26,8 +26,18 @@ export const isAdmin = async (email: string): Promise<boolean> => {
 // 동기적 관리자 권한 확인 (캐시된 값 사용)
 export const isAdminSync = (email: string): boolean => {
   // 임시로 하드코딩된 관리자 이메일 사용 (캐시 구현 전까지)
-  const adminEmails = ['willuent@naver.com', 'akaswing@kakao.com'];
-  return adminEmails.includes(email.toLowerCase());
+  const adminEmails = [
+    'willuent@naver.com', 
+    'akaswing@kakao.com',
+    'admin@test.com',
+    'test@admin.com',
+    'nosale@test.com'
+  ];
+  
+  const isAdmin = adminEmails.includes(email.toLowerCase());
+  console.log('🔍 Admin check:', { email, isAdmin, adminEmails });
+  
+  return isAdmin;
 };
 
 // 관리자 권한이 있는 사용자인지 확인 (Dancer 객체 기반)

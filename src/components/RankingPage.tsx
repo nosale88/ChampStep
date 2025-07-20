@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Trophy, TrendingUp, Grid3X3, List, ChevronDown } from 'lucide-react';
+import { Search, Filter, Trophy, TrendingUp, Grid3X3, List, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Dancer } from '../types';
 import DancerCard from './DancerCard';
@@ -13,10 +13,12 @@ interface RankingPageProps {
 const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => {
   const { isDarkMode } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('all');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedCrew, setSelectedCrew] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   const availableGenres = useMemo(() => {
     const genres = new Set<string>();
@@ -29,7 +31,9 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
   const availableCrews = useMemo(() => {
     const crews = new Set<string>();
     dancers.forEach(dancer => {
-      if (dancer.crew) crews.add(dancer.crew);
+      if (dancer.crew) {
+        crews.add(dancer.crew);
+      }
     });
     return Array.from(crews).sort();
   }, [dancers]);
@@ -38,12 +42,44 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
     return dancers.filter(dancer => {
       const matchesSearch = dancer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            dancer.nickname.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesGenre = selectedGenre === 'all' || dancer.genres.includes(selectedGenre);
+      const matchesGenre = selectedGenres.length === 0 || 
+                          selectedGenres.some(genre => dancer.genres.includes(genre));
       const matchesCrew = selectedCrew === 'all' || dancer.crew === selectedCrew;
       
       return matchesSearch && matchesGenre && matchesCrew;
     });
-  }, [dancers, searchTerm, selectedGenre, selectedCrew]);
+  }, [dancers, searchTerm, selectedGenres, selectedCrew]);
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredDancers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentDancers = filteredDancers.slice(startIndex, endIndex);
+
+  // 필터가 변경될 때 첫 페이지로 리셋
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedGenres, selectedCrew]);
+
+  // 장르 선택/해제 핸들러
+  const handleGenreToggle = (genre: string) => {
+    setSelectedGenres(prev => {
+      if (prev.includes(genre)) {
+        return prev.filter(g => g !== genre);
+      } else {
+        return [...prev, genre];
+      }
+    });
+  };
+
+  // 모든 장르 선택/해제
+  const handleAllGenresToggle = () => {
+    if (selectedGenres.length === availableGenres.length) {
+      setSelectedGenres([]);
+    } else {
+      setSelectedGenres([...availableGenres]);
+    }
+  };
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -107,38 +143,52 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
                 <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   장르
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="space-y-2">
                   <button
-                    onClick={() => setSelectedGenre('all')}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      selectedGenre === 'all'
+                    onClick={handleAllGenresToggle}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      selectedGenres.length === availableGenres.length
                         ? isDarkMode
                           ? 'bg-blue-600 text-white'
                           : 'bg-blue-500 text-white'
-                        : isDarkMode
-                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    모든 장르
-                  </button>
-                  {availableGenres.map(genre => (
-                    <button
-                      key={genre}
-                      onClick={() => setSelectedGenre(genre)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                        selectedGenre === genre
+                        : selectedGenres.length === 0
                           ? isDarkMode
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-500 text-white'
-                          : isDarkMode
                             ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {genre}
-                    </button>
-                  ))}
+                          : isDarkMode
+                            ? 'bg-yellow-600 text-white'
+                            : 'bg-yellow-500 text-white'
+                    }`}
+                  >
+                    {selectedGenres.length === 0 ? '모든 장르' : 
+                     selectedGenres.length === availableGenres.length ? '모든 장르 선택됨' :
+                     `${selectedGenres.length}개 장르 선택됨`}
+                  </button>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-32 overflow-y-auto">
+                    {availableGenres.map(genre => (
+                      <label
+                        key={genre}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                          isDarkMode
+                            ? 'hover:bg-gray-700'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedGenres.includes(genre)}
+                          onChange={() => handleGenreToggle(genre)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <span className={`text-sm ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          {genre}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -228,7 +278,7 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
               { 
                 icon: Filter, 
                 label: '활성 필터', 
-                value: [selectedGenre !== 'all', selectedCrew !== 'all', searchTerm !== ''].filter(Boolean).length, 
+                value: [selectedGenres.length > 0, selectedCrew !== 'all', searchTerm !== ''].filter(Boolean).length, 
                 color: isDarkMode ? 'text-purple-400 bg-purple-900' : 'text-purple-600 bg-purple-50' 
               }
             ].map(({ icon: Icon, label, value, color }, index) => (
@@ -286,7 +336,7 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
               
               {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {filteredDancers.map((dancer) => (
+                  {currentDancers.map((dancer) => (
                     <DancerCard
                       key={dancer.id}
                       dancer={dancer}
@@ -296,14 +346,90 @@ const RankingPage: React.FC<RankingPageProps> = ({ onDancerClick, dancers }) => 
                 </div>
               ) : (
                 <div className="space-y-2 sm:space-y-3">
-                  {filteredDancers.map((dancer, index) => (
+                  {currentDancers.map((dancer, index) => (
                     <DancerListItem
                       key={dancer.id}
                       dancer={dancer}
-                      rank={index + 1}
+                      rank={startIndex + index + 1}
                       onClick={() => onDancerClick(dancer.id)}
                     />
                   ))}
+                </div>
+              )}
+              
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+                  <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {startIndex + 1}-{Math.min(endIndex, filteredDancers.length)} / {filteredDancers.length}명
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`p-2 rounded-lg transition-colors ${
+                        currentPage === 1
+                          ? isDarkMode
+                            ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : isDarkMode
+                            ? 'bg-gray-700 text-white hover:bg-gray-600'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                      }`}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 7) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 4) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 3) {
+                          pageNum = totalPages - 6 + i;
+                        } else {
+                          pageNum = currentPage - 3 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === pageNum
+                                ? isDarkMode
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-blue-500 text-white'
+                                : isDarkMode
+                                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className={`p-2 rounded-lg transition-colors ${
+                        currentPage === totalPages
+                          ? isDarkMode
+                            ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : isDarkMode
+                            ? 'bg-gray-700 text-white hover:bg-gray-600'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                      }`}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               )}
             </>

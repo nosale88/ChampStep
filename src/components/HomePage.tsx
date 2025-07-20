@@ -10,11 +10,12 @@ interface HomePageProps {
   onCompetitionClick: (competitionId: string) => void;
   dancers: Dancer[];
   competitions: Competition[];
+  onViewChange: (view: 'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin') => void;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, dancers, competitions }) => {
+const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, dancers, competitions, onViewChange }) => {
   const { isDarkMode } = useTheme();
-  const topDancers = dancers.slice(0, 3);
+  const topDancers = dancers.slice(0, 9);
   const recentCompetitions = competitions.slice(0, 2);
 
   return (
@@ -86,7 +87,7 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className={`text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              🏆 현재 스텝 TOP 3
+              🏆 현재 스텝 TOP 9
             </h2>
             <p className={`max-w-2xl mx-auto px-4 text-sm sm:text-base transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               대회 수상 내역을 바탕으로 산정된 현재 최고 스텝 댄서들을 만나보세요
@@ -100,6 +101,21 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
                 onClick={() => onDancerClick(dancer.id)}
               />
             ))}
+          </div>
+          
+          {/* 전체 보기 버튼 */}
+          <div className="text-center mt-8 sm:mt-12">
+            <button
+              onClick={() => onViewChange('ranking')}
+              className={`inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 group ${
+                isDarkMode 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+              }`}
+            >
+              전체 스텝 보기
+              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </button>
           </div>
         </div>
       </section>

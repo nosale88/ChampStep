@@ -269,6 +269,7 @@ function AppContent() {
           onCompetitionClick={handleCompetitionClick}
           dancers={dancers}
           competitions={competitions}
+          onViewChange={setCurrentView}
         />
       )}
       
@@ -307,7 +308,11 @@ function AppContent() {
       )}
 
       {currentView === 'admin' && (
-        <AdminPanel />
+        <AdminPanel 
+          dancers={dancers}
+          competitions={competitions}
+          crews={crews}
+        />
       )}
 
       {selectedDancer && (
