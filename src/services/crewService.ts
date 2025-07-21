@@ -203,24 +203,90 @@ export async function searchCrews(query: string, limit: number = 50): Promise<Cr
   }
 }
 
-export async function addCrewSchedule(schedule: Omit<CrewSchedule, 'id' | 'createdAt'>): Promise<boolean> {
+export async function addCrewSchedule(schedule: Omit<CrewSchedule, 'id' | 'createdAt'>): Promise<CrewSchedule | null> {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('crew_schedules')
       .insert({
         crew_id: schedule.crewId,
         title: schedule.title,
         description: schedule.description,
         date: schedule.date,
+        time: schedule.time,
         location: schedule.location,
-        type: schedule.type
+        type: schedule.type,
+        is_public: schedule.isPublic,
+        created_by: schedule.createdBy
       })
+      .select()
+      .single()
 
     if (error) throw error
-    return true
+    
+    // 데이터베이스 형식을 CrewSchedule 형식으로 변환
+    return {
+      id: data.id,
+      crewId: data.crew_id,
+      title: data.title,
+      description: data.description,
+      date: data.date,
+      time: data.time,
+      location: data.location,
+      type: data.type,
+      isPublic: data.is_public,
+      createdBy: data.created_by,
+      createdAt: data.created_at
+    }
   } catch (error) {
     console.error('Error adding crew schedule:', error)
-    return false
+    return null
+  }
+}
+
+// CrewsPage에서 사용하는 함수명으로 별칭 생성
+export async function addScheduleToCrew(crewId: string, schedule: any): Promise<CrewSchedule | null> {
+  return await addCrewSchedule({
+    crewId,
+    title: schedule.title,
+    description: schedule.description,
+    date: schedule.date,
+    time: schedule.time,
+    location: schedule.location,
+    type: schedule.type,
+    isPublic: schedule.isPublic,
+    createdBy: schedule.createdBy
+  })
+}
+
+export async function getCrewSchedules(crewId: string): Promise<CrewSchedule[]> {
+  try {
+    const { data, error } = await supabase
+      .from('crew_schedules')
+      .select('*')
+      .eq('crew_id', crewId)
+      .order('date', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching crew schedules:', error)
+      return []
+    }
+
+    return (data || []).map(schedule => ({
+      id: schedule.id,
+      crewId: schedule.crew_id,
+      title: schedule.title,
+      description: schedule.description,
+      date: schedule.date,
+      time: schedule.time || '',
+      location: schedule.location,
+      type: schedule.type,
+      isPublic: schedule.is_public,
+      createdBy: schedule.created_by,
+      createdAt: schedule.created_at
+    }))
+  } catch (error) {
+    console.error('Error in getCrewSchedules:', error)
+    return []
   }
 }
 
@@ -237,27 +303,7 @@ export async function fetchCrewSchedules(crewName: string): Promise<CrewSchedule
       return []
     }
 
-    const { data, error } = await supabase
-      .from('crew_schedules')
-      .select('*')
-      .eq('crew_id', crewData.id)
-      .order('date', { ascending: true })
-
-    if (error) {
-      console.error('Error fetching crew schedules:', error)
-      return []
-    }
-
-    return (data || []).map(schedule => ({
-      id: schedule.id,
-      crewId: schedule.crew_id,
-      title: schedule.title,
-      description: schedule.description,
-      date: schedule.date,
-      location: schedule.location,
-      type: schedule.type,
-      createdAt: schedule.created_at
-    }))
+    return getCrewSchedules(crewData.id)
   } catch (error) {
     console.error('Error in fetchCrewSchedules:', error)
     return []

@@ -112,6 +112,7 @@ export interface StepReward {
 
 export interface CrewSchedule {
   id: string;
+  crewId: string;
   title: string;
   description: string;
   date: string;
