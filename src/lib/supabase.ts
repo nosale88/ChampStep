@@ -5,17 +5,28 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zmoalrtninbbgz
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptb2FscnRuaW5iYmd6cWhmdWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MjM2NjAsImV4cCI6MjA2NzA5OTY2MH0.E6gj0plKMKWK3skBvBycKZsuanK2c0z5UcvZ1c9SfLA'
 
 // 환경 변수 로딩 상태 디버깅 (updated for anon key fix)
-console.log('🔧 Environment variables check:', {
+console.log('🔧 🚨 CRITICAL Environment variables check 🚨:', {
   hasViteSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
   hasViteSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
   envUrl: import.meta.env.VITE_SUPABASE_URL || 'NOT_SET',
   envKeyLength: import.meta.env.VITE_SUPABASE_ANON_KEY?.length || 0,
-  finalUrl: supabaseUrl.substring(0, 30) + '...',
+  finalUrl: supabaseUrl,
+  finalKey: supabaseAnonKey.substring(0, 50) + '...',
   finalKeyLength: supabaseAnonKey.length,
   environment: import.meta.env.MODE || 'unknown',
   isDev: import.meta.env.DEV,
-  isProd: import.meta.env.PROD
+  isProd: import.meta.env.PROD,
+  allEnvKeys: Object.keys(import.meta.env),
+  supabaseEnvKeys: Object.keys(import.meta.env).filter(key => key.includes('SUPABASE'))
 })
+
+// 즉시 연결 테스트 실행
+console.log('🔧 🚨 Starting immediate connection test...');
+testSupabaseConnection().then(result => {
+  console.log('🔧 🚨 Connection test result:', result);
+}).catch(error => {
+  console.error('🔧 🚨 Connection test failed:', error);
+});
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
