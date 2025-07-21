@@ -144,15 +144,113 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className={`rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-colors ${
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
+      <div className={`w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transition-colors sm:rounded-2xl rounded-t-3xl sm:m-4 ${
         isDarkMode ? 'bg-gray-800' : 'bg-white'
       }`}>
+        {/* Mobile Handle Bar */}
+        <div className="sm:hidden flex justify-center pt-2 pb-4">
+          <div className={`w-12 h-1 rounded-full ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
+        </div>
+        
         {/* Header */}
-        <div className={`sticky top-0 border-b p-6 rounded-t-2xl transition-colors ${
+        <div className={`sticky top-0 border-b px-4 sm:px-6 py-4 sm:py-6 sm:rounded-t-2xl transition-colors ${
           isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <div className="flex items-center justify-between">
+          {/* Mobile Header Layout */}
+          <div className="sm:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <img
+                    src={dancer.profileImage || dancer.avatar || 'https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg'}
+                    alt={dancer.nickname}
+                    className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-100"
+                  />
+                  <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getRankColor(dancer.rank)}`}>
+                    {getRankIcon(dancer.rank)}
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className={`text-xl font-bold truncate transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {dancer.nickname}
+                  </h2>
+                  <p className={`text-sm truncate transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {dancer.name}
+                  </p>
+                  {dancer.crew && (
+                    <div className="flex items-center space-x-1 mt-1">
+                      <Users className={`h-3 w-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                      <button
+                        onClick={() => handleCrewClick(dancer.crew!)}
+                        className={`text-xs font-medium transition-colors truncate max-w-24 ${
+                          isDarkMode 
+                            ? 'text-blue-400 hover:text-blue-300' 
+                            : 'text-blue-600 hover:text-blue-700'
+                        }`}
+                      >
+                        {dancer.crew}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className={`p-2 rounded-full transition-colors ${
+                  isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
+                }`}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Mobile Action Buttons */}
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              <button
+                onClick={() => setShowResumeModal(true)}
+                className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ${
+                  isDarkMode 
+                    ? 'bg-green-900 text-green-300 hover:bg-green-800' 
+                    : 'bg-green-50 text-green-700 hover:bg-green-100'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                <span>이력서</span>
+              </button>
+              <button
+                onClick={() => window.open(`/portfolio/${dancer.nickname}`, '_blank')}
+                className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ${
+                  isDarkMode 
+                    ? 'bg-purple-900 text-purple-300 hover:bg-purple-800' 
+                    : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                }`}
+              >
+                <Briefcase className="h-4 w-4" />
+                <span>포트폴리오</span>
+              </button>
+              {canEdit && (
+                <button
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ${
+                    isEditMode
+                      ? isDarkMode 
+                        ? 'bg-red-900 text-red-300 hover:bg-red-800' 
+                        : 'bg-red-50 text-red-700 hover:bg-red-100'
+                      : isDarkMode 
+                        ? 'bg-blue-900 text-blue-300 hover:bg-blue-800' 
+                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  }`}
+                >
+                  {isEditMode ? <X className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
+                  <span>{isEditMode ? '취소' : '편집'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop Header Layout */}
+          <div className="hidden sm:flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <img
@@ -282,51 +380,51 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="px-4 sm:px-6 py-4 sm:py-6">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className={`p-6 rounded-xl transition-colors ${
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className={`p-4 sm:p-6 rounded-xl transition-colors ${
               isDarkMode ? 'bg-gradient-to-r from-blue-900 to-blue-800' : 'bg-gradient-to-r from-blue-50 to-blue-100'
             }`}>
               <div className="flex items-center space-x-3">
-                <Trophy className={`h-8 w-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                <Trophy className={`h-6 w-6 sm:h-8 sm:w-8 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                 <div>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-blue-200' : 'text-blue-900'}`}>
+                  <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-blue-200' : 'text-blue-900'}`}>
                     {dancer.totalPoints.toFixed(1)}
                   </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
+                  <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
                     총 스텝 점수
                   </p>
                 </div>
               </div>
             </div>
-            <div className={`p-6 rounded-xl transition-colors ${
+            <div className={`p-4 sm:p-6 rounded-xl transition-colors ${
               isDarkMode ? 'bg-gradient-to-r from-green-900 to-green-800' : 'bg-gradient-to-r from-green-50 to-green-100'
             }`}>
               <div className="flex items-center space-x-3">
-                <Calendar className={`h-8 w-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+                <Calendar className={`h-6 w-6 sm:h-8 sm:w-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
                 <div>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-green-200' : 'text-green-900'}`}>
+                  <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-green-200' : 'text-green-900'}`}>
                     {dancer.competitions?.length || 0}
                   </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>
+                  <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>
                     참여 대회 수
                   </p>
                 </div>
               </div>
             </div>
-            <div className={`p-6 rounded-xl transition-colors ${
+            <div className={`p-4 sm:p-6 rounded-xl transition-colors ${
               isDarkMode ? 'bg-gradient-to-r from-purple-900 to-purple-800' : 'bg-gradient-to-r from-purple-50 to-purple-100'
             }`}>
               <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getRankColor(dancer.rank)}`}>
+                <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${getRankColor(dancer.rank)}`}>
                   {getRankIcon(dancer.rank)}
                 </div>
                 <div>
-                  <p className={`text-2xl font-bold ${isDarkMode ? 'text-purple-200' : 'text-purple-900'}`}>
+                  <p className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-purple-200' : 'text-purple-900'}`}>
                     #{dancer.rank}
                   </p>
-                  <p className={`text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+                  <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-purple-300' : 'text-purple-700'}`}>
                     현재 스텝
                   </p>
                 </div>
@@ -335,15 +433,15 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
           </div>
 
           {/* Genres */}
-          <div className="mb-8">
-            <h3 className={`text-lg font-semibold mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <div className="mb-6 sm:mb-8">
+            <h3 className={`text-base sm:text-lg font-semibold mb-3 sm:mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               전문 장르
             </h3>
             <div className="flex flex-wrap gap-2">
               {(dancer.genres || []).map((genre, index) => (
                 <span
                   key={index}
-                  className={`px-4 py-2 rounded-full font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-sm font-medium transition-colors ${
                     isDarkMode 
                       ? 'bg-blue-900 text-blue-300' 
                       : 'bg-blue-50 text-blue-700'
@@ -357,8 +455,8 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
 
           {/* Crew Information */}
           {dancer.crew && crews && (
-            <div className="mb-8">
-              <h3 className={`text-lg font-semibold mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <div className="mb-6 sm:mb-8">
+              <h3 className={`text-base sm:text-lg font-semibold mb-3 sm:mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 소속 크루
               </h3>
               {(() => {
@@ -367,36 +465,36 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                   return (
                     <div 
                       onClick={() => handleCrewClick(dancer.crew!)}
-                      className={`p-6 rounded-xl cursor-pointer transition-all hover:shadow-lg ${
+                      className={`p-4 sm:p-6 rounded-xl cursor-pointer transition-all hover:shadow-lg active:scale-95 ${
                         isDarkMode 
                           ? 'bg-gray-700 hover:bg-gray-600' 
                           : 'bg-gray-50 hover:bg-gray-100'
                       }`}
                     >
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
                         <img
                           src={crew.avatar}
                           alt={crew.name}
-                          className="w-16 h-16 rounded-full object-cover"
+                          className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover"
                         />
-                        <div className="flex-1">
-                          <h4 className={`text-xl font-bold transition-colors ${
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`text-lg sm:text-xl font-bold transition-colors truncate ${
                             isDarkMode ? 'text-white' : 'text-gray-900'
                           }`}>
                             {crew.name}
                           </h4>
-                          <p className={`text-sm transition-colors ${
+                          <p className={`text-xs sm:text-sm transition-colors ${
                             isDarkMode ? 'text-gray-400' : 'text-gray-600'
                           }`}>
                             {crew.genre} • {crew.members?.length || 0}명
                           </p>
-                          <p className={`text-sm mt-2 line-clamp-2 transition-colors ${
+                          <p className={`text-xs sm:text-sm mt-1 sm:mt-2 line-clamp-2 transition-colors ${
                             isDarkMode ? 'text-gray-300' : 'text-gray-700'
                           }`}>
                             {crew.introduction}
                           </p>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm">
+                        <div className="hidden sm:flex items-center space-x-4 text-sm">
                           <div className="text-center">
                             <div className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                               {crew.members?.length || 0}
@@ -415,50 +513,65 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                           </div>
                         </div>
                       </div>
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex flex-wrap gap-2">
-                          {(crew.members || []).slice(0, 3).map((member) => (
-                            <button
-                              key={member.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (onDancerClick) {
-                                  onClose();
-                                  onDancerClick(member.id);
-                                }
-                              }}
-                              className={`flex items-center space-x-2 px-2 py-1 rounded-lg transition-colors ${
-                                isDarkMode 
-                                  ? 'hover:bg-gray-600' 
-                                  : 'hover:bg-gray-200'
-                              }`}
-                            >
-                              <img
-                                src={member.avatar}
-                                alt={member.nickname}
-                                className="w-6 h-6 rounded-full"
-                              />
-                              <span className={`text-sm ${
-                                isDarkMode 
-                                  ? 'text-blue-400 hover:text-blue-300' 
-                                  : 'text-blue-600 hover:text-blue-700'
-                              }`}>
-                                {member.nickname}
-                              </span>
-                            </button>
-                          ))}
-                          {(crew.members?.length || 0) > 3 && (
-                            <span className={`text-sm ${
-                              isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                            }`}>
-                              외 {(crew.members?.length || 0) - 3}명
-                            </span>
-                          )}
+                      <div className="mt-3 sm:mt-4">
+                        {/* Mobile: Members count and CTA */}
+                        <div className="sm:hidden flex items-center justify-between mb-2">
+                          <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            멤버 {crew.members?.length || 0}명 • 스케줄 {crew.schedules?.length || 0}개
+                          </span>
+                          <div className={`text-xs font-medium ${
+                            isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                          }`}>
+                            크루 상세보기 →
+                          </div>
                         </div>
-                        <div className={`text-sm font-medium ${
-                          isDarkMode ? 'text-blue-400' : 'text-blue-600'
-                        }`}>
-                          크루 상세보기 →
+                        
+                        {/* Members buttons */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                            {(crew.members || []).slice(0, 3).map((member) => (
+                              <button
+                                key={member.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onDancerClick) {
+                                    onClose();
+                                    onDancerClick(member.id);
+                                  }
+                                }}
+                                className={`flex items-center space-x-1.5 sm:space-x-2 px-2 py-1 rounded-lg transition-colors active:scale-95 ${
+                                  isDarkMode 
+                                    ? 'hover:bg-gray-600' 
+                                    : 'hover:bg-gray-200'
+                                }`}
+                              >
+                                <img
+                                  src={member.avatar}
+                                  alt={member.nickname}
+                                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full"
+                                />
+                                <span className={`text-xs sm:text-sm ${
+                                  isDarkMode 
+                                    ? 'text-blue-400 hover:text-blue-300' 
+                                    : 'text-blue-600 hover:text-blue-700'
+                                }`}>
+                                  {member.nickname}
+                                </span>
+                              </button>
+                            ))}
+                            {(crew.members?.length || 0) > 3 && (
+                              <span className={`text-xs sm:text-sm self-center ${
+                                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                              }`}>
+                                외 {(crew.members?.length || 0) - 3}명
+                              </span>
+                            )}
+                          </div>
+                          <div className={`hidden sm:block text-sm font-medium ${
+                            isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                          }`}>
+                            크루 상세보기 →
+                          </div>
                         </div>
                       </div>
                     </div>
