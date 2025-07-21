@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase'
 import { Crew, CrewSchedule } from '../types'
-import { mockCrews } from '../data/mockData'
 
 // 문자열 유사도 계산 함수 (레벤슈타인 거리 기반)
 function calculateSimilarity(str1: string, str2: string): number {
@@ -84,13 +83,13 @@ export async function fetchCrews(): Promise<Crew[]> {
     if (error) {
       console.error('❌ Error fetching crews from Supabase:', error)
       console.log('🔄 Using mock crews as fallback...')
-      return mockCrews
+      return []
     }
     
     if (!crewsData || crewsData.length === 0) {
       console.log('⚠️ No crews data found in Supabase')
       console.log('🔄 Using mock crews as fallback...')
-      return mockCrews
+      return []
     }
     
     console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
@@ -155,7 +154,7 @@ export async function fetchCrews(): Promise<Crew[]> {
   } catch (error) {
     console.error('❌ Error in fetchCrews:', error)
     console.log('🔄 Falling back to mock crews...')
-    return mockCrews
+    return []
   }
 }
 

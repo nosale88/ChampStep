@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase'
 import { Competition, Judge, Guest, Winner } from '../types'
-import { mockCompetitions } from '../data/mockData'
 
 export async function fetchCompetitions(): Promise<Competition[]> {
   try {
@@ -15,7 +14,7 @@ export async function fetchCompetitions(): Promise<Competition[]> {
     if (error) {
       console.error('❌ Error fetching competitions from Supabase:', error)
       console.log('🔄 Using mock competitions as fallback...')
-      return mockCompetitions
+      return []
     }
 
     if (data && data.length > 0) {
@@ -61,11 +60,11 @@ export async function fetchCompetitions(): Promise<Competition[]> {
     }
 
     console.log('⚠️ No competitions found in Supabase, using mock data')
-    return mockCompetitions
+    return []
   } catch (error) {
     console.error('❌ Critical error in fetchCompetitions:', error)
     console.log('🔄 Using mock competitions as fallback...')
-    return mockCompetitions
+    return []
   }
 }
 
