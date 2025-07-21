@@ -6,7 +6,8 @@ import CommentSystem from './CommentSystem';
 import { fetchComments } from '../services/commentService';
 import DancerResume from './DancerResume';
 
-import { usePermissions } from '../utils/permissions';
+import { useAuth } from '../contexts/AuthContext';
+import { canEditDancer } from '../utils/permissions';
 
 interface DancerDetailModalProps {
   dancer: Dancer;
@@ -53,7 +54,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   }
   
   const { isDarkMode } = useTheme();
-  const { canEditDancer, canComment, currentUser } = usePermissions();
+  const { user, isAdmin } = useAuth();
   const [showResumeModal, setShowResumeModal] = useState(false);
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -82,8 +83,8 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   }, [isOpen, dancer.id]);
   
   // 권한 확인
-  const canEdit = canEditDancer(dancer, permissions);
-  const canAddComment = canComment('dancer', dancer.id, permissions);
+  const canEdit = canEditDancer(user?.email || '', isAdmin, dancer);
+  const canAddComment = true; // 로그인한 사용자는 댓글 작성 가능
   
   if (!isOpen) {
     return null;
@@ -261,7 +262,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                 <div className={`absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${getRankColor(dancer.rank)}`}>
                   {getRankIcon(dancer.rank)}
                 </div>
-                {onUpdateDancer && canEditDancer(dancer) && (
+                {onUpdateDancer && canEdit && (
                   <button
                     onClick={() => handleImageUpload('profile')}
                     className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
@@ -294,7 +295,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                 )}
               </div>
               <div className="flex items-center space-x-2">
-                {onUpdateDancer && canEditDancer(dancer) && (
+                {onUpdateDancer && canEdit && (
                   <button
                     onClick={() => handleImageUpload('background')}
                     className={`px-3 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${

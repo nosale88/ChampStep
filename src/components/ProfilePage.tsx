@@ -172,8 +172,8 @@ const ProfilePage: React.FC = () => {
             )}
             <div className="absolute inset-0 bg-black bg-opacity-30" />
             
-            {/* 배경 이미지 업로드 버튼 - 관리자만 가능 */}
-            {user && isAdmin && (
+            {/* 배경 이미지 업로드 버튼 - 본인 또는 관리자만 가능 */}
+            {user && (isAdmin || user.id === dancer?.id) && (
               <button
                 onClick={() => setShowImageUpload('background')}
                 className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-lg text-white transition-colors"
@@ -190,8 +190,8 @@ const ProfilePage: React.FC = () => {
                   alt={formData.name}
                   className="w-16 h-16 sm:w-32 sm:h-32 rounded-full border-2 sm:border-4 border-white shadow-lg object-cover"
                 />
-                {/* 프로필 이미지 업로드 버튼 - 관리자만 가능 */}
-                {user && isAdmin && (
+                {/* 프로필 이미지 업로드 버튼 - 본인 또는 관리자만 가능 */}
+                {user && (isAdmin || user.id === dancer?.id) && (
                   <button
                     onClick={() => setShowImageUpload('avatar')}
                     className="absolute bottom-0 right-0 sm:bottom-2 sm:right-2 p-1 sm:p-2 bg-blue-500 hover:bg-blue-600 rounded-full text-white shadow-lg transition-colors"

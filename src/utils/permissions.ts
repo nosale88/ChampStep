@@ -168,17 +168,45 @@ export class PermissionManager {
   }
 }
 
+// 간단한 권한 확인 함수들 (AuthContext 독립적)
+export const canEditDancer = (currentUserEmail: string, isAdmin: boolean, dancer: Dancer): boolean => {
+  // 관리자는 모든 권한
+  if (isAdmin) {
+    return true;
+  }
+
+  // 본인의 프로필인 경우
+  if (dancer.email === currentUserEmail) {
+    return true;
+  }
+
+  return false;
+};
+
+export const canEditCrew = (currentUserEmail: string, isAdmin: boolean, crew: Crew): boolean => {
+  // 관리자는 모든 권한
+  if (isAdmin) {
+    return true;
+  }
+
+  // 크루 멤버인 경우
+  const isMember = crew.members?.some(member => member.email === currentUserEmail);
+  if (isMember) {
+    return true;
+  }
+
+  return false;
+};
+
 // 권한 확인을 위한 Hook (React Context와 함께 사용)
 export const usePermissions = () => {
-  // 현재 사용자 정보를 Context에서 가져오는 로직
-  // 실제 구현에서는 AuthContext나 UserContext에서 가져와야 함
+  // 임시로 모든 사용자에게 관리자 권한 (디버깅용)
   const getCurrentUser = () => {
-    // 임시 구현 - 실제로는 인증 시스템에서 가져와야 함
     return {
       id: 'current-user-id',
       name: '테스트 사용자',
-      email: 'user@example.com',
-      role: 'user' as const
+      email: 'admin@test.com',
+      role: 'admin' as const
     };
   };
 
