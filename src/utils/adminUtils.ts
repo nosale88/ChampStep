@@ -49,14 +49,22 @@ export const isAdminSync = (email: string): boolean => {
   ];
   
   const normalizedEmail = email.toLowerCase().trim();
-  const isAdmin = adminEmails.includes(normalizedEmail);
+  
+  // akaswing 관련 추가 체크 (임시)
+  const isAkaswingEmail = normalizedEmail.includes('akaswing');
+  const isInAdminList = adminEmails.includes(normalizedEmail);
+  const isAdmin = isInAdminList || isAkaswingEmail;
   
   console.log('🔍 isAdminSync check:', { 
     originalEmail: email,
     normalizedEmail,
     isAdmin,
+    isAkaswingEmail,
+    isInAdminList,
     adminEmails,
-    exactMatch: adminEmails.find(adminEmail => adminEmail === normalizedEmail)
+    exactMatch: adminEmails.find(adminEmail => adminEmail === normalizedEmail),
+    includes: adminEmails.includes(normalizedEmail),
+    indexOf: adminEmails.indexOf(normalizedEmail)
   });
   
   return isAdmin;

@@ -169,9 +169,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         // 즉시 동기적으로 관리자 권한 확인
-        const syncAdminStatus = isAdminSync(data.email || '');
+        const userEmail = data.email || '';
+        const syncAdminStatus = isAdminSync(userEmail);
         console.log('🔍 Immediate admin status check:', {
           email: data.email,
+          userEmail,
+          emailType: typeof userEmail,
+          emailLength: userEmail.length,
           syncAdminStatus,
           dbIsAdmin: data.is_admin,
           finalAdmin: syncAdminStatus || data.is_admin
