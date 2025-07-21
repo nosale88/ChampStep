@@ -23,7 +23,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   crews: propCrews = []
 }) => {
   const { isDarkMode } = useTheme();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
+  
+  console.log('🔍 AdminPanel - Auth check:', { isAdmin, hasUser: !!user });
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dancers, setDancers] = useState<Dancer[]>(propDancers);
   const [competitions, setCompetitions] = useState<Competition[]>(propCompetitions);

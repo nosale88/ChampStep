@@ -29,6 +29,8 @@ function AppContent() {
   // URL 경로에 따라 초기 뷰 설정
   const getInitialView = (): 'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin' => {
     const path = location.pathname;
+    console.log('🔍 Current pathname:', path);
+    
     if (path === '/ranking') return 'ranking';
     if (path === '/competitions') return 'competitions';
     if (path === '/crews') return 'crews';
@@ -102,7 +104,9 @@ function AppContent() {
   // URL 변경 시 currentView 업데이트
   useEffect(() => {
     const newView = getInitialView();
+    console.log('🔍 URL changed - current view:', currentView, 'new view:', newView);
     if (newView !== currentView) {
+      console.log('🔄 Updating current view to:', newView);
       setCurrentView(newView);
     }
   }, [location.pathname]);
@@ -352,11 +356,14 @@ function AppContent() {
       )}
 
       {currentView === 'admin' && (
-        <AdminPanel 
-          dancers={dancers}
-          competitions={competitions}
-          crews={crews}
-        />
+        <>
+          {console.log('🔍 Rendering AdminPanel - currentView:', currentView)}
+          <AdminPanel 
+            dancers={dancers}
+            competitions={competitions}
+            crews={crews}
+          />
+        </>
       )}
 
       {selectedDancer && (
