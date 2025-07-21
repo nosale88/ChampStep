@@ -95,10 +95,13 @@ function AppContent() {
     loadData();
   }, []);
 
-  const selectedDancer = useMemo(() => 
-    selectedDancerId ? dancers.find(d => d.id === selectedDancerId) : null,
-    [selectedDancerId, dancers]
-  );
+  const selectedDancer = useMemo(() => {
+    console.log('📌 selectedDancerId:', selectedDancerId);
+    console.log('👥 Total dancers:', dancers.length);
+    const dancer = selectedDancerId ? dancers.find(d => d.id === selectedDancerId) : null;
+    console.log('✅ Found dancer:', dancer);
+    return dancer;
+  }, [selectedDancerId, dancers]);
   
   const selectedCompetition = useMemo(() => 
     selectedCompetitionId ? competitions.find(c => c.id === selectedCompetitionId) : null,
@@ -106,6 +109,7 @@ function AppContent() {
   );
 
   const handleDancerClick = useCallback((dancerId: string) => {
+    console.log('🎯 handleDancerClick called with dancerId:', dancerId);
     setSelectedCompetitionId(null);
     setSelectedDancerId(dancerId);
   }, []);
@@ -316,21 +320,24 @@ function AppContent() {
       )}
 
       {selectedDancer && (
-        <DancerDetailModal
-          dancer={selectedDancer}
-          isOpen={!!selectedDancer}
-          onClose={closeDancerModal}
-          onSelectCompetition={handleSelectCompetitionFromDancer}
-          onSelectCrew={handleSelectCrewFromDancer}
-          crews={crews}
-          dancers={dancers}
-          comments={comments.filter(c => c.targetType === 'dancer' && c.targetId === selectedDancer.id)}
-          onAddComment={handleAddComment}
-          onUpdateComment={handleUpdateComment}
-          onDeleteComment={handleDeleteComment}
-          onDancerClick={handleSelectDancerFromCrew}
-          onUpdateDancer={handleUpdateDancer}
-        />
+        <>
+          {console.log('🎭 Rendering DancerDetailModal for:', selectedDancer)}
+          <DancerDetailModal
+            dancer={selectedDancer}
+            isOpen={!!selectedDancer}
+            onClose={closeDancerModal}
+            onSelectCompetition={handleSelectCompetitionFromDancer}
+            onSelectCrew={handleSelectCrewFromDancer}
+            crews={crews}
+            dancers={dancers}
+            comments={comments.filter(c => c.targetType === 'dancer' && c.targetId === selectedDancer.id)}
+            onAddComment={handleAddComment}
+            onUpdateComment={handleUpdateComment}
+            onDeleteComment={handleDeleteComment}
+            onDancerClick={handleSelectDancerFromCrew}
+            onUpdateDancer={handleUpdateDancer}
+          />
+        </>
       )}
 
       {selectedCompetition && (

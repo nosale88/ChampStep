@@ -41,6 +41,8 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   permissions = [],
   dancers = []
 }) => {
+  console.log('🎯 DancerDetailModal - isOpen:', isOpen, 'dancer:', dancer);
+  
   const { isDarkMode } = useTheme();
   const { canEditDancer, canComment, currentUser } = usePermissions();
   const [showResumeModal, setShowResumeModal] = useState(false);
@@ -74,7 +76,12 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   const canEdit = canEditDancer(dancer, permissions);
   const canAddComment = canComment('dancer', dancer.id, permissions);
   
-  if (!isOpen) return null;
+  if (!isOpen) {
+    console.log('❌ DancerDetailModal not rendering - isOpen is false');
+    return null;
+  }
+  
+  console.log('✅ DancerDetailModal rendering');
 
   const handleImageUpload = (type: 'background' | 'profile') => {
     const input = document.createElement('input');
