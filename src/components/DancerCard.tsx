@@ -3,6 +3,7 @@ import { Trophy, Users, Instagram, Crown, Star } from 'lucide-react';
 import { Dancer } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 import StepExplanation from './StepExplanation';
+import { getValidAvatarUrl, handleImageError } from '../utils/avatarUtils';
 
 interface DancerCardProps {
   dancer: Dancer;
@@ -43,10 +44,12 @@ const DancerCard: React.FC<DancerCardProps> = ({ dancer, onClick }) => {
       style={{ height: '280px' }}
     >
       {/* 배경 이미지 */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
-        style={{
-          backgroundImage: `url(${dancer.backgroundImage || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'})`,
+      <img 
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+        src={dancer.backgroundImage || 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'}
+        alt="배경"
+        onError={(e) => {
+          e.currentTarget.src = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80';
         }}
       />
       
@@ -83,9 +86,10 @@ const DancerCard: React.FC<DancerCardProps> = ({ dancer, onClick }) => {
           {/* 프로필 이미지 */}
           <div className="relative">
             <img
-              src={dancer.profileImage || dancer.avatar || 'https://images.pexels.com/photos/2102587/pexels-photo-2102587.jpeg'}
+              src={getValidAvatarUrl(dancer.profileImage || dancer.avatar)}
               alt={dancer.nickname}
               className="w-16 h-16 rounded-full object-cover border-3 border-white/30 shadow-lg"
+              onError={handleImageError}
             />
             <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-white"></div>
           </div>

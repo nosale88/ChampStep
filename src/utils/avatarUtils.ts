@@ -22,3 +22,18 @@ export const getValidAvatarUrl = (avatarUrl?: string | null, userId?: string): s
   }
   return getDefaultAvatarUrl(userId);
 };
+
+/**
+ * 이미지 로드 실패 시 기본 이미지로 대체하는 핸들러
+ * @param event 이미지 로드 에러 이벤트
+ * @param fallbackUrl 대체 이미지 URL (기본값: DEFAULT_AVATAR_URL)
+ */
+export const handleImageError = (
+  event: React.SyntheticEvent<HTMLImageElement, Event>,
+  fallbackUrl: string = DEFAULT_AVATAR_URL
+): void => {
+  const img = event.currentTarget;
+  if (img.src !== fallbackUrl) {
+    img.src = fallbackUrl;
+  }
+};

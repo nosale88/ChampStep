@@ -36,38 +36,33 @@ function AppContent() {
     const loadData = async () => {
       console.log('🚀 Starting data load...');
       
-      // 최대 15초 타임아웃 설정
+      // 최대 5초 타임아웃 설정
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Data loading timeout')), 15000);
+        setTimeout(() => reject(new Error('Data loading timeout')), 5000);
       });
       
       try {
         console.log('📊 Fetching data from services...');
         
-        // 타임아웃과 함께 데이터 로딩
-        const dataPromise = Promise.allSettled([
-          fetchDancers(),
-          fetchCompetitions(), 
-          fetchCrews()
+        // 각 데이터를 개별적으로 로드하여 실패한 것만 스킵
+        const results = await Promise.allSettled([
+          Promise.race([fetchDancers(), timeoutPromise]),
+          Promise.race([fetchCompetitions(), timeoutPromise]), 
+          Promise.race([fetchCrews(), timeoutPromise])
         ]);
         
-        const [dancersData, competitionsData, crewsData] = await Promise.race([
-          dataPromise,
-          timeoutPromise
-        ]) as PromiseSettledResult<any>[];
-        
-        // 실제 Supabase 데이터만 사용 (목 데이터 fallback 제거)
-        const dancers = dancersData.status === 'fulfilled' ? dancersData.value : [];
-        const competitions = competitionsData.status === 'fulfilled' ? competitionsData.value : [];
-        const crews = crewsData.status === 'fulfilled' ? crewsData.value : [];
+        // 각 결과를 안전하게 처리
+        const dancers = results[0].status === 'fulfilled' ? results[0].value : [];
+        const competitions = results[1].status === 'fulfilled' ? results[1].value : [];
+        const crews = results[2].status === 'fulfilled' ? results[2].value : [];
         
         console.log('✅ Data fetch completed:', {
           dancers: dancers.length,
           competitions: competitions.length,
           crews: crews.length,
-          dancersStatus: dancersData.status,
-          competitionsStatus: competitionsData.status,
-          crewsStatus: crewsData.status
+          dancersStatus: results[0].status,
+          competitionsStatus: results[1].status,
+          crewsStatus: results[2].status
         });
         
         // 실제 데이터 내용도 로그로 확인
@@ -254,10 +249,14 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>로딩 중...</p>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <Header currentView={currentView} onViewChange={setCurrentView} />
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-lg font-medium`}>댄서 정보를 불러오는 중...</p>
+            <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm mt-2`}>잠시만 기다려주세요</p>
+          </div>
         </div>
       </div>
     );
