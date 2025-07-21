@@ -188,17 +188,24 @@ export async function updateCrewImage(
     
     if (!imageUrl) throw new Error('이미지 업로드 실패');
 
-    // 데이터베이스 업데이트
-    const updateData: any = {};
-    if (imageType === 'avatar') updateData.avatar = imageUrl;
-    else if (imageType === 'background') updateData.background_image = imageUrl;
+    // 데이터베이스 업데이트 (crews 테이블에 background_image 컬럼이 없으므로 스토리지 URL만 반환)
+    console.log('🔄 크루 이미지 업로드 완료, DB 업데이트 스킵 (컬럼 없음):', {
+      crewId,
+      imageType,
+      imageUrl
+    });
+    
+    // TODO: crews 테이블에 background_image, avatar 컬럼 추가 필요
+    // const updateData: any = {};
+    // if (imageType === 'avatar') updateData.avatar = imageUrl;
+    // else if (imageType === 'background') updateData.background_image = imageUrl;
 
-    const { error } = await supabase
-      .from('crews')
-      .update(updateData)
-      .eq('id', crewId);
+    // const { error } = await supabase
+    //   .from('crews')
+    //   .update(updateData)
+    //   .eq('id', crewId);
 
-    if (error) throw error;
+    // if (error) throw error;
 
     return imageUrl;
   } catch (error) {

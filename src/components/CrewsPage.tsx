@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Calendar, Plus, MapPin, Clock, Eye, EyeOff, MessageCircle, ChevronLeft, ChevronRight, Edit2, Upload, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Crew, Dancer, CrewSchedule, Message } from '../types';
 import MessageModal from './MessageModal';
 import MessageList from './MessageList';
@@ -20,6 +21,7 @@ type CalendarView = 'month' | 'week' | 'day';
 
 const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: propSelectedCrew, messages = [], onSendMessage, onDancerClick, onUpdateCrew, currentDancer }) => {
   const { isDarkMode } = useTheme();
+  const { isAdmin } = useAuth();
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(propSelectedCrew || null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -194,8 +196,9 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
     }
   };
 
-  // 크루 멤버인지 확인
+  // 크루 멤버인지 확인 (관리자는 모든 크루 수정 가능)
   const isCrewMember = (crew: Crew) => {
+    if (isAdmin) return true; // 관리자는 모든 크루 수정 가능
     if (!currentDancer) return false;
     return crew.members.some(member => member.id === currentDancer.id);
   };
@@ -226,23 +229,32 @@ const CrewsPage: React.FC<CrewsPageProps> = ({ crews, dancers, selectedCrew: pro
     }
   };
 
-  // 배경 이미지 업로드 처리
-  const handleImageUpload = () => {
+  // 배경 이미지 업로드 처리 (실제 Supabase Storage 업로드)
+  const handleImageUpload = async () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const imageUrl = e.target?.result as string;
-          setEditingCrew({
-            ...editingCrew,
-            backgroundImage: imageUrl
-          });
-        };
-        reader.readAsDataURL(file);
+      if (file && selectedCrew) {
+        try {
+          // Supabase Storage에 업로드
+          const { updateCrewImage } = await import('../services/storageService');
+          const imageUrl = await updateCrewImage(selectedCrew.id, file, 'background');
+          
+          if (imageUrl) {
+            setEditingCrew({
+              ...editingCrew,
+              backgroundImage: imageUrl
+            });
+            console.log('✅ 크루 배경 이미지 업로드 성공:', imageUrl);
+          } else {
+            alert('이미지 업로드에 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('❌ 이미지 업로드 오류:', error);
+          alert('이미지 업로드 중 오류가 발생했습니다.');
+        }
       }
     };
     input.click();
