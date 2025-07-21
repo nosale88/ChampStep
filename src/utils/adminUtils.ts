@@ -83,11 +83,7 @@ export const isAdminSync = (email: string): boolean => {
     akaswingEmailCodes: Array.from('akaswing@kakao.com').map(char => char.charCodeAt(0))
   });
   
-  // 임시: 모든 사용자에게 관리자 권한 부여 (디버깅용)
-  console.log('🔍 TEMP: Granting admin access to all users for debugging');
-  return true; // 임시로 모든 사용자를 관리자로 처리
-  
-  // return isAdmin;
+  return isAdmin;
 };
 
 // 관리자 권한이 있는 사용자인지 확인 (Dancer 객체 기반)
