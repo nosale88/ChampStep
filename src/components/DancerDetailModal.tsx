@@ -41,7 +41,16 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   permissions = [],
   dancers = []
 }) => {
-  console.log('🎯 DancerDetailModal - isOpen:', isOpen, 'dancer:', dancer);
+  // dancer 객체 유효성 검증
+  if (!dancer) {
+    console.error('❌ DancerDetailModal: dancer is null or undefined');
+    return null;
+  }
+
+  if (!dancer.id || !dancer.nickname) {
+    console.error('❌ DancerDetailModal: dancer object is incomplete', dancer);
+    return null;
+  }
   
   const { isDarkMode } = useTheme();
   const { canEditDancer, canComment, currentUser } = usePermissions();
@@ -77,11 +86,8 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   const canAddComment = canComment('dancer', dancer.id, permissions);
   
   if (!isOpen) {
-    console.log('❌ DancerDetailModal not rendering - isOpen is false');
     return null;
   }
-  
-  console.log('✅ DancerDetailModal rendering');
 
   const handleImageUpload = (type: 'background' | 'profile') => {
     const input = document.createElement('input');
