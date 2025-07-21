@@ -40,6 +40,8 @@ const EnhancedDancerPortfolio: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addModalType, setAddModalType] = useState<'awards' | 'performances' | 'lectures' | 'choreography'>('awards');
 
   useEffect(() => {
     const loadDancer = async () => {
@@ -83,6 +85,54 @@ const EnhancedDancerPortfolio: React.FC = () => {
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+  };
+
+  const handleAddItem = () => {
+    // 현재 활성 카테고리에 따라 추가할 항목 타입 결정
+    let type: 'awards' | 'performances' | 'lectures' | 'choreography' = 'awards';
+    
+    if (activeCategory === 'awards') type = 'awards';
+    else if (activeCategory === 'performances') type = 'performances';
+    else if (activeCategory === 'lectures') type = 'lectures';
+    else if (activeCategory === 'choreography') type = 'choreography';
+    else {
+      // 전체 보기일 때는 수상경력을 기본으로
+      type = 'awards';
+    }
+    
+    setAddModalType(type);
+    setShowAddModal(true);
+  };
+
+  const handleSaveItem = (type: string, data: any) => {
+    if (!dancer) return;
+
+    const newId = Date.now().toString(); // 임시 ID 생성
+    const newItem = { ...data, id: newId };
+
+    // 댄서 데이터 업데이트
+    const updatedDancer = { ...dancer };
+    
+    switch (type) {
+      case 'awards':
+        updatedDancer.awards = [...(dancer.awards || []), newItem];
+        break;
+      case 'performances':
+        updatedDancer.performances = [...(dancer.performances || []), newItem];
+        break;
+      case 'lectures':
+        updatedDancer.lectures = [...(dancer.lectures || []), newItem];
+        break;
+      case 'choreography':
+        updatedDancer.choreographies = [...(dancer.choreographies || []), newItem];
+        break;
+    }
+
+    setDancer(updatedDancer);
+    setShowAddModal(false);
+    
+    // TODO: 실제 데이터베이스에 저장하는 로직 추가
+    console.log('새 항목 저장:', type, data);
   };
 
   const categories = [
@@ -552,7 +602,10 @@ const EnhancedDancerPortfolio: React.FC = () => {
                 {activeCategory === 'all' ? '포트폴리오' : categories.find(c => c.id === activeCategory)?.label}
               </h2>
               {isEditMode && (
-                <button className="flex items-center space-x-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors">
+                <button 
+                  onClick={handleAddItem}
+                  className="flex items-center space-x-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors"
+                >
                   <Plus className="w-4 h-4" />
                   <span>추가</span>
                 </button>
@@ -577,6 +630,259 @@ const EnhancedDancerPortfolio: React.FC = () => {
             </p>
           </div>
         </footer>
+        
+        {/* 경력 추가 모달 */}
+        {showAddModal && (
+          <AddCareerModal
+            type={addModalType}
+            onClose={() => setShowAddModal(false)}
+            onSave={handleSaveItem}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// 경력 추가 모달 컴포넌트
+interface AddCareerModalProps {
+  type: 'awards' | 'performances' | 'lectures' | 'choreography';
+  onClose: () => void;
+  onSave: (type: string, data: any) => void;
+}
+
+const AddCareerModal: React.FC<AddCareerModalProps> = ({ type, onClose, onSave }) => {
+  const [formData, setFormData] = useState<any>({});
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(type, formData);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const getModalTitle = () => {
+    switch (type) {
+      case 'awards': return '수상경력 추가';
+      case 'performances': return '공연 이력 추가';
+      case 'lectures': return '강의 이력 추가';
+      case 'choreography': return '연출 작품 추가';
+      default: return '경력 추가';
+    }
+  };
+
+  const renderForm = () => {
+    switch (type) {
+      case 'awards':
+        return (
+          <>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">대회명</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="대회명을 입력하세요"
+                onChange={(e) => handleInputChange('name', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">순위</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="1위, 2위, 우승 등"
+                onChange={(e) => handleInputChange('rank', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">날짜</label>
+              <input
+                type="date"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                onChange={(e) => handleInputChange('date', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">주최기관</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="주최기관명을 입력하세요"
+                onChange={(e) => handleInputChange('organizer', e.target.value)}
+              />
+            </div>
+          </>
+        );
+      case 'performances':
+        return (
+          <>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">공연명</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="공연명을 입력하세요"
+                onChange={(e) => handleInputChange('name', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">역할</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="메인댄서, 백댄서, 안무가 등"
+                onChange={(e) => handleInputChange('role', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">날짜</label>
+              <input
+                type="date"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                onChange={(e) => handleInputChange('date', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">장소</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="공연 장소를 입력하세요"
+                onChange={(e) => handleInputChange('location', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">설명</label>
+              <textarea
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                rows={3}
+                placeholder="공연에 대한 설명을 입력하세요"
+                onChange={(e) => handleInputChange('description', e.target.value)}
+              />
+            </div>
+          </>
+        );
+      case 'lectures':
+        return (
+          <>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">강의명</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="강의명을 입력하세요"
+                onChange={(e) => handleInputChange('title', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">기관/장소</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="강의 기관이나 장소를 입력하세요"
+                onChange={(e) => handleInputChange('institution', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">날짜</label>
+              <input
+                type="date"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                onChange={(e) => handleInputChange('date', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">설명</label>
+              <textarea
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                rows={3}
+                placeholder="강의에 대한 설명을 입력하세요"
+                onChange={(e) => handleInputChange('description', e.target.value)}
+              />
+            </div>
+          </>
+        );
+      case 'choreography':
+        return (
+          <>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">작품명</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="연출 작품명을 입력하세요"
+                onChange={(e) => handleInputChange('title', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">아티스트/가수</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="아티스트나 가수명을 입력하세요"
+                onChange={(e) => handleInputChange('artist', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">날짜</label>
+              <input
+                type="date"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                onChange={(e) => handleInputChange('date', e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-300 mb-2">설명</label>
+              <textarea
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                rows={3}
+                placeholder="연출 작품에 대한 설명을 입력하세요"
+                onChange={(e) => handleInputChange('description', e.target.value)}
+              />
+            </div>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-white">{getModalTitle()}</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit}>
+            {renderForm()}
+            
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+              >
+                저장
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
