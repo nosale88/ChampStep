@@ -10,11 +10,13 @@ export const isAdmin = async (email: string): Promise<boolean> => {
   console.log('🔍 Admin check: Checking email in database:', email);
   
   try {
+    console.log('🔍 Attempting DB query for admin check:', email.toLowerCase());
     const { data, error } = await supabase
       .from('admin_emails')
-      .select('email')
-      .eq('email', email.toLowerCase())
-      .single();
+      .select('*')
+      .eq('email', email.toLowerCase());
+    
+    console.log('🔍 DB query result:', { data, error, count: data?.length });
     
     if (error) {
       console.log('🔍 Admin check DB error:', error.message);
@@ -22,7 +24,7 @@ export const isAdmin = async (email: string): Promise<boolean> => {
       return isAdminSync(email);
     }
     
-    const isAdmin = !!data;
+    const isAdmin = data && data.length > 0;
     console.log('🔍 Admin check DB result:', { email, isAdmin, data });
     return isAdmin;
   } catch (error) {
