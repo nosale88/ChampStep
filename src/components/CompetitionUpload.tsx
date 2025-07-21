@@ -268,16 +268,21 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className={`rounded-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden ${
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center sm:p-4 z-50">
+      <div className={`w-full h-full sm:h-auto sm:rounded-2xl sm:max-w-6xl sm:max-h-[95vh] overflow-hidden ${
         isDarkMode ? 'bg-gray-800' : 'bg-white'
       }`}>
+        {/* Mobile Handle Bar */}
+        <div className="sm:hidden flex justify-center pt-2 pb-4">
+          <div className={`w-12 h-1 rounded-full ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
+        </div>
+
         {/* Header */}
-        <div className={`border-b p-6 ${
+        <div className={`border-b px-4 sm:px-6 py-4 sm:py-6 ${
           isDarkMode ? 'border-gray-700' : 'border-gray-200'
         }`}>
           <div className="flex items-center justify-between">
-            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className={`text-lg sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               {editingCompetition ? '대회 수정' : '새 대회 등록'}
             </h2>
             <button
@@ -286,26 +291,30 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                 isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
               }`}
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           </div>
 
-          {/* Tabs */}
-          <div className="flex space-x-1 mt-6">
+          {/* Tabs - Mobile Optimized */}
+          <div className="flex space-x-1 mt-4 sm:mt-6 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center justify-center sm:justify-start space-x-0 sm:space-x-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors min-w-0 flex-shrink-0 ${
                     activeTab === tab.id
                       ? 'bg-blue-500 text-white'
                       : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
+                  <Icon className="w-4 h-4 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline text-sm sm:text-base">{tab.label}</span>
+                  {/* Mobile: Show short label below icon */}
+                  <span className="sm:hidden text-xs mt-1 absolute top-full left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                    {tab.label.split(' ')[0]}
+                  </span>
                 </button>
               );
             })}
@@ -313,10 +322,10 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-[60vh] overflow-y-auto">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
           {activeTab === 'basic' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     대회명 *
@@ -325,7 +334,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                     type="text"
                     value={formData.eventName || ''}
                     onChange={(e) => handleInputChange('eventName', e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg border ${
+                    className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
                         : 'bg-white border-gray-300 text-gray-900'
@@ -342,7 +351,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                     type="text"
                     value={formData.venue || ''}
                     onChange={(e) => handleInputChange('venue', e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg border ${
+                    className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
                         : 'bg-white border-gray-300 text-gray-900'
@@ -352,7 +361,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     대회 시작일 *
@@ -361,7 +370,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                     type="date"
                     value={formData.eventStartDate || ''}
                     onChange={(e) => handleInputChange('eventStartDate', e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg border ${
+                    className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
                         : 'bg-white border-gray-300 text-gray-900'
@@ -377,7 +386,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                     type="date"
                     value={formData.eventEndDate || ''}
                     onChange={(e) => handleInputChange('eventEndDate', e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg border ${
+                    className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
                         : 'bg-white border-gray-300 text-gray-900'
@@ -396,7 +405,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                       key={genre}
                       type="button"
                       onClick={() => handleGenreToggle(genre)}
-                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                      className={`px-3 py-2 rounded-full text-sm font-medium transition-colors touch-manipulation ${
                         formData.genres?.includes(genre)
                           ? 'bg-blue-500 text-white'
                           : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
@@ -406,13 +415,13 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                     </button>
                   ))}
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <input
                     type="text"
                     value={customGenre}
                     onChange={(e) => setCustomGenre(e.target.value)}
                     placeholder="직접 입력"
-                    className={`flex-1 px-3 py-2 rounded-lg border ${
+                    className={`flex-1 px-3 py-3 sm:py-2 rounded-lg border text-base ${
                       isDarkMode 
                         ? 'bg-gray-700 border-gray-600 text-white' 
                         : 'bg-white border-gray-300 text-gray-900'
@@ -436,7 +445,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                 <select
                   value={formData.status || 'upcoming'}
                   onChange={(e) => handleInputChange('status', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg border ${
+                  className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
@@ -458,7 +467,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                 <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   주최자 정보
                 </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       주최자명
@@ -467,7 +476,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                       type="text"
                       value={formData.managerName || ''}
                       onChange={(e) => handleInputChange('managerName', e.target.value)}
-                      className={`w-full px-3 py-2 rounded-lg border ${
+                      className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -482,7 +491,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                       type="tel"
                       value={formData.managerContact || ''}
                       onChange={(e) => handleInputChange('managerContact', e.target.value)}
-                      className={`w-full px-3 py-2 rounded-lg border ${
+                      className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -497,7 +506,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                       type="email"
                       value={formData.managerEmail || ''}
                       onChange={(e) => handleInputChange('managerEmail', e.target.value)}
-                      className={`w-full px-3 py-2 rounded-lg border ${
+                      className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -512,7 +521,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                 <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   참가 정보
                 </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       참가 유형
@@ -520,7 +529,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                     <select
                       value={formData.participationType || 'individual'}
                       onChange={(e) => handleInputChange('participationType', e.target.value)}
-                      className={`w-full px-3 py-2 rounded-lg border ${
+                      className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -538,7 +547,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                       type="number"
                       value={formData.participantLimit || ''}
                       onChange={(e) => handleInputChange('participantLimit', parseInt(e.target.value) || 0)}
-                      className={`w-full px-3 py-2 rounded-lg border ${
+                      className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -553,7 +562,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                 <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   상금 및 비용
                 </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       상금 정보
@@ -562,7 +571,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                       value={formData.prizeDetails || ''}
                       onChange={(e) => handleInputChange('prizeDetails', e.target.value)}
                       rows={3}
-                      className={`w-full px-3 py-2 rounded-lg border ${
+                      className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                         isDarkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
@@ -579,7 +588,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                         type="text"
                         value={formData.entryFee || ''}
                         onChange={(e) => handleInputChange('entryFee', e.target.value)}
-                        className={`w-full px-3 py-2 rounded-lg border ${
+                        className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                           isDarkMode 
                             ? 'bg-gray-700 border-gray-600 text-white' 
                             : 'bg-white border-gray-300 text-gray-900'
@@ -595,7 +604,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                         type="text"
                         value={formData.audienceFee || ''}
                         onChange={(e) => handleInputChange('audienceFee', e.target.value)}
-                        className={`w-full px-3 py-2 rounded-lg border ${
+                        className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                           isDarkMode 
                             ? 'bg-gray-700 border-gray-600 text-white' 
                             : 'bg-white border-gray-300 text-gray-900'
@@ -616,7 +625,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                   value={formData.detailedDescription || ''}
                   onChange={(e) => handleInputChange('detailedDescription', e.target.value)}
                   rows={4}
-                  className={`w-full px-3 py-2 rounded-lg border ${
+                  className={`w-full px-3 py-3 sm:py-2 rounded-lg border text-base ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
@@ -660,7 +669,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {(formData.judges || []).map((judge) => (
                     <div
                       key={judge.id}
@@ -727,7 +736,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {(formData.guests || []).map((guest) => (
                     <div
                       key={guest.id}
@@ -778,13 +787,14 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
         </div>
 
         {/* Footer */}
-        <div className={`border-t p-6 ${
+        {/* Footer - Mobile Optimized */}
+        <div className={`border-t p-4 sm:p-6 bg-white dark:bg-gray-800 ${
           isDarkMode ? 'border-gray-700' : 'border-gray-200'
         }`}>
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
             <button
               onClick={onClose}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg font-medium transition-colors ${
                 isDarkMode 
                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -794,7 +804,7 @@ const CompetitionUpload: React.FC<CompetitionUploadProps> = ({
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-3 sm:py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors touch-manipulation"
             >
               <Save className="w-4 h-4" />
               <span>{editingCompetition ? '수정 완료' : '대회 등록'}</span>
