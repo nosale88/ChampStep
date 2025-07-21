@@ -16,6 +16,17 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { user, dancer, signOut, isAdmin } = useAuth();
+  
+  // 관리자 권한 디버깅
+  console.log('🔍 Header - Auth state:', {
+    hasUser: !!user,
+    userEmail: user?.email,
+    hasDancer: !!dancer,
+    dancerEmail: dancer?.email,
+    isAdmin: isAdmin,
+    dancerIsAdmin: dancer?.isAdmin,
+    shouldShowAdminMenu: isAdmin && user
+  });
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -62,13 +73,17 @@ const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
     };
   }, []);
 
+  // 관리자 메뉴 표시 조건 강화
+  const shouldShowAdminMenu = user && isAdmin;
+  console.log('🔍 Admin menu visibility:', { user: !!user, isAdmin, shouldShowAdminMenu });
+
   const navItems = [
     { key: 'home', label: '홈', icon: Home },
     { key: 'ranking', label: '스텝', icon: Trophy },
     { key: 'competitions', label: '대회', icon: Calendar },
     { key: 'crews', label: '크루', icon: Users },
     ...(user ? [{ key: 'profile', label: '내 정보', icon: User }] : []),
-    ...(isAdmin ? [{ key: 'admin', label: '관리자', icon: Shield }] : [])
+    ...(shouldShowAdminMenu ? [{ key: 'admin', label: '관리자', icon: Shield }] : [])
   ];
 
   const handleNavClick = (view: View) => {

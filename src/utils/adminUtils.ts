@@ -34,7 +34,12 @@ export const isAdmin = async (email: string): Promise<boolean> => {
 
 // 동기적 관리자 권한 확인 (캐시된 값 사용)
 export const isAdminSync = (email: string): boolean => {
-  // 임시로 하드코딩된 관리자 이메일 사용 (캐시 구현 전까지)
+  if (!email) {
+    console.log('🔍 isAdminSync: No email provided');
+    return false;
+  }
+  
+  // 관리자 이메일 목록 (정확히 매칭)
   const adminEmails = [
     'willuent@naver.com', 
     'akaswing@kakao.com',
@@ -43,8 +48,16 @@ export const isAdminSync = (email: string): boolean => {
     'nosale@test.com'
   ];
   
-  const isAdmin = adminEmails.includes(email.toLowerCase());
-  console.log('🔍 Admin check:', { email, isAdmin, adminEmails });
+  const normalizedEmail = email.toLowerCase().trim();
+  const isAdmin = adminEmails.includes(normalizedEmail);
+  
+  console.log('🔍 isAdminSync check:', { 
+    originalEmail: email,
+    normalizedEmail,
+    isAdmin,
+    adminEmails,
+    exactMatch: adminEmails.find(adminEmail => adminEmail === normalizedEmail)
+  });
   
   return isAdmin;
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -22,7 +23,21 @@ import { Competition, Dancer, Crew, Message, Comment } from './types';
 function AppContent() {
   const { isDarkMode } = useTheme();
   const { dancer: authDancer } = useAuth();
-  const [currentView, setCurrentView] = useState<'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin'>('home');
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // URL 경로에 따라 초기 뷰 설정
+  const getInitialView = (): 'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin' => {
+    const path = location.pathname;
+    if (path === '/ranking') return 'ranking';
+    if (path === '/competitions') return 'competitions';
+    if (path === '/crews') return 'crews';
+    if (path === '/profile') return 'profile';
+    if (path === '/admin') return 'admin';
+    return 'home';
+  };
+  
+  const [currentView, setCurrentView] = useState<'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin'>(getInitialView());
   const [selectedDancerId, setSelectedDancerId] = useState<string | null>(null);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
@@ -83,6 +98,21 @@ function AppContent() {
 
     loadData();
   }, []);
+
+  // URL 변경 시 currentView 업데이트
+  useEffect(() => {
+    const newView = getInitialView();
+    if (newView !== currentView) {
+      setCurrentView(newView);
+    }
+  }, [location.pathname]);
+
+  // 뷰 변경 핸들러 (URL도 함께 업데이트)
+  const handleViewChange = useCallback((view: 'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin') => {
+    setCurrentView(view);
+    const path = view === 'home' ? '/' : `/${view}`;
+    navigate(path);
+  }, [navigate]);
 
   const selectedDancer = useMemo(() => {
     console.log('📌 selectedDancerId:', selectedDancerId);
@@ -261,7 +291,7 @@ function AppContent() {
   if (loading) {
     return (
       <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <Header currentView={currentView} onViewChange={setCurrentView} />
+        <Header currentView={currentView} onViewChange={handleViewChange} />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -275,7 +305,7 @@ function AppContent() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      <Header currentView={currentView} onViewChange={setCurrentView} />
+      <Header currentView={currentView} onViewChange={handleViewChange} />
       
       {currentView === 'home' && (
         <HomePage 
@@ -283,7 +313,7 @@ function AppContent() {
           onCompetitionClick={handleCompetitionClick}
           dancers={dancers}
           competitions={competitions}
-          onViewChange={setCurrentView}
+          onViewChange={handleViewChange}
         />
       )}
       

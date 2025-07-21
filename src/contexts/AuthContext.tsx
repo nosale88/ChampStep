@@ -168,24 +168,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           finalIsAdmin: dancerData.isAdmin
         });
         
+        // 즉시 동기적으로 관리자 권한 확인
+        const syncAdminStatus = isAdminSync(data.email || '');
+        console.log('🔍 Immediate admin status check:', {
+          email: data.email,
+          syncAdminStatus,
+          dbIsAdmin: data.is_admin,
+          finalAdmin: syncAdminStatus || data.is_admin
+        });
+        
+        // 관리자 권한을 즉시 설정
+        setUserIsAdmin(syncAdminStatus || data.is_admin || false);
+        
         setDancer(dancerData);
         
-        // 관리자 권한 확인 (비동기)
+        // 비동기 관리자 권한 확인 (더블 체크)
         if (data.email) {
-          console.log('🔍 Checking admin status for:', data.email);
+          console.log('🔍 Double-checking admin status asynchronously for:', data.email);
           try {
             const adminStatus = await isAdmin(data.email);
-            console.log('🔍 Admin status result:', adminStatus);
-            setUserIsAdmin(adminStatus);
+            console.log('🔍 Async admin status result:', adminStatus);
+            if (adminStatus !== syncAdminStatus) {
+              console.log('🔍 Admin status mismatch, updating to async result');
+              setUserIsAdmin(adminStatus);
+            }
           } catch (error) {
-            console.error('🔍 Error checking admin status:', error);
-            // 폴백으로 동기 방식 사용
-            const fallbackAdmin = isAdminSync(data.email);
-            console.log('🔍 Fallback admin check:', fallbackAdmin);
-            setUserIsAdmin(fallbackAdmin);
+            console.error('🔍 Error checking admin status asynchronously:', error);
+            console.log('🔍 Keeping sync admin status:', syncAdminStatus);
           }
-        } else {
-          setUserIsAdmin(false);
         }
       } else {
         console.log('🔄 No profile data - will show onboarding');

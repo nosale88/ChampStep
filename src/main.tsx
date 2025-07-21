@@ -10,6 +10,12 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
+        <Route path="/home" element={<App />} />
+        <Route path="/ranking" element={<App />} />
+        <Route path="/competitions" element={<App />} />
+        <Route path="/crews" element={<App />} />
+        <Route path="/profile" element={<App />} />
+        <Route path="/admin" element={<App />} />
         <Route path="/portfolio/:nickname" element={<EnhancedDancerPortfolio />} />
       </Routes>
     </BrowserRouter>
