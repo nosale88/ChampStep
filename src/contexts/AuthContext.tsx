@@ -32,12 +32,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🚀 AuthContext initializing...');
     
     // 초기 세션 확인
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('📋 Initial session check:', session ? 'Found' : 'None');
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         console.log('👤 User found, fetching profile for:', session.user.id);
+        
+        // 초기 세션에서도 관리자 권한 확인
+        if (session.user.email) {
+          console.log('🔍 Initial admin check for:', session.user.email);
+          const adminStatus = isAdminSync(session.user.email);
+          console.log('🔍 Initial admin status:', adminStatus);
+          setUserIsAdmin(adminStatus);
+          
+          // 비동기 더블체크
+          try {
+            const asyncAdminStatus = await isAdmin(session.user.email);
+            console.log('🔍 Initial async admin status:', asyncAdminStatus);
+            if (asyncAdminStatus !== adminStatus) {
+              setUserIsAdmin(asyncAdminStatus);
+            }
+          } catch (error) {
+            console.error('🔍 Error in initial async admin check:', error);
+          }
+        }
+        
         fetchDancerProfile(session.user.id);
       } else {
         console.log('❌ No user session, setting loading to false');
@@ -55,6 +75,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         console.log('👤 User authenticated, fetching profile for:', session.user.id);
+        
+        // 1. 관리자 권한 즉시 확인 (댄서 프로필과 별도로)
+        if (session.user.email) {
+          console.log('🔍 Checking admin status immediately for:', session.user.email);
+          const adminStatus = isAdminSync(session.user.email);
+          console.log('🔍 Immediate admin status:', adminStatus);
+          setUserIsAdmin(adminStatus);
+          
+          // 2. 비동기로 더블체크
+          try {
+            const asyncAdminStatus = await isAdmin(session.user.email);
+            console.log('🔍 Async admin status:', asyncAdminStatus);
+            if (asyncAdminStatus !== adminStatus) {
+              console.log('🔍 Admin status updated after async check');
+              setUserIsAdmin(asyncAdminStatus);
+            }
+          } catch (error) {
+            console.error('🔍 Error in async admin check:', error);
+          }
+        }
+        
+        // 3. 댄서 프로필 로딩 (선택적)
         // 소셜 로그인 시 프로필이 없으면 생성
         if (event === 'SIGNED_IN' && session.user.app_metadata.provider !== 'email') {
           console.log('🔑 Social login detected, creating profile if needed');
