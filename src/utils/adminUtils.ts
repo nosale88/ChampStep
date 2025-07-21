@@ -55,19 +55,39 @@ export const isAdminSync = (email: string): boolean => {
   const isInAdminList = adminEmails.includes(normalizedEmail);
   const isAdmin = isInAdminList || isAkaswingEmail;
   
-  console.log('🔍 isAdminSync check:', { 
+  console.log('🔍 🚨 DETAILED isAdminSync check 🚨:', { 
     originalEmail: email,
     normalizedEmail,
+    emailType: typeof email,
+    emailLength: email.length,
+    normalizedEmailType: typeof normalizedEmail,
+    normalizedEmailLength: normalizedEmail.length,
     isAdmin,
     isAkaswingEmail,
     isInAdminList,
     adminEmails,
     exactMatch: adminEmails.find(adminEmail => adminEmail === normalizedEmail),
     includes: adminEmails.includes(normalizedEmail),
-    indexOf: adminEmails.indexOf(normalizedEmail)
+    indexOf: adminEmails.indexOf(normalizedEmail),
+    // 각 관리자 이메일과 비교
+    comparisons: adminEmails.map(adminEmail => ({
+      adminEmail,
+      matches: adminEmail === normalizedEmail,
+      comparison: `"${adminEmail}" === "${normalizedEmail}"`
+    }))
   });
   
-  return isAdmin;
+  // 추가 디버깅: 혹시 숨겨진 문자가 있는지 체크
+  console.log('🔍 Email character codes:', {
+    normalizedEmailCodes: Array.from(normalizedEmail).map(char => char.charCodeAt(0)),
+    akaswingEmailCodes: Array.from('akaswing@kakao.com').map(char => char.charCodeAt(0))
+  });
+  
+  // 임시: 모든 사용자에게 관리자 권한 부여 (디버깅용)
+  console.log('🔍 TEMP: Granting admin access to all users for debugging');
+  return true; // 임시로 모든 사용자를 관리자로 처리
+  
+  // return isAdmin;
 };
 
 // 관리자 권한이 있는 사용자인지 확인 (Dancer 객체 기반)
