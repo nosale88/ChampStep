@@ -86,6 +86,14 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
   const canEdit = canEditDancer(user?.email || '', isAdmin, dancer);
   const canAddComment = true; // 로그인한 사용자는 댓글 작성 가능
   
+  // CommentSystem을 위한 currentUser 객체 생성
+  const currentUser = user ? {
+    id: user.id,
+    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Unknown',
+    email: user.email || '',
+    role: isAdmin ? 'admin' as const : 'user' as const
+  } : undefined;
+  
   if (!isOpen) {
     return null;
   }
