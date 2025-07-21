@@ -13,10 +13,15 @@ interface HomePageProps {
   onViewChange: (view: 'home' | 'ranking' | 'competitions' | 'crews' | 'profile' | 'admin') => void;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, dancers, competitions, onViewChange }) => {
+const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, dancers = [], competitions = [], onViewChange }) => {
   const { isDarkMode } = useTheme();
-  const topDancers = dancers.slice(0, 9);
-  const recentCompetitions = competitions.slice(0, 2);
+  
+  // 안전한 데이터 접근을 위한 null 체크
+  const safeDancers = Array.isArray(dancers) ? dancers : [];
+  const safeCompetitions = Array.isArray(competitions) ? competitions : [];
+  
+  const topDancers = safeDancers.slice(0, 9);
+  const recentCompetitions = safeCompetitions.slice(0, 2);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -94,13 +99,21 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            {topDancers.map((dancer) => (
-              <DancerCard
-                key={dancer.id}
-                dancer={dancer}
-                onClick={() => onDancerClick(dancer.id)}
-              />
-            ))}
+            {topDancers.length > 0 ? (
+              topDancers.map((dancer) => (
+                dancer && dancer.id ? (
+                  <DancerCard
+                    key={dancer.id}
+                    dancer={dancer}
+                    onClick={() => onDancerClick(dancer.id)}
+                  />
+                ) : null
+              ))
+            ) : (
+              <div className={`col-span-full text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p>댄서 정보를 불러오는 중...</p>
+              </div>
+            )}
           </div>
           
           {/* 전체 보기 버튼 */}
@@ -132,13 +145,21 @@ const HomePage: React.FC<HomePageProps> = ({ onDancerClick, onCompetitionClick, 
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-            {recentCompetitions.map((competition) => (
-              <CompetitionCard
-                key={competition.id}
-                competition={competition}
-                onClick={() => onCompetitionClick(competition.id)}
-              />
-            ))}
+            {recentCompetitions.length > 0 ? (
+              recentCompetitions.map((competition) => (
+                competition && competition.id ? (
+                  <CompetitionCard
+                    key={competition.id}
+                    competition={competition}
+                    onClick={() => onCompetitionClick(competition.id)}
+                  />
+                ) : null
+              ))
+            ) : (
+              <div className={`col-span-full text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p>대회 정보를 불러오는 중...</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

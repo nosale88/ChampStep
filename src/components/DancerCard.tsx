@@ -13,6 +13,11 @@ interface DancerCardProps {
 const DancerCard: React.FC<DancerCardProps> = ({ dancer, onClick }) => {
   const { isDarkMode } = useTheme();
   
+  // 안전한 데이터 접근을 위한 null 체크
+  if (!dancer || !dancer.id) {
+    return null;
+  }
+  
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Crown className="w-4 h-4" />;
     if (rank === 2) return <Star className="w-4 h-4" />;
