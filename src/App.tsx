@@ -15,6 +15,7 @@ import { fetchDancers } from './services/dancerService';
 import { fetchCompetitions } from './services/competitionService';
 import { fetchCrews } from './services/crewService';
 import { addComment, updateComment, deleteComment } from './services/commentService';
+import { testSupabaseConnection } from './lib/supabase';
 
 import { Competition, Dancer, Crew, Message, Comment } from './types';
 
@@ -36,39 +37,32 @@ function AppContent() {
     const loadData = async () => {
       console.log('🚀 Starting data load...');
       
-      // 최대 5초 타임아웃 설정
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Data loading timeout')), 5000);
-      });
+      // 먼저 Supabase 연결 테스트
+      const isConnected = await testSupabaseConnection();
+      if (!isConnected) {
+        console.error('❌ Supabase connection failed, loading with empty data');
+        setDancers([]);
+        setCompetitions([]);
+        setCrews([]);
+        setLoading(false);
+        return;
+      }
       
       try {
         console.log('📊 Fetching data from services...');
         
-        // 각 데이터를 개별적으로 로드하여 실패한 것만 스킵
-        const results = await Promise.allSettled([
-          Promise.race([fetchDancers(), timeoutPromise]),
-          Promise.race([fetchCompetitions(), timeoutPromise]), 
-          Promise.race([fetchCrews(), timeoutPromise])
+        // 모든 데이터를 병렬로 로드
+        const [dancers, competitions, crews] = await Promise.all([
+          fetchDancers(),
+          fetchCompetitions(), 
+          fetchCrews()
         ]);
-        
-        // 각 결과를 안전하게 처리
-        const dancers = results[0].status === 'fulfilled' ? results[0].value : [];
-        const competitions = results[1].status === 'fulfilled' ? results[1].value : [];
-        const crews = results[2].status === 'fulfilled' ? results[2].value : [];
         
         console.log('✅ Data fetch completed:', {
           dancers: dancers.length,
           competitions: competitions.length,
-          crews: crews.length,
-          dancersStatus: results[0].status,
-          competitionsStatus: results[1].status,
-          crewsStatus: results[2].status
+          crews: crews.length
         });
-        
-        // 실제 데이터 내용도 로그로 확인
-        console.log('👥 Dancers data:', dancers.slice(0, 3));
-        console.log('🏆 Competitions data:', competitions.slice(0, 3));
-        console.log('👨‍👩‍👧‍👦 Crews data:', crews.slice(0, 3));
         
         // 데이터 설정
         setDancers(dancers);
@@ -77,7 +71,7 @@ function AppContent() {
         
       } catch (error) {
         console.error('❌ Critical error loading data:', error);
-        // 타임아웃이나 에러 발생 시 빈 배열로 설정하여 앱이 계속 작동하도록 함
+        // 에러 발생 시에도 빈 배열로 설정하여 앱이 계속 작동하도록 함
         setDancers([]);
         setCompetitions([]);
         setCrews([]);

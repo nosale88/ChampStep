@@ -6,90 +6,47 @@ import { mockDancers } from '../data/mockData'
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
     console.log('🔍 Fetching dancers from Supabase...');
-    console.log('🔍 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-    console.log('🔍 Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
     
-    // Supabase 연결 시도 (타임아웃 15초 - 배포환경용)
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Supabase connection timeout')), 15000)
-    );
+    const { data, error } = await supabase
+      .from('dancers')
+      .select(`
+        id,
+        nickname,
+        name,
+        crew,
+        genres,
+        sns,
+        total_points,
+        rank,
+        avatar
+      `)
+      .order('rank', { ascending: true });
     
-    // 재시도 로직 추가
-    let lastError = null;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      console.log(`🔍 Attempt ${attempt}/3: Fetching dancers from Supabase...`);
-      
-      try {
-        const supabasePromise = supabase
-          .from('dancers')
-          .select(`
-            id,
-            nickname,
-            name,
-            crew,
-            genres,
-            sns,
-            total_points,
-            rank,
-            avatar
-          `)
-          .order('rank', { ascending: true });
-
-        const { data, error } = await Promise.race([supabasePromise, timeoutPromise]) as any;
-        
-        if (error) {
-          lastError = error;
-          console.error(`❌ Attempt ${attempt} failed:`, {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          });
-          
-          if (attempt < 3) {
-            console.log(`🔄 Retrying in 2 seconds...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            continue;
-          }
-        } else if (data && data.length > 0) {
-          console.log(`✅ Successfully fetched ${data.length} dancers from Supabase (attempt ${attempt})`);
-          return data.map(dancer => ({
-            id: dancer.id,
-            nickname: dancer.nickname,
-            name: dancer.name,
-            crew: dancer.crew,
-            genres: dancer.genres || [],
-            sns: dancer.sns || {},
-            totalPoints: dancer.total_points || 0,
-            rank: dancer.rank || 999,
-            avatar: getValidAvatarUrl(dancer.avatar, dancer.id)
-          }));
-        } else {
-          console.log(`⚠️ Attempt ${attempt}: No dancers found in database`);
-          if (attempt < 3) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            continue;
-          }
-        }
-      } catch (timeoutError) {
-        lastError = timeoutError;
-        console.error(`❌ Attempt ${attempt} timed out:`, timeoutError.message);
-        if (attempt < 3) {
-          console.log(`🔄 Retrying in 2 seconds...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          continue;
-        }
-      }
+    if (error) {
+      console.error('❌ Error fetching dancers:', error);
+      return [];
     }
 
-    // 모든 시도 실패 시 목 데이터 사용
-    console.error('❌ All attempts failed, using mock data. Last error:', lastError);
-    console.log('🔄 Falling back to mock data...');
-    return mockDancers;
+    if (!data || data.length === 0) {
+      console.log('⚠️ No dancers found in database');
+      return [];
+    }
+
+    console.log(`✅ Successfully fetched ${data.length} dancers from Supabase`);
+    return data.map(dancer => ({
+      id: dancer.id,
+      nickname: dancer.nickname,
+      name: dancer.name,
+      crew: dancer.crew,
+      genres: dancer.genres || [],
+      sns: dancer.sns || {},
+      totalPoints: dancer.total_points || 0,
+      rank: dancer.rank || 999,
+      avatar: getValidAvatarUrl(dancer.avatar, dancer.id)
+    }));
   } catch (error) {
     console.error('❌ Critical error in fetchDancers:', error);
-    console.log('🔄 Using mock data as fallback...');
-    return mockDancers;
+    return [];
   }
 }
 

@@ -12,7 +12,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   global: {
     fetch: (url, options = {}) => {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000); // 5초 타임아웃
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10초 타임아웃
       
       return fetch(url, {
         ...options,
@@ -20,4 +20,25 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       }).finally(() => clearTimeout(timeout));
     }
   }
-}) 
+})
+
+// Supabase 연결 테스트 함수
+export const testSupabaseConnection = async (): Promise<boolean> => {
+  try {
+    console.log('🔗 Testing Supabase connection...');
+    const { data, error } = await supabase
+      .from('dancers')
+      .select('count', { count: 'exact', head: true });
+    
+    if (error) {
+      console.error('❌ Supabase connection test failed:', error);
+      return false;
+    }
+    
+    console.log('✅ Supabase connection successful');
+    return true;
+  } catch (error) {
+    console.error('❌ Supabase connection test error:', error);
+    return false;
+  }
+}; 

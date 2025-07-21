@@ -59,149 +59,104 @@ const getRandomGenre = (): string => {
 };
 
 export async function fetchCrews(): Promise<Crew[]> {
-  console.log('🔄 Starting fetchCrews with retry logic...')
-  
-  const MAX_RETRIES = 3
-  const RETRY_DELAY = 2000 // 2초
-  let lastError: any = null
-  
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      console.log(`🔄 Attempt ${attempt}/${MAX_RETRIES} to fetch crews...`)
-      
-      // 환경 변수 확인
-      console.log('🔍 Environment check:', {
-        supabaseUrl: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing',
-        supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing'
-      })
-      
-      // 타임아웃 설정 (30초)
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
-      })
-      
-      const fetchPromise = supabase
-        .from('crews')
-        .select(`
-          id,
-          name,
-          description,
-          genres,
-          location,
-          member_count,
-          established_year,
-          achievements,
-          instagram_url,
-          youtube_url,
-          twitter_url,
-          background_image,
-          created_at
-        `)
-        .order('name', { ascending: true })
-      
-      const { data: crewsData, error } = await Promise.race([
-        fetchPromise,
-        timeoutPromise
-      ]) as any
-      
-      if (error) {
-        console.error(`❌ Attempt ${attempt} failed with Supabase error:`, error)
-        lastError = error
-        
-        if (attempt < MAX_RETRIES) {
-          console.log(`⏳ Waiting ${RETRY_DELAY}ms before retry...`)
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
-          continue
-        }
-        throw error
-      }
-      
-      if (!crewsData || crewsData.length === 0) {
-        console.log('⚠️ No crews data found in Supabase')
-        if (attempt < MAX_RETRIES) {
-          console.log(`⏳ Waiting ${RETRY_DELAY}ms before retry...`)
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
-          continue
-        }
-        console.log('🔄 Using mock crews as fallback...')
-        return mockCrews
-      }
-      
-      console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
-      
-      // 댄서 데이터도 함께 가져와서 크루별로 매칭
-      console.log('🔄 Fetching dancers for crew matching...')
-      const { data: dancersData } = await supabase
-        .from('dancers')
-        .select('id, nickname, name, crew, genres, rank, total_points, avatar')
-        .not('crew', 'is', null)
-        .order('rank', { ascending: true })
-      
-      console.log(`✅ Fetched ${dancersData?.length || 0} dancers for matching`)
-      
-      // 크루별로 댄서 매칭
-      const crewsWithMembers = crewsData.map((crew: any) => {
-        // 크루 이름과 댄서의 크루 필드를 매칭
-        const matchingDancers = dancersData?.filter((dancer: any) => {
-          if (!dancer.crew) {
-            return false
-          }
-          
-          // 정확한 매칭 우선
-          if (dancer.crew.toLowerCase().trim() === crew.name.toLowerCase().trim()) {
-            return true
-          }
-          
-          // 유사도 매칭 (80% 이상)
-          return calculateSimilarity(dancer.crew, crew.name) >= 0.8
-        }) || []
-        
-        return {
-          id: crew.id,
-          name: crew.name,
-          description: crew.description || '',
-          genres: crew.genres || [getRandomGenre()],
-          location: crew.location || '서울',
-          memberCount: matchingDancers.length || crew.member_count || 0,
-          establishedYear: crew.established_year || new Date().getFullYear(),
-          achievements: crew.achievements || [],
-          socialMedia: {
-            instagram: crew.instagram_url || '',
-            youtube: crew.youtube_url || '',
-            twitter: crew.twitter_url || ''
-          },
-          backgroundImage: crew.background_image || '',
-          members: matchingDancers.map((dancer: any) => ({
-            id: dancer.id,
-            nickname: dancer.nickname,
-            name: dancer.name,
-            genres: dancer.genres || [],
-            rank: dancer.rank || 999,
-            totalPoints: dancer.total_points || 0,
-            avatar: dancer.avatar || ''
-          })),
-          schedule: [] as CrewSchedule[]
-        }
-      })
-      
-      return crewsWithMembers
-      
-    } catch (timeoutError) {
-      console.error(`❌ Attempt ${attempt} failed:`, timeoutError)
-      lastError = timeoutError
-      
-      if (attempt < MAX_RETRIES) {
-        console.log(`⏳ Waiting ${RETRY_DELAY}ms before retry...`)
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
-        continue
-      }
+  try {
+    console.log('🔄 Fetching crews from Supabase...')
+    
+    const { data: crewsData, error } = await supabase
+      .from('crews')
+      .select(`
+        id,
+        name,
+        description,
+        genres,
+        location,
+        member_count,
+        established_year,
+        achievements,
+        instagram_url,
+        youtube_url,
+        twitter_url,
+        background_image,
+        created_at
+      `)
+      .order('name', { ascending: true })
+    
+    if (error) {
+      console.error('❌ Error fetching crews from Supabase:', error)
+      console.log('🔄 Using mock crews as fallback...')
+      return mockCrews
     }
+    
+    if (!crewsData || crewsData.length === 0) {
+      console.log('⚠️ No crews data found in Supabase')
+      console.log('🔄 Using mock crews as fallback...')
+      return mockCrews
+    }
+    
+    console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
+    
+    // 댄서 데이터도 함께 가져와서 크루별로 매칭
+    console.log('🔄 Fetching dancers for crew matching...')
+    const { data: dancersData } = await supabase
+      .from('dancers')
+      .select('id, nickname, name, crew, genres, rank, total_points, avatar')
+      .not('crew', 'is', null)
+      .order('rank', { ascending: true })
+    
+    console.log(`✅ Fetched ${dancersData?.length || 0} dancers for matching`)
+    
+    // 크루별로 댄서 매칭
+    const crewsWithMembers = crewsData.map((crew: any) => {
+      // 크루 이름과 댄서의 크루 필드를 매칭
+      const matchingDancers = dancersData?.filter((dancer: any) => {
+        if (!dancer.crew) {
+          return false
+        }
+        
+        // 정확한 매칭 우선
+        if (dancer.crew.toLowerCase().trim() === crew.name.toLowerCase().trim()) {
+          return true
+        }
+        
+        // 유사도 매칭 (80% 이상)
+        return calculateSimilarity(dancer.crew, crew.name) >= 0.8
+      }) || []
+      
+      return {
+        id: crew.id,
+        name: crew.name,
+        description: crew.description || '',
+        genres: crew.genres || [getRandomGenre()],
+        location: crew.location || '서울',
+        memberCount: matchingDancers.length || crew.member_count || 0,
+        establishedYear: crew.established_year || new Date().getFullYear(),
+        achievements: crew.achievements || [],
+        socialMedia: {
+          instagram: crew.instagram_url || '',
+          youtube: crew.youtube_url || '',
+          twitter: crew.twitter_url || ''
+        },
+        backgroundImage: crew.background_image || '',
+        members: matchingDancers.map((dancer: any) => ({
+          id: dancer.id,
+          nickname: dancer.nickname,
+          name: dancer.name,
+          genres: dancer.genres || [],
+          rank: dancer.rank || 999,
+          totalPoints: dancer.total_points || 0,
+          avatar: dancer.avatar || ''
+        })),
+        schedule: [] as CrewSchedule[]
+      }
+    })
+    
+    return crewsWithMembers
+    
+  } catch (error) {
+    console.error('❌ Error in fetchCrews:', error)
+    console.log('🔄 Falling back to mock crews...')
+    return mockCrews
   }
-  
-  // 모든 시도 실패 시 목 데이터 사용
-  console.error('❌ All attempts failed, using mock crews. Last error:', lastError)
-  console.log('🔄 Falling back to mock crews...')
-  return mockCrews
 }
 
 export async function fetchCrewById(id: string): Promise<Crew | null> {
