@@ -27,6 +27,20 @@ const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
     dancerIsAdmin: dancer?.isAdmin,
     shouldShowAdminMenu: isAdmin && user
   });
+
+  // 임시: 화면에 관리자 상태 표시 (디버깅용)
+  const showDebugInfo = user?.email === 'akaswing@kakao.com';
+  
+  React.useEffect(() => {
+    if (showDebugInfo) {
+      console.log('🚨 DEBUG INFO FOR ADMIN:', {
+        userEmail: user?.email,
+        isAdmin,
+        shouldShowAdminMenu,
+        navItemsCount: navItems.length
+      });
+    }
+  }, [isAdmin, user?.email, showDebugInfo]);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -129,6 +143,12 @@ const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => {
                   <h1 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} transition-colors`}>
                     ChampStep
                   </h1>
+                  {/* 임시 디버그 정보 */}
+                  {showDebugInfo && (
+                    <div className="text-xs text-red-500 mt-1">
+                      Admin: {isAdmin ? 'YES' : 'NO'} | Menu: {shouldShowAdminMenu ? 'YES' : 'NO'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
