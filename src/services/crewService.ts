@@ -37,27 +37,53 @@ export async function fetchCrews(): Promise<Crew[]> {
     
     console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
     
-    // 단순한 크루 데이터 반환 (실제 테이블 구조에 맞게)
-    const crewsWithBasicData = crewsData.map((crew: any) => ({
-      id: crew.id,
-      name: crew.name,
-      description: crew.description || '',
-      genres: [], // 빈 배열로 초기화 (테이블에 없음)
-      location: crew.location || '',
-      memberCount: crew.member_count || 0,
-      establishedYear: crew.founded_year || new Date().getFullYear(),
-      achievements: [], // 빈 배열로 초기화 (테이블에 없음)
-      instagramUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
-      youtubeUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
-      twitterUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
-      backgroundImage: '', // 빈 문자열로 초기화 (테이블에 없음)
-      createdAt: crew.created_at || new Date().toISOString(),
-      members: [], // 빈 배열로 초기화
-      schedules: [], // 빈 배열로 초기화
-      genre: 'Dance' // 기본값
-    }))
+    // 댄서 데이터도 함께 가져와서 크루별로 매칭
+    console.log('🔄 Fetching dancers for crew matching...')
+    const { data: dancersData } = await supabase
+      .from('dancers')
+      .select('id, nickname, name, crew, genres, rank, total_points, avatar')
+      .not('crew', 'is', null)
+      .order('rank', { ascending: true })
     
-    return crewsWithBasicData
+    console.log(`✅ Fetched ${dancersData?.length || 0} dancers for matching`)
+    
+    // 크루별로 댄서 매칭
+    const crewsWithMembers = crewsData.map((crew: any) => {
+      // 크루 이름과 댄서의 크루 필드를 매칭
+      const members = (dancersData || []).filter(dancer => 
+        dancer.crew && dancer.crew.toLowerCase() === crew.name.toLowerCase()
+      ).map(dancer => ({
+        id: dancer.id,
+        nickname: dancer.nickname,
+        name: dancer.name,
+        crew: dancer.crew,
+        genres: dancer.genres || [],
+        rank: dancer.rank || 999,
+        totalPoints: dancer.total_points || 0,
+        avatar: dancer.avatar
+      }))
+      
+      return {
+        id: crew.id,
+        name: crew.name,
+        description: crew.description || '',
+        genres: [], // 빈 배열로 초기화 (테이블에 없음)
+        location: crew.location || '',
+        memberCount: members.length, // 실제 멤버 수로 업데이트
+        establishedYear: crew.founded_year || new Date().getFullYear(),
+        achievements: [], // 빈 배열로 초기화 (테이블에 없음)
+        instagramUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
+        youtubeUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
+        twitterUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
+        backgroundImage: '', // 빈 문자열로 초기화 (테이블에 없음)
+        createdAt: crew.created_at || new Date().toISOString(),
+        members, // 실제 멤버 배열
+        schedules: [], // 빈 배열로 초기화
+        genre: 'Dance' // 기본값
+      }
+    })
+    
+    return crewsWithMembers
     
   } catch (error) {
     console.error('❌ Error in fetchCrews:', error)
