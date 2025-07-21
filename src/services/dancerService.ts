@@ -6,33 +6,73 @@ import { mockDancers } from '../data/mockData'
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
     console.log('🔍 Fetching dancers from Supabase...');
+    console.log('🔍 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
     
+    // 먼저 테이블 존재 여부 확인
+    console.log('🔍 Testing table access...');
+    const { count, error: countError } = await supabase
+      .from('dancers')
+      .select('*', { count: 'exact', head: true });
+    
+    console.log('📊 Table count result:', { count, error: countError });
+    
+    if (countError) {
+      console.error('❌ Error accessing dancers table:', countError);
+      console.error('❌ Error details:', {
+        message: countError.message,
+        details: countError.details,
+        hint: countError.hint,
+        code: countError.code
+      });
+      console.log('🔄 Using mock data as fallback...');
+      return mockDancers;
+    }
+    
+    console.log(`📊 Total dancers in database: ${count}`);
+    
+    // 먼저 간단한 쿼리로 시작
+    console.log('🔍 Trying simple select...');
+    const { data: simpleData, error: simpleError } = await supabase
+      .from('dancers')
+      .select('id, nickname')
+      .limit(5);
+    
+    console.log('📊 Simple query result:', { dataLength: simpleData?.length, error: simpleError });
+    
+    if (simpleError) {
+      console.error('❌ Simple query failed:', simpleError);
+      return [];
+    }
+    
+    // 전체 데이터 가져오기
+    console.log('🔍 Fetching all dancer data...');
     const { data, error } = await supabase
       .from('dancers')
-      .select(`
-        id,
-        nickname,
-        name,
-        crew,
-        genres,
-        sns,
-        total_points,
-        rank,
-        avatar
-      `)
+      .select('*')
       .order('rank', { ascending: true });
+    
+    console.log('📊 Fetch result:', { dataLength: data?.length, error });
     
     if (error) {
       console.error('❌ Error fetching dancers:', error);
-      return [];
+      console.error('❌ Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      console.log('🔄 Using mock data as fallback...');
+      return mockDancers;
     }
 
     if (!data || data.length === 0) {
-      console.log('⚠️ No dancers found in database');
-      return [];
+      console.log('⚠️ No dancers found in database, using mock data');
+      return mockDancers;
     }
 
     console.log(`✅ Successfully fetched ${data.length} dancers from Supabase`);
+    console.log('👤 First dancer:', data[0]);
+    
     return data.map(dancer => ({
       id: dancer.id,
       nickname: dancer.nickname,
@@ -46,7 +86,8 @@ export async function fetchDancers(): Promise<Dancer[]> {
     }));
   } catch (error) {
     console.error('❌ Critical error in fetchDancers:', error);
-    return [];
+    console.log('🔄 Using mock data as fallback...');
+    return mockDancers;
   }
 }
 
