@@ -11,15 +11,9 @@ export async function fetchCrews(): Promise<Crew[]> {
         id,
         name,
         description,
-        genres,
         location,
         member_count,
-        established_year,
-        achievements,
-        instagram_url,
-        youtube_url,
-        twitter_url,
-        background_image,
+        founded_year,
         created_at
       `)
       .order('name', { ascending: true })
@@ -43,24 +37,24 @@ export async function fetchCrews(): Promise<Crew[]> {
     
     console.log(`✅ Successfully fetched ${crewsData.length} crews from Supabase`)
     
-    // 단순한 크루 데이터 반환 (멤버 매칭 없이)
+    // 단순한 크루 데이터 반환 (실제 테이블 구조에 맞게)
     const crewsWithBasicData = crewsData.map((crew: any) => ({
       id: crew.id,
       name: crew.name,
       description: crew.description || '',
-      genres: crew.genres || [],
+      genres: [], // 빈 배열로 초기화 (테이블에 없음)
       location: crew.location || '',
       memberCount: crew.member_count || 0,
-      establishedYear: crew.established_year || new Date().getFullYear(),
-      achievements: crew.achievements || [],
-      instagramUrl: crew.instagram_url || '',
-      youtubeUrl: crew.youtube_url || '',
-      twitterUrl: crew.twitter_url || '',
-      backgroundImage: crew.background_image || '',
+      establishedYear: crew.founded_year || new Date().getFullYear(),
+      achievements: [], // 빈 배열로 초기화 (테이블에 없음)
+      instagramUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
+      youtubeUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
+      twitterUrl: '', // 빈 문자열로 초기화 (테이블에 없음)
+      backgroundImage: '', // 빈 문자열로 초기화 (테이블에 없음)
       createdAt: crew.created_at || new Date().toISOString(),
       members: [], // 빈 배열로 초기화
       schedules: [], // 빈 배열로 초기화
-      genre: Array.isArray(crew.genres) ? crew.genres[0] || 'Unknown' : 'Unknown'
+      genre: 'Dance' // 기본값
     }))
     
     return crewsWithBasicData
@@ -88,19 +82,19 @@ export async function fetchCrewById(id: string): Promise<Crew | null> {
       id: data.id,
       name: data.name,
       description: data.description,
-      genres: data.genres,
-      location: data.location,
-      memberCount: data.member_count,
-      establishedYear: data.established_year,
-      achievements: data.achievements,
-      instagramUrl: data.instagram_url,
-      youtubeUrl: data.youtube_url,
-      twitterUrl: data.twitter_url,
-      backgroundImage: data.background_image,
+      genres: [],
+      location: data.location || '',
+      memberCount: data.member_count || 0,
+      establishedYear: data.founded_year || new Date().getFullYear(),
+      achievements: [],
+      instagramUrl: '',
+      youtubeUrl: '',
+      twitterUrl: '',
+      backgroundImage: '',
       createdAt: data.created_at,
       members: [],
       schedules: [],
-      genre: Array.isArray(data.genres) ? data.genres[0] || 'Unknown' : 'Unknown'
+      genre: 'Dance'
     }
   } catch (error) {
     console.error('Error in fetchCrewById:', error)
@@ -125,19 +119,19 @@ export async function fetchCrewByName(name: string): Promise<Crew | null> {
       id: data.id,
       name: data.name,
       description: data.description,
-      genres: data.genres,
-      location: data.location,
-      memberCount: data.member_count,
-      establishedYear: data.established_year,
-      achievements: data.achievements,
-      instagramUrl: data.instagram_url,
-      youtubeUrl: data.youtube_url,
-      twitterUrl: data.twitter_url,
-      backgroundImage: data.background_image,
+      genres: [],
+      location: data.location || '',
+      memberCount: data.member_count || 0,
+      establishedYear: data.founded_year || new Date().getFullYear(),
+      achievements: [],
+      instagramUrl: '',
+      youtubeUrl: '',
+      twitterUrl: '',
+      backgroundImage: '',
       createdAt: data.created_at,
       members: [],
       schedules: [],
-      genre: Array.isArray(data.genres) ? data.genres[0] || 'Unknown' : 'Unknown'
+      genre: 'Dance'
     }
   } catch (error) {
     console.error('Error in fetchCrewByName:', error)
