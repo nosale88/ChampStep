@@ -94,10 +94,27 @@ const ProfilePage: React.FC = () => {
     try {
       const imageUrl = await uploadImage(file, type, dancer.id);
       if (imageUrl) {
+        // 로컬 상태 업데이트
         setFormData(prev => ({
           ...prev,
           [type === 'avatar' ? 'avatar' : 'backgroundImage']: imageUrl
         }));
+        
+        // 즉시 DB에 저장
+        const updatedData = {
+          ...dancer,
+          [type === 'avatar' ? 'avatar' : 'backgroundImage']: imageUrl
+        };
+        
+        console.log('🔄 Saving image to database:', { type, imageUrl });
+        const { error } = await updateProfile(updatedData);
+        
+        if (error) {
+          console.error('❌ Error saving image to DB:', error);
+          alert('이미지 저장 중 오류가 발생했습니다.');
+        } else {
+          console.log('✅ Image saved to database successfully');
+        }
       }
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -528,15 +545,33 @@ const ProfilePage: React.FC = () => {
             
             <ImageUpload
               onUpload={async (file) => {
-                if (!user || !dancer) return null;
+                if (!user || !dancer || !showImageUpload) return null;
                 
                 try {
                   const imageUrl = await uploadImage(file, showImageUpload, dancer.id);
                   if (imageUrl) {
+                    // 로컬 상태 업데이트
                     setFormData(prev => ({
                       ...prev,
                       [showImageUpload === 'avatar' ? 'avatar' : 'backgroundImage']: imageUrl
                     }));
+                    
+                    // 즉시 DB에 저장
+                    const updatedData = {
+                      ...dancer,
+                      [showImageUpload === 'avatar' ? 'avatar' : 'backgroundImage']: imageUrl
+                    };
+                    
+                    console.log('🔄 Saving image to database (modal):', { type: showImageUpload, imageUrl });
+                    const { error } = await updateProfile(updatedData);
+                    
+                    if (error) {
+                      console.error('❌ Error saving image to DB (modal):', error);
+                      alert('이미지 저장 중 오류가 발생했습니다.');
+                    } else {
+                      console.log('✅ Image saved to database successfully (modal)');
+                    }
+                    
                     setShowImageUpload(null);
                     return imageUrl;
                   }

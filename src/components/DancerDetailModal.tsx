@@ -98,21 +98,35 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
     return null;
   }
 
-  const handleImageUpload = (type: 'background' | 'profile') => {
+  const handleImageUpload = async (type: 'background' | 'profile') => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file && onUpdateDancer) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const imageUrl = e.target?.result as string;
-          onUpdateDancer(dancer.id, {
-            [type === 'background' ? 'backgroundImage' : 'profileImage']: imageUrl
-          });
-        };
-        reader.readAsDataURL(file);
+        try {
+          console.log('🔄 Uploading image to storage...', { type, file: file.name });
+          
+          // Supabase Storage에 실제 업로드
+          const { uploadImage } = await import('../services/storageService');
+          const storageType = type === 'background' ? 'background' : 'avatar';
+          const imageUrl = await uploadImage(file, storageType, dancer.id);
+          
+          if (imageUrl) {
+            console.log('✅ Image uploaded successfully:', imageUrl);
+            
+            // 댄서 정보 업데이트 (DB 저장)
+            onUpdateDancer(dancer.id, {
+              [type === 'background' ? 'backgroundImage' : 'profileImage']: imageUrl
+            });
+          } else {
+            throw new Error('Failed to upload image');
+          }
+        } catch (error) {
+          console.error('❌ Error uploading image:', error);
+          alert('이미지 업로드 중 오류가 발생했습니다.');
+        }
       }
     };
     input.click();
