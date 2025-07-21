@@ -133,7 +133,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
 
   const handleCrewClick = (crewName: string) => {
     if (onSelectCrew && crews) {
-      const crew = crews.find(c => c.name === crewName);
+      const crew = (crews || []).find(c => c.name === crewName);
       if (crew) {
         onClose();
         onSelectCrew(crew);
@@ -307,7 +307,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                 <Calendar className={`h-8 w-8 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
                 <div>
                   <p className={`text-2xl font-bold ${isDarkMode ? 'text-green-200' : 'text-green-900'}`}>
-                    {dancer.competitions.length}
+                    {dancer.competitions?.length || 0}
                   </p>
                   <p className={`text-sm ${isDarkMode ? 'text-green-300' : 'text-green-700'}`}>
                     참여 대회 수
@@ -340,7 +340,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
               전문 장르
             </h3>
             <div className="flex flex-wrap gap-2">
-              {dancer.genres.map((genre, index) => (
+              {(dancer.genres || []).map((genre, index) => (
                 <span
                   key={index}
                   className={`px-4 py-2 rounded-full font-medium transition-colors ${
@@ -362,7 +362,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                 소속 크루
               </h3>
               {(() => {
-                const crew = crews.find(c => c.name === dancer.crew);
+                const crew = (crews || []).find(c => c.name === dancer.crew);
                 if (crew) {
                   return (
                     <div 
@@ -388,7 +388,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                           <p className={`text-sm transition-colors ${
                             isDarkMode ? 'text-gray-400' : 'text-gray-600'
                           }`}>
-                            {crew.genre} • {crew.members.length}명
+                            {crew.genre} • {crew.members?.length || 0}명
                           </p>
                           <p className={`text-sm mt-2 line-clamp-2 transition-colors ${
                             isDarkMode ? 'text-gray-300' : 'text-gray-700'
@@ -399,7 +399,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                         <div className="flex items-center space-x-4 text-sm">
                           <div className="text-center">
                             <div className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              {crew.members.length}
+                              {crew.members?.length || 0}
                             </div>
                             <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                               멤버
@@ -407,7 +407,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                           </div>
                           <div className="text-center">
                             <div className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              {crew.schedules.length}
+                              {crew.schedules?.length || 0}
                             </div>
                             <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                               스케줄
@@ -417,7 +417,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                       </div>
                       <div className="mt-4 flex items-center justify-between">
                         <div className="flex flex-wrap gap-2">
-                          {crew.members.slice(0, 3).map((member) => (
+                          {(crew.members || []).slice(0, 3).map((member) => (
                             <button
                               key={member.id}
                               onClick={(e) => {
@@ -447,11 +447,11 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                               </span>
                             </button>
                           ))}
-                          {crew.members.length > 3 && (
+                          {(crew.members?.length || 0) > 3 && (
                             <span className={`text-sm ${
                               isDarkMode ? 'text-gray-400' : 'text-gray-600'
                             }`}>
-                              외 {crew.members.length - 3}명
+                              외 {(crew.members?.length || 0) - 3}명
                             </span>
                           )}
                         </div>
@@ -511,8 +511,8 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
               대회 참여 이력
             </h3>
             <div className="space-y-4">
-              {dancer.competitions.map((competition) => {
-                const participant = competition.participants.find(p => p.dancerId === dancer.id);
+              {(dancer.competitions || []).map((competition) => {
+                const participant = (competition.participants || []).find(p => p.dancerId === dancer.id);
                 const position = participant?.position || 0;
                 const points = participant?.points || 0;
                 
@@ -533,7 +533,7 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
                             <span>{formatDate(competition.eventStartDate)}</span>
                           </div>
                           <div className="flex flex-wrap gap-1">
-                            {competition.genres.map((genre, index) => (
+                            {(competition.genres || []).map((genre, index) => (
                               <span key={index} className={`px-2 py-1 text-xs rounded-full transition-colors ${
                                 isDarkMode 
                                   ? 'bg-orange-900 text-orange-300' 
@@ -564,13 +564,13 @@ const DancerDetailModal: React.FC<DancerDetailModalProps> = ({
           </div>
 
           {/* Videos Section */}
-          {dancer.videos && dancer.videos.length > 0 && (
+          {dancer.videos && dancer.videos?.length > 0 && (
             <div>
               <h3 className={`text-lg font-semibold mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 관련 영상
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {dancer.videos.map((video) => {
+                {(dancer.videos || []).map((video) => {
                   // TODO: 실제 대회 데이터를 props나 context에서 가져와야 함
                   const competition = undefined;
                   return (
