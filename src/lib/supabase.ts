@@ -1,50 +1,70 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../types/database'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zmoalrtninbbgzqhfufe.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptb2FscnRuaW5iYmd6cWhmdWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MjM2NjAsImV4cCI6MjA2NzA5OTY2MH0.E6gj0plKMKWK3skBvBycKZsuanK2c0z5UcvZ1c9SfLA'
+// 환경변수 체크를 더 안전하게
+let supabaseUrl: string
+let supabaseAnonKey: string
+
+try {
+  supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zmoalrtninbbgzqhfufe.supabase.co'
+  supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptb2FscnRuaW5iYmd6cWhmdWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MjM2NjAsImV4cCI6MjA2NzA5OTY2MH0.E6gj0plKMKWK3skBvBycKZsuanK2c0z5UcvZ1c9SfLA'
+} catch (error) {
+  console.error('🚨 Error accessing environment variables:', error)
+  supabaseUrl = 'https://zmoalrtninbbgzqhfufe.supabase.co'
+  supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptb2FscnRuaW5iYmd6cWhmdWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MjM2NjAsImV4cCI6MjA2NzA5OTY2MH0.E6gj0plKMKWK3skBvBycKZsuanK2c0z5UcvZ1c9SfLA'
+}
 
 // 환경 변수 로딩 상태 디버깅 (updated for anon key fix)
 console.log('🔧 🚨 CRITICAL Environment variables check 🚨:', {
-  hasViteSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
-  hasViteSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-  envUrl: import.meta.env.VITE_SUPABASE_URL || 'NOT_SET',
-  envKeyLength: import.meta.env.VITE_SUPABASE_ANON_KEY?.length || 0,
+  hasViteSupabaseUrl: !!supabaseUrl,
+  hasViteSupabaseKey: !!supabaseAnonKey,
   finalUrl: supabaseUrl,
   finalKey: supabaseAnonKey.substring(0, 50) + '...',
   finalKeyLength: supabaseAnonKey.length,
-  environment: import.meta.env.MODE || 'unknown',
-  isDev: import.meta.env.DEV,
-  isProd: import.meta.env.PROD,
-  allEnvKeys: Object.keys(import.meta.env),
-  supabaseEnvKeys: Object.keys(import.meta.env).filter(key => key.includes('SUPABASE'))
+  environment: typeof import.meta !== 'undefined' ? import.meta.env?.MODE : 'unknown',
+  isDev: typeof import.meta !== 'undefined' ? import.meta.env?.DEV : false,
+  isProd: typeof import.meta !== 'undefined' ? import.meta.env?.PROD : false
 })
 
-// 즉시 연결 테스트 실행
-console.log('🔧 🚨 Starting immediate connection test...');
-testSupabaseConnection().then(result => {
-  console.log('🔧 🚨 Connection test result:', result);
-}).catch(error => {
-  console.error('🔧 🚨 Connection test failed:', error);
-});
+// Supabase 클라이언트 생성을 안전하게
+let supabase: ReturnType<typeof createClient<Database>>
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    detectSessionInUrl: true
-  },
-  global: {
-    fetch: (url, options = {}) => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000); // 10초 타임아웃
-      
-      return fetch(url, {
-        ...options,
-        signal: controller.signal
-      }).finally(() => clearTimeout(timeout));
+try {
+  supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      detectSessionInUrl: true
+    },
+    global: {
+      fetch: (url, options = {}) => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000); // 10초 타임아웃
+        
+        return fetch(url, {
+          ...options,
+          signal: controller.signal
+        }).finally(() => clearTimeout(timeout));
+      }
     }
-  }
-})
+  })
+  console.log('✅ Supabase client created successfully');
+} catch (error) {
+  console.error('🚨 Error creating Supabase client:', error);
+  // 기본 클라이언트 생성
+  supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+}
+
+export { supabase };
+
+// 연결 테스트 실행 (export 후에)
+setTimeout(() => {
+  console.log('🔧 🚨 Starting delayed connection test...');
+  testSupabaseConnection().then(result => {
+    console.log('🔧 🚨 Connection test result:', result);
+  }).catch(error => {
+    console.error('🔧 🚨 Connection test failed:', error);
+  });
+}, 100);
 
 // Supabase 연결 테스트 함수
 export const testSupabaseConnection = async (): Promise<boolean> => {
