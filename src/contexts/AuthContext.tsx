@@ -182,7 +182,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         // 관리자 권한을 즉시 설정
-        setUserIsAdmin(syncAdminStatus || data.is_admin || false);
+        const finalAdminStatus = syncAdminStatus || data.is_admin || false;
+        console.log('🔑 FINAL ADMIN STATUS SET:', {
+          email: data.email,
+          syncAdminStatus,
+          dbIsAdmin: data.is_admin,
+          finalAdminStatus,
+          willSetUserIsAdmin: finalAdminStatus
+        });
+        setUserIsAdmin(finalAdminStatus);
         
         setDancer(dancerData);
         
@@ -458,6 +466,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: error as Error };
     }
   };
+
+  // 디버깅용 window 객체에 상태 확인 함수 추가
+  React.useEffect(() => {
+    (window as any).debugAuth = () => {
+      console.log('🔍 DEBUG AUTH STATE:', {
+        user: user?.email,
+        userIsAdmin,
+        dancer: dancer?.email,
+        dancerIsAdmin: dancer?.isAdmin,
+        loading
+      });
+    };
+    
+    (window as any).checkAdminStatus = (email?: string) => {
+      const targetEmail = email || user?.email;
+      if (targetEmail) {
+        console.log('🔍 Checking admin status for:', targetEmail);
+        const syncResult = isAdminSync(targetEmail);
+        console.log('🔍 Sync admin result:', syncResult);
+        isAdmin(targetEmail).then(asyncResult => {
+          console.log('🔍 Async admin result:', asyncResult);
+        });
+      }
+    };
+  }, [user, userIsAdmin, dancer, loading]);
 
   return (
     <AuthContext.Provider value={{
