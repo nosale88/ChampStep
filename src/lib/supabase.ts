@@ -8,9 +8,13 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 console.log('🔧 Environment variables check:', {
   hasViteSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
   hasViteSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-  supabaseUrl: supabaseUrl.substring(0, 30) + '...',
-  keyLength: supabaseAnonKey.length,
-  environment: import.meta.env.MODE || 'unknown'
+  envUrl: import.meta.env.VITE_SUPABASE_URL || 'NOT_SET',
+  envKeyLength: import.meta.env.VITE_SUPABASE_ANON_KEY?.length || 0,
+  finalUrl: supabaseUrl.substring(0, 30) + '...',
+  finalKeyLength: supabaseAnonKey.length,
+  environment: import.meta.env.MODE || 'unknown',
+  isDev: import.meta.env.DEV,
+  isProd: import.meta.env.PROD
 })
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -35,19 +39,32 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 export const testSupabaseConnection = async (): Promise<boolean> => {
   try {
     console.log('🔗 Testing Supabase connection...');
+    console.log('🔗 Using URL:', supabaseUrl);
+    console.log('🔗 Key length:', supabaseAnonKey.length);
+    
     const { data, error } = await supabase
       .from('dancers')
       .select('count', { count: 'exact', head: true });
     
+    console.log('🔗 Connection test result:', { data, error });
+    
     if (error) {
-      console.error('❌ Supabase connection test failed:', error);
+      console.error('❌ Supabase connection test failed:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       return false;
     }
     
-    console.log('✅ Supabase connection successful');
+    console.log('✅ Supabase connection successful, count:', data);
     return true;
   } catch (error) {
     console.error('❌ Supabase connection test error:', error);
+    console.error('❌ Error type:', typeof error);
+    console.error('❌ Error string:', String(error));
     return false;
   }
 }; 

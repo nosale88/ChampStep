@@ -5,9 +5,12 @@ import { getValidAvatarUrl } from '../utils/avatarUtils'
 export async function fetchDancers(): Promise<Dancer[]> {
   try {
     console.log('🔍 Fetching dancers from Supabase...');
+    console.log('🔍 Environment mode:', import.meta.env.MODE);
     console.log('🔍 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('🔍 Has Supabase Key:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
     
     // 단순한 쿼리로 시작
+    const startTime = Date.now();
     const { data, error } = await supabase
       .from('dancers')
       .select(`
@@ -33,8 +36,12 @@ export async function fetchDancers(): Promise<Dancer[]> {
       `)
       .order('rank', { ascending: true });
     
+    const endTime = Date.now();
+    console.log('📊 Query completed in:', endTime - startTime, 'ms');
     console.log('📊 Query result:', {
       dataLength: data?.length,
+      hasData: !!data,
+      firstItem: data?.[0] ? { id: data[0].id, nickname: data[0].nickname } : null,
       error: error,
       errorCode: error?.code,
       errorMessage: error?.message,
