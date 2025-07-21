@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Download, FileText, Eye, Calendar, Trophy, Users, Music, School, Briefcase } from 'lucide-react';
+import { Download, FileText, Eye, Calendar, Trophy, Users, Music, School, Briefcase, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Dancer } from '../types';
 import html2canvas from 'html2canvas';
@@ -63,63 +63,140 @@ const DancerResume: React.FC<DancerResumeProps> = ({ dancer, onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col`}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
+      <div className={`w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col transition-colors sm:rounded-2xl rounded-t-3xl sm:m-4 ${
+        isDarkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        {/* Mobile Handle Bar */}
+        <div className="sm:hidden flex justify-center pt-2 pb-4">
+          <div className={`w-12 h-1 rounded-full ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
+        </div>
+        
         {/* 헤더 */}
-        <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between`}>
-          <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
-            <FileText className="mr-3 h-6 w-6" />
-            이력서 미리보기
-          </h2>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={downloadPDF}
-              disabled={isGenerating}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center ${
-                isGenerating
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
-              }`}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              {isGenerating ? 'PDF 생성 중...' : 'PDF 다운로드'}
-            </button>
-            <button
-              onClick={onClose}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                isDarkMode 
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              닫기
-            </button>
+        <div className={`sticky top-0 border-b px-4 sm:px-6 py-4 sm:py-6 sm:rounded-t-2xl transition-colors ${
+          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          {/* Mobile Header Layout */}
+          <div className="sm:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`text-xl font-bold transition-colors flex items-center ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <FileText className="mr-2 h-5 w-5" />
+                이력서
+              </h2>
+              <button
+                onClick={onClose}
+                className={`p-2 rounded-full transition-colors ${
+                  isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
+                }`}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Mobile Action Button */}
+            <div className="flex space-x-2">
+              <button
+                onClick={downloadPDF}
+                disabled={isGenerating}
+                className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 ${
+                  isGenerating
+                    ? 'bg-gray-400 cursor-not-allowed text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white active:scale-95'
+                }`}
+              >
+                <Download className="h-4 w-4" />
+                <span className="text-sm">{isGenerating ? 'PDF 생성 중...' : 'PDF 다운로드'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Header Layout */}
+          <div className="hidden sm:flex items-center justify-between">
+            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
+              <FileText className="mr-3 h-6 w-6" />
+              이력서 미리보기
+            </h2>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={downloadPDF}
+                disabled={isGenerating}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center ${
+                  isGenerating
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isGenerating ? 'PDF 생성 중...' : 'PDF 다운로드'}
+              </button>
+              <button
+                onClick={onClose}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                닫기
+              </button>
+            </div>
           </div>
         </div>
 
         {/* 이력서 내용 */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
           <div 
             ref={resumeRef}
-            className="bg-white text-black p-8 mx-auto"
+            className="bg-white text-black p-4 sm:p-8 mx-auto"
             style={{ maxWidth: '210mm', minHeight: '297mm' }}
           >
             {/* 제목 */}
-            <h1 className="text-3xl font-bold text-center mb-8">이 력 서</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">이 력 서</h1>
 
             {/* 기본 정보 */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-800 pb-2">기본 정보</h2>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1 row-span-4">
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-gray-800 pb-2">기본 정보</h2>
+              <div className="flex flex-col sm:grid sm:grid-cols-3 gap-4">
+                <div className="flex justify-center sm:col-span-1 sm:row-span-4">
                   <img 
                     src={dancer.profileImage || dancer.avatar} 
                     alt={dancer.name}
-                    className="w-32 h-40 object-cover border border-gray-300"
+                    className="w-24 h-32 sm:w-32 sm:h-40 object-cover border border-gray-300"
                   />
                 </div>
-                <div className="col-span-2">
-                  <table className="w-full">
+                <div className="sm:col-span-2">
+                  <div className="space-y-2 sm:hidden">
+                    {/* Mobile: Stacked layout */}
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="font-medium text-sm">성명</span>
+                      <span className="text-sm">{dancer.name}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="font-medium text-sm">활동명</span>
+                      <span className="text-sm">{dancer.nickname}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="font-medium text-sm">생년월일</span>
+                      <span className="text-sm">{dancer.birthDate ? new Date(dancer.birthDate).toLocaleDateString('ko-KR') : '1995.01.01'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="font-medium text-sm">연락처</span>
+                      <span className="text-sm">{dancer.phone || '010-1234-5678'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="font-medium text-sm">이메일</span>
+                      <span className="text-sm break-all">{dancer.email || 'dancer@example.com'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="font-medium text-sm">전문 장르</span>
+                      <span className="text-sm text-right">{dancer.genres.join(', ')}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="font-medium text-sm">소속 크루</span>
+                      <span className="text-sm">{dancer.crew || '-'}</span>
+                    </div>
+                  </div>
+                  <table className="w-full hidden sm:table">
                     <tbody>
                       <tr className="border-b">
                         <td className="py-2 px-4 font-medium bg-gray-100 w-1/3">성명</td>
@@ -156,12 +233,23 @@ const DancerResume: React.FC<DancerResumeProps> = ({ dancer, onClose }) => {
             </div>
 
             {/* 학력 */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-800 pb-2 flex items-center">
-                <School className="mr-2 h-5 w-5" />
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-gray-800 pb-2 flex items-center">
+                <School className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 학력
               </h2>
-              <table className="w-full">
+              {/* Mobile: Card layout */}
+              <div className="space-y-3 sm:hidden">
+                {education.map((edu) => (
+                  <div key={edu.id} className="border border-gray-300 rounded-lg p-3">
+                    <div className="font-medium text-sm mb-1">{edu.school}</div>
+                    <div className="text-xs text-gray-600 mb-1">{edu.major} • {edu.degree}</div>
+                    <div className="text-xs text-gray-500">{edu.period}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop: Table layout */}
+              <table className="w-full hidden sm:table">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="py-2 px-4 text-left">학교명</th>
@@ -184,12 +272,23 @@ const DancerResume: React.FC<DancerResumeProps> = ({ dancer, onClose }) => {
             </div>
 
             {/* 경력 */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-800 pb-2 flex items-center">
-                <Briefcase className="mr-2 h-5 w-5" />
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-gray-800 pb-2 flex items-center">
+                <Briefcase className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 경력
               </h2>
-              <table className="w-full">
+              {/* Mobile: Card layout */}
+              <div className="space-y-3 sm:hidden">
+                {career.map((car) => (
+                  <div key={car.id} className="border border-gray-300 rounded-lg p-3">
+                    <div className="font-medium text-sm mb-1">{car.company}</div>
+                    <div className="text-xs text-gray-600 mb-1">{car.position} • {car.period}</div>
+                    <div className="text-xs text-gray-500">{car.description}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop: Table layout */}
+              <table className="w-full hidden sm:table">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="py-2 px-4 text-left">소속</th>
@@ -212,12 +311,26 @@ const DancerResume: React.FC<DancerResumeProps> = ({ dancer, onClose }) => {
             </div>
 
             {/* 수상 경력 */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-800 pb-2 flex items-center">
-                <Trophy className="mr-2 h-5 w-5" />
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-gray-800 pb-2 flex items-center">
+                <Trophy className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 수상 경력
               </h2>
-              <table className="w-full">
+              {/* Mobile: Card layout */}
+              <div className="space-y-3 sm:hidden">
+                {awards.map((award) => (
+                  <div key={award.id} className="border border-gray-300 rounded-lg p-3">
+                    <div className="font-medium text-sm mb-1">{award.name}</div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600">{award.rank}</span>
+                      <span className="text-xs text-gray-500">{award.date}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">{award.organizer}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop: Table layout */}
+              <table className="w-full hidden sm:table">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="py-2 px-4 text-left">대회명</th>
@@ -240,12 +353,23 @@ const DancerResume: React.FC<DancerResumeProps> = ({ dancer, onClose }) => {
             </div>
 
             {/* 공연 활동 */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-800 pb-2 flex items-center">
-                <Music className="mr-2 h-5 w-5" />
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-gray-800 pb-2 flex items-center">
+                <Music className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 공연 활동
               </h2>
-              <table className="w-full">
+              {/* Mobile: Card layout */}
+              <div className="space-y-3 sm:hidden">
+                {performances.map((perf) => (
+                  <div key={perf.id} className="border border-gray-300 rounded-lg p-3">
+                    <div className="font-medium text-sm mb-1">{perf.name}</div>
+                    <div className="text-xs text-gray-600 mb-1">{perf.role} • {perf.date}</div>
+                    <div className="text-xs text-gray-500">{perf.location}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop: Table layout */}
+              <table className="w-full hidden sm:table">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="py-2 px-4 text-left">공연명</th>
@@ -268,15 +392,15 @@ const DancerResume: React.FC<DancerResumeProps> = ({ dancer, onClose }) => {
             </div>
 
             {/* 자기소개 */}
-            <div className="mb-8">
-              <h2 className="text-xl font-bold mb-4 border-b-2 border-gray-800 pb-2">자기소개</h2>
-              <p className="text-sm leading-relaxed">
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-gray-800 pb-2">자기소개</h2>
+              <p className="text-xs sm:text-sm leading-relaxed">
                 {dancer.bio || '안녕하세요. 댄서 ' + dancer.name + '입니다. 다양한 장르의 춤을 통해 관객들과 소통하며, 끊임없이 발전하는 아티스트가 되고자 노력하고 있습니다.'}
               </p>
             </div>
 
             {/* 작성일 */}
-            <div className="text-right text-sm text-gray-600 mt-8">
+            <div className="text-right text-xs sm:text-sm text-gray-600 mt-6 sm:mt-8">
               작성일: {new Date().toLocaleDateString('ko-KR')}
             </div>
           </div>
