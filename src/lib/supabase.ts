@@ -41,25 +41,42 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
     console.log('🔗 Testing Supabase connection...');
     console.log('🔗 Using URL:', supabaseUrl);
     console.log('🔗 Key length:', supabaseAnonKey.length);
+    console.log('🔗 Key type:', supabaseAnonKey.includes('anon') ? 'anon' : 'service_role');
     
-    const { data, error } = await supabase
+    // 먼저 단순한 테이블 존재 확인
+    const { data: tableData, error: tableError } = await supabase
       .from('dancers')
       .select('count', { count: 'exact', head: true });
     
-    console.log('🔗 Connection test result:', { data, error });
+    console.log('🔗 Table access test:', { data: tableData, error: tableError });
     
-    if (error) {
-      console.error('❌ Supabase connection test failed:', {
-        error,
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
+    // RLS 무시하고 데이터 확인 (anon key로는 안 될 수 있음)
+    const { data: sampleData, error: sampleError } = await supabase
+      .from('dancers')
+      .select('id, nickname')
+      .limit(1);
+    
+    console.log('🔗 Sample data test:', { data: sampleData, error: sampleError });
+    
+    if (tableError) {
+      console.error('❌ Table access failed:', {
+        error: tableError,
+        code: tableError.code,
+        message: tableError.message,
+        details: tableError.details,
+        hint: tableError.hint
       });
+      
+      // RLS 정책 문제일 가능성 체크
+      if (tableError.code === 'PGRST116' || tableError.message?.includes('policy')) {
+        console.warn('⚠️ 이것은 RLS(Row Level Security) 정책 문제일 수 있습니다.');
+        console.warn('⚠️ Supabase 대시보드에서 테이블의 RLS 설정을 확인해주세요.');
+      }
+      
       return false;
     }
     
-    console.log('✅ Supabase connection successful, count:', data);
+    console.log('✅ Supabase connection successful');
     return true;
   } catch (error) {
     console.error('❌ Supabase connection test error:', error);
